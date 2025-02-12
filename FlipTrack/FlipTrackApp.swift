@@ -1,12 +1,13 @@
-//
-//  FlipTrackApp.swift
-//  FlipTrack
-//
-//  Created by Andreas Pardeike on 2025-02-11.
-//
-
 import SwiftUI
 import SwiftData
+
+var apiKey: String {
+    get {
+        UserDefaults.standard.string(forKey: "apiKey") ?? ""
+    } set {
+        UserDefaults.standard.set(newValue, forKey: "apiKey")
+    }
+}
 
 @main
 struct FlipTrackApp: App {

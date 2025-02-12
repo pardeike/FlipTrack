@@ -1,56 +1,42 @@
-//
-//  ContentView.swift
-//  FlipTrack
-//
-//  Created by Andreas Pardeike on 2025-02-11.
-//
-
 import SwiftUI
 import SwiftData
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
+    @State var image = UIImage()
+    @State var scores = [0, 0]
 
     var body: some View {
-        NavigationSplitView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
+        VStack {
+            if apiKey.starts(with: "sk-") {
+                Image(uiImage: image)
+                    .resizable(resizingMode: .stretch)
+                    .aspectRatio(contentMode: .fit)
+                Button("Analyze") {
+                    if let img = UIPasteboard.general.image {
+                        image = img
+                        Task {
+                            scores = await Analyzer.extractScore(image)
+                            if scores.count != 2 {
+                                scores = [0, 0]
+                            }
+                        }
                     }
                 }
-                .onDelete(perform: deleteItems)
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
+                .buttonStyle(.borderedProminent)
+                Spacer()
+                HStack {
+                    Spacer()
+                    Text("\(scores[0])")
+                    Spacer()
+                    Text("\(scores[1])")
+                    Spacer()
                 }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                }
+            } else {
+                Button("Paste API Key") { apiKey = UIPasteboard.general.string ?? "" }
+                    .buttonStyle(.borderedProminent)
             }
-        } detail: {
-            Text("Select an item")
-        }
-    }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
-            }
+            Spacer()
         }
     }
 }
