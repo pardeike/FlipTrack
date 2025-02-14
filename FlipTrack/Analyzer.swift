@@ -1,23 +1,24 @@
 import UIKit
 
-struct ImageResponse: Decodable {
-    struct Choice: Decodable {
-        struct Message: Decodable {
-            struct ImageRequest: Encodable {
-                let model = "gpt-4o-mini"
-                let messages: [String]
-            }
-            let content: String
-        }
-        let message: Message
-    }
-    let choices: [Choice]
-}
-
 class Analyzer {
+    
+    struct ImageResponse: Decodable {
+        struct Choice: Decodable {
+            struct Message: Decodable {
+                struct ImageRequest: Encodable {
+                    let model = "gpt-4o-mini"
+                    let messages: [String]
+                }
+                let content: String
+            }
+            let message: Message
+        }
+        let choices: [Choice]
+    }
+    
     static let url = URL(string: "https://api.openai.com/v1/chat/completions")!
-    static func extractScore(_ image: UIImage) async -> [Int] {
-        let imageData = renderedJPEGData(from: image, compressionQuality: 0.5)!
+    static func extractScore(_ image: UIImage, _ maxSize: Int, _ quality: CGFloat) async -> [Int] {
+        guard let imageData = renderedJPEGData(from: image, maxSize: maxSize, quality: quality) else { return [] }
         let base64 = imageData.base64EncodedString()
         let body = """
         {
@@ -41,6 +42,7 @@ class Analyzer {
         }
         """
         var request = URLRequest(url: url)
+        guard let apiKey = UserDefaults.standard.string(forKey: "openai-api-key") else { return [] }
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.httpMethod = "POST"
@@ -54,11 +56,37 @@ class Analyzer {
         return text.split(separator: "/").map { Int($0.trimmingCharacters(in: .whitespaces)) ?? 0 }
     }
     
-    static func renderedJPEGData(from image: UIImage, compressionQuality: CGFloat) -> Data? {
-        let renderer = UIGraphicsImageRenderer(size: image.size)
+    static func renderedJPEGData(from image: UIImage, maxSize: Int, quality: CGFloat) -> Data? {
+        let (w, h) = (image.size.width, image.size.height)
+        let f = CGFloat(maxSize) / max(w, h)
+        let size = CGSize(width: w * f, height: h * f)
+        #if ENHANCE
+        guard let inputCIImage = CIImage(image: image) else { return nil }
+        
+        guard let colorControlsFilter = CIFilter(name: "CIColorControls") else { return nil }
+        colorControlsFilter.setValue(inputCIImage, forKey: kCIInputImageKey)
+        colorControlsFilter.setValue(1.5, forKey: kCIInputContrastKey)    // Increase contrast
+        colorControlsFilter.setValue(2.0, forKey: kCIInputSaturationKey)  // Boost saturation
+        colorControlsFilter.setValue(0.0, forKey: kCIInputBrightnessKey)  // Adjust brightness
+        guard let colorAdjustedImage = colorControlsFilter.outputImage else { return nil }
+
+        guard let hueAdjustFilter = CIFilter(name: "CIHueAdjust") else { return nil }
+        hueAdjustFilter.setValue(colorAdjustedImage, forKey: kCIInputImageKey)
+        hueAdjustFilter.setValue(0.1, forKey: kCIInputAngleKey)
+        guard let hueAdjustedImage = hueAdjustFilter.outputImage else { return nil }
+        
+        let ciContext = CIContext(options: nil)
+        guard let cgImage = ciContext.createCGImage(hueAdjustedImage, from: hueAdjustedImage.extent) else { return nil }
+        let processedImage = UIImage(cgImage: cgImage)
+        
+        let renderer = UIGraphicsImageRenderer(size: size)
         let renderedImage = renderer.image { _ in
-            image.draw(in: CGRect(origin: .zero, size: image.size))
+            processedImage.draw(in: CGRect(origin: .zero, size: size))
         }
-        return renderedImage.jpegData(compressionQuality: compressionQuality)
+        #else
+        let renderedImage = image
+        #endif 
+        return renderedImage.jpegData(compressionQuality: quality)
     }
+
 }

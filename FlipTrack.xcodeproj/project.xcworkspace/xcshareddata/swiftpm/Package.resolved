@@ -1,0 +1,15 @@
+{
+  "originHash" : "2b23ebc276f2c56851d34dfa52180b17b48272b3212ced7b7a2cea6ffdd1eb62",
+  "pins" : [
+    {
+      "identity" : "camerapreview",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ribtiago/CameraPreview",
+      "state" : {
+        "revision" : "67f27b58ab97782a7900600a2e0ec426c4760e9a",
+        "version" : "1.0.0"
+      }
+    }
+  ],
+  "version" : 3
+}

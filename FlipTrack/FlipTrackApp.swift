@@ -1,33 +1,16 @@
 import SwiftUI
 import SwiftData
 
-var apiKey: String {
-    get {
-        UserDefaults.standard.string(forKey: "apiKey") ?? ""
-    } set {
-        UserDefaults.standard.set(newValue, forKey: "apiKey")
-    }
-}
-
 @main
 struct FlipTrackApp: App {
     var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
+        let schema = Schema([Item.self])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
+        return try! ModelContainer(for: schema, configurations: [modelConfiguration])
     }()
 
     var body: some Scene {
-        WindowGroup {
-            ContentView()
-        }
-        .modelContainer(sharedModelContainer)
+        WindowGroup { MainView() }
+            .modelContainer(sharedModelContainer)
     }
 }
