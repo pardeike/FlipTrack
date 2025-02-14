@@ -40,12 +40,12 @@ struct EventView: View {
         color(for: game.winningIndex)
     }
 
+    private var rndScore: Int {
+        Int.random(in: 0...100)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
-            EventHeaderView(formattedDate: formattedEventDate(for: eventDate)) {
-                dismiss()
-            }
-
             CurrentGameView(firstPlayer: viewModel.firstPlayer,
                             secondPlayer: viewModel.secondPlayer,
                             firstPlayerIndex: viewModel.firstPlayerIndex,
@@ -83,8 +83,11 @@ struct EventView: View {
         }
         .padding(.horizontal)
         .preferredColorScheme(.dark)
+        .navigationTitle(formattedEventDate(for: eventDate))
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
+
 
 #Preview {
     EventView(event: Event(date: Date()))
