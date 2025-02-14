@@ -10,24 +10,25 @@ class EventViewModel: ObservableObject {
     let player2: String = "Fredrik"
 
     private var eventData: EventData
+    
+    static let sampleGames: [Game] = [
+        Game(nr: 1, scores: [rndScore, rndScore]),
+        Game(nr: 2, scores: [rndScore, rndScore]),
+        Game(nr: 3, scores: [rndScore, rndScore]),
+        Game(nr: 4, scores: [rndScore, rndScore]),
+        Game(nr: 5, scores: [rndScore, rndScore]),
+        Game(nr: 6, scores: [rndScore, rndScore]),
+        Game(nr: 7, scores: [rndScore, rndScore]),
+        Game(nr: 8, scores: [rndScore, rndScore]),
+        Game(nr: 9, scores: [rndScore, rndScore]),
+        Game(nr: 10, scores: [rndScore, rndScore]),
+        Game(nr: 11, scores: [rndScore, rndScore]),
+        Game(nr: 12, scores: [rndScore, rndScore]),
+    ]
 
     init() {
-        let sampleGames: [Game] = [
-            /*Game(id: 1, scores: [rndScore, rndScore]),
-            Game(id: 2, scores: [rndScore, rndScore]),
-            Game(id: 3, scores: [rndScore, rndScore]),
-            Game(id: 4, scores: [rndScore, rndScore]),
-            Game(id: 5, scores: [rndScore, rndScore]),
-            Game(id: 6, scores: [rndScore, rndScore]),
-            Game(id: 7, scores: [rndScore, rndScore]),
-            Game(id: 8, scores: [rndScore, rndScore]),
-            Game(id: 9, scores: [rndScore, rndScore]),
-            Game(id: 10, scores: [rndScore, rndScore]),
-            Game(id: 11, scores: [rndScore, rndScore]),
-            Game(id: 12, scores: [rndScore, rndScore]),*/
-        ]
-        eventData = EventData(games: sampleGames)
-        games = sampleGames
+        eventData = EventData(games: [])
+        games = []
     }
 
     var playerTotals: [Int] {
