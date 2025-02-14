@@ -1,11 +1,11 @@
 import SwiftUI
 
-struct TotalsView: View {
-    let playerTotals: [Int]
-    let playerWins: [Int]
-    let colorFor: (Int) -> Color
-    let formattedNumber: (Int) -> String
-    let gold: Color
+public struct TotalsView: View {
+    public let playerTotals: [Int]
+    public let playerWins: [Int]
+    public let colorFor: (Int) -> Color
+    public let formattedNumber: (Int) -> String
+    public let gold: Color
 
     private var playerTotalIndex: Int {
         playerTotals[0] == playerTotals[1] ? -1 : (playerTotals[0] > playerTotals[1] ? 0 : 1)
@@ -18,7 +18,15 @@ struct TotalsView: View {
     private var background1: [Color] { [.clear, gold, .clear] }
     private var background2: [Color] { [.clear, .clear, gold] }
 
-    var body: some View {
+    public init(playerTotals: [Int], playerWins: [Int], colorFor: @escaping (Int) -> Color, formattedNumber: @escaping (Int) -> String, gold: Color) {
+        self.playerTotals = playerTotals
+        self.playerWins = playerWins
+        self.colorFor = colorFor
+        self.formattedNumber = formattedNumber
+        self.gold = gold
+    }
+
+    public var body: some View {
         Grid(alignment: .center) {
             GridRow {
                 Text("TOTALS")

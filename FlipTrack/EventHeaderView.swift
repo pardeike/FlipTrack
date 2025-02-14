@@ -1,10 +1,15 @@
 import SwiftUI
 
-struct EventHeaderView: View {
-    let formattedDate: String
-    let onBack: () -> Void
+public struct EventHeaderView: View {
+    public let formattedDate: String
+    public let onBack: () -> Void
 
-    var body: some View {
+    public init(formattedDate: String, onBack: @escaping () -> Void) {
+        self.formattedDate = formattedDate
+        self.onBack = onBack
+    }
+
+    public var body: some View {
         HStack {
             Button(action: onBack) {
                 Image(systemName: "chevron.left")

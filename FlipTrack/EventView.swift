@@ -1,12 +1,20 @@
 import SwiftUI
+import Foundation
 
 struct EventView: View {
+    let event: Event
     @StateObject private var viewModel = EventViewModel()
-    @State private var eventDate = Date()
+    @State private var eventDate: Date
+    @Environment(\.dismiss) private var dismiss
 
     let color1 = Color(hue: 0.54, saturation: 1, brightness: 1)
     let color2 = Color(hue: 0.07, saturation: 1, brightness: 1)
     static let gold = Color.yellow.opacity(0.25)
+
+    init(event: Event) {
+        self.event = event
+        _eventDate = State(initialValue: event.date)
+    }
 
     func formattedEventDate(for date: Date) -> String {
         let calendar = Calendar.current
@@ -34,20 +42,22 @@ struct EventView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            EventHeaderView(formattedDate: formattedEventDate(for: eventDate)) { /* TODO navigate back */ }
-            
+            EventHeaderView(formattedDate: formattedEventDate(for: eventDate)) {
+                dismiss()
+            }
+
             CurrentGameView(firstPlayer: viewModel.firstPlayer,
                             secondPlayer: viewModel.secondPlayer,
                             firstPlayerIndex: viewModel.firstPlayerIndex,
                             colorFor: color(for:),
                             gold: EventView.gold)
-            
+
             TotalsView(playerTotals: viewModel.playerTotals,
                        playerWins: viewModel.playerWins,
                        colorFor: color(for:),
                        formattedNumber: formattedNumber,
                        gold: EventView.gold)
-            
+
             if !viewModel.games.isEmpty {
                 GamesPlayedView(games: viewModel.games,
                                 formattedNumber: formattedNumber,
@@ -55,7 +65,7 @@ struct EventView: View {
             } else {
                 Spacer()
             }
-            
+
             Button(action: {
                 Task {
                     await viewModel.addGame(scores: [rndScore, rndScore])
@@ -77,5 +87,5 @@ struct EventView: View {
 }
 
 #Preview {
-    EventView()
+    EventView(event: Event(date: Date()))
 }

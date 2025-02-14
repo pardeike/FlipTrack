@@ -1,0 +1,10 @@
+{
+    "workspace": "${workspaceRoot}/FlipTrack.xcodeproj/project.xcworkspace",
+    "scheme": "FlipTrack",
+    "variables": {
+    },
+    "postBuildTasks": [
+    ],
+    "debugConfigurations": [
+    ]
+}

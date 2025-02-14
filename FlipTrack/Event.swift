@@ -1,6 +1,12 @@
 import Foundation
 
-struct Event: Identifiable {
-    var id = UUID()
-    let date: Date
+import Foundation
+
+public struct Event: Identifiable {
+    public var id = UUID()
+    public let date: Date
+
+    public init(date: Date) {
+        self.date = date
+    }
 }
