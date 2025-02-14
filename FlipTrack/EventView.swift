@@ -3,127 +3,14 @@ import SwiftUI
 struct EventView: View {
     @StateObject private var viewModel = EventViewModel()
     @State private var eventDate = Date()
+    
+    let color1 = Color(hue: 0.54, saturation: 1, brightness: 1)
+    let color2 = Color(hue: 0.07, saturation: 1, brightness: 1)
+    static let gold = Color.yellow.opacity(0.25)
+    
+    let background1: [Color] = [.clear, gold, .clear]
+    let background2: [Color] = [.clear, .clear, gold]
 
-    var body: some View {
-        VStack(spacing: 0) {
-            // Header with back button and event date.
-            HStack {
-                Button(action: {
-                    // Back action handled by NavigationView.
-                }) {
-                    Image(systemName: "chevron.left")
-                        .foregroundColor(.white)
-                        .padding()
-                }
-                Spacer()
-                Text(formattedEventDate(for: eventDate))
-                    .foregroundColor(.white)
-                    .font(.headline)
-                Spacer()
-                // Dummy spacer for symmetry.
-                Spacer().frame(width: 44)
-            }
-            .background(Color.black)
-
-            // Current game header.
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Current Game")
-                        .font(.subheadline)
-                        .foregroundColor(.white)
-                    Text("\(viewModel.currentGameInfo.firstPlayer) starts")
-                        .font(.title2)
-                        .bold()
-                        .foregroundColor(color(for: viewModel.currentGameInfo.firstPlayer))
-                }
-                .padding()
-                Spacer()
-            }
-            .background(Color.gray.opacity(0.2))
-
-            // Totals section showing scores and wins.
-            let totals = viewModel.playerTotals
-            let wins = viewModel.playerWins
-            HStack {
-                Spacer()
-                VStack {
-                    Text(viewModel.player1)
-                        .font(.headline)
-                        .foregroundColor(color(for: viewModel.player1))
-                    Text("Score: \(totals.player1Score)")
-                        .foregroundColor(totals.player1Score >= totals.player2Score ? color(for: viewModel.player1) : .white)
-                        .fontWeight(totals.player1Score >= totals.player2Score ? .bold : .regular)
-                    Text("Wins: \(wins.player1Wins)")
-                        .foregroundColor(wins.player1Wins >= wins.player2Wins ? color(for: viewModel.player1) : .white)
-                        .fontWeight(wins.player1Wins >= wins.player2Wins ? .bold : .regular)
-                }
-                Spacer()
-                VStack {
-                    Text(viewModel.player2)
-                        .font(.headline)
-                        .foregroundColor(color(for: viewModel.player2))
-                    Text("Score: \(totals.player2Score)")
-                        .foregroundColor(totals.player2Score >= totals.player1Score ? color(for: viewModel.player2) : .white)
-                        .fontWeight(totals.player2Score >= totals.player1Score ? .bold : .regular)
-                    Text("Wins: \(wins.player2Wins)")
-                        .foregroundColor(wins.player2Wins >= wins.player1Wins ? color(for: viewModel.player2) : .white)
-                        .fontWeight(wins.player2Wins >= wins.player1Wins ? .bold : .regular)
-                }
-                Spacer()
-            }
-            .padding()
-            .background(Color.black)
-
-            // List of all games.
-            List {
-                ForEach(viewModel.games) { game in
-                    HStack {
-                        Text("#\(game.id)")
-                            .frame(width: 40, alignment: .leading)
-                        let players = playersFor(game: game)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("\(players.first) vs \(players.second)")
-                                .foregroundColor(.white)
-                            HStack {
-                                let p1Score = (game.id % 2 != 0) ? game.leftScore : game.rightScore
-                                let p2Score = (game.id % 2 != 0) ? game.rightScore : game.leftScore
-                                Text("\(p1Score)")
-                                    .foregroundColor(p1Score >= p2Score ? color(for: players.first) : .white)
-                                Text("-")
-                                    .foregroundColor(.white)
-                                Text("\(p2Score)")
-                                    .foregroundColor(p2Score > p1Score ? color(for: players.second) : .white)
-                            }
-                        }
-                    }
-                    .listRowBackground(Color.black)
-                }
-            }
-            .listStyle(PlainListStyle())
-
-            // Footer with snapshot button.
-            HStack {
-                Spacer()
-                Button(action: {
-                    // Trigger snapshot logic.
-                }) {
-                    Text("Snapshot")
-                        .font(.headline)
-                        .foregroundColor(.black)
-                        .padding()
-                        .background(Color.white)
-                        .cornerRadius(8)
-                }
-                Spacer()
-            }
-            .padding()
-            .background(Color.black)
-        }
-        .background(Color.black.edgesIgnoringSafeArea(.all))
-        .preferredColorScheme(.dark)
-    }
-
-    // Adjusts the event date based on a 2AM start.
     func formattedEventDate(for date: Date) -> String {
         let calendar = Calendar.current
         let hour = calendar.component(.hour, from: date)
@@ -133,18 +20,198 @@ struct EventView: View {
         return formatter.string(from: adjustedDate)
     }
 
-    // Returns color for a given player.
-    func color(for player: String) -> Color {
-        return player == viewModel.player1 ? Color.yellow : Color.orange
+    func formattedNumber(_ number: Int) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.groupingSeparator = "."
+        return formatter.string(from: NSNumber(value: number)) ?? "\(number)"
     }
 
-    // Determines players order based on game number.
-    func playersFor(game: Game) -> (first: String, second: String) {
-        if game.id % 2 != 0 {
-            return (first: viewModel.player1, second: viewModel.player2)
-        } else {
-            return (first: viewModel.player2, second: viewModel.player1)
+    func color(for playerIndex: Int) -> Color {
+        [color1, color2][playerIndex]
+    }
+    
+    func winningColor(_ game: Game) -> Color {
+        color(for: game.winningIndex)
+    }
+    
+    var playerTotalIndex: Int {
+        if viewModel.playerTotals[0] == viewModel.playerTotals[1] { return -1 }
+        return viewModel.playerTotals[0] > viewModel.playerTotals[1] ? 0 : 1
+    }
+    
+    var playerWinIndex: Int {
+        if viewModel.playerWins[0] == viewModel.playerWins[1] { return -1 }
+        return viewModel.playerWins[0] > viewModel.playerWins[1] ? 0 : 1
+    }
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            
+            HStack {
+                Button(action: {}) {
+                    Image(systemName: "chevron.left")
+                        .foregroundColor(.white)
+                        .padding()
+                }
+                Spacer()
+                Text(formattedEventDate(for: eventDate))
+                    .foregroundColor(.white)
+                    .font(.headline)
+                    .minimumScaleFactor(0.5)
+                Spacer()
+                Spacer().frame(width: 44)
+            }
+            .padding(.bottom, 10)
+            
+            Grid(alignment: .center) {
+                GridRow {
+                    Text("CURRENT GAME")
+                        .font(.headline)
+                        .foregroundColor(.gray)
+                        .padding(6)
+                        .gridCellColumns(2)
+                }
+                GridRow {
+                    Text(viewModel.firstPlayer)
+                        .foregroundColor(color(for: viewModel.firstPlayerIndex))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                        .background(EventView.gold)
+                    Text(viewModel.secondPlayer)
+                        .foregroundColor(color(for: 1 - viewModel.firstPlayerIndex))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                }
+                .textCase(.uppercase)
+                .font(.title)
+                .bold()
+            }
+            .background(Color(white: 0.1))
+            .padding(.bottom, 20)
+            
+            Grid(alignment: .center) {
+                GridRow {
+                    Text("TOTALS")
+                        .font(.headline)
+                        .foregroundColor(.gray)
+                        .padding(6)
+                        .gridCellColumns(2)
+                }
+                GridRow {
+                    Text("Andreas").foregroundColor(color(for: 0))
+                    Text("Fredrik").foregroundColor(color(for: 1))
+                }
+                .font(.headline)
+                .bold()
+                .frame(maxWidth: .infinity)
+                .padding(.bottom, 6)
+                GridRow {
+                    Text(formattedNumber(viewModel.playerTotals[0]))
+                        .foregroundColor(color(for: 0))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                        .background(background1[playerTotalIndex + 1])
+                    Text(formattedNumber(viewModel.playerTotals[1]))
+                        .foregroundColor(color(for: 1))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                        .background(background2[playerTotalIndex + 1])
+                }
+                .font(.title2)
+                GridRow {
+                    Text("#\(viewModel.playerWins[0])")
+                        .foregroundColor(color(for: 0))
+                        .font(.title)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                        .background(background1[playerWinIndex + 1])
+                    Text("#\(viewModel.playerWins[1])")
+                        .foregroundColor(color(for: 1))
+                        .font(.title)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                        .background(background2[playerWinIndex + 1])
+                }
+            }
+            .background(Color(white: 0.1))
+            .padding(.bottom, 20)
+
+            if !viewModel.games.isEmpty {
+                Grid(alignment: .center) {
+                    GridRow {
+                        Text("GAMES PLAYED")
+                            .font(.headline)
+                            .foregroundColor(.gray)
+                            .padding(6)
+                            .gridCellColumns(2)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .background(Color(white: 0.1))
+                ScrollView(.vertical) {
+                    LazyVGrid(columns: [
+                        GridItem(.fixed(50), spacing: 0, alignment: .trailing),
+                        GridItem(.flexible(minimum: 0, maximum: 10000), spacing: 0, alignment: .trailing),
+                        GridItem(.flexible(minimum: 0, maximum: 10000), spacing: 0, alignment: .trailing),
+                    ]) {
+                        Text("#").padding(.trailing, 4)
+                        Text("Andreas").padding(.trailing, 4)
+                        Text("Fredrik").padding(.trailing, 10)
+                        ForEach(Array(viewModel.games.enumerated()), id: \.element.id) { index, game in
+                            Group {
+                                HStack {
+                                    Spacer()
+                                    Text("\(game.nr)")
+                                }
+                                HStack {
+                                    Spacer()
+                                    if game.winningIndex == 0 {
+                                        Image(systemName: "star.fill").foregroundColor(.yellow)
+                                    }
+                                    Text(formattedNumber(game.scores[0]))
+                                }
+                                HStack {
+                                    Spacer()
+                                    if game.winningIndex == 1 {
+                                        Image(systemName: "star.fill").foregroundColor(.yellow)
+                                    }
+                                    Text(formattedNumber(game.scores[1]))
+                                        .padding(.trailing, 6)
+                                }
+                            }
+                            .padding(6)
+                            .background(winningColor(game).opacity(0.25))
+                        }
+                    }
+                    .font(.title2)
+                }
+                .background(Color(white: 0.1))
+                .defaultScrollAnchor(.bottom)
+                .scrollIndicators(.hidden)
+                .padding(.bottom, 20)
+            } else {
+                Spacer()
+            }
+            
+            Button(action: {
+                Task {
+                    await viewModel.addGame(scores: [rndScore, rndScore])
+                    
+                }
+            }) {
+                Circle()
+                    .frame(width: 60, height: 60)
+                    .foregroundColor(.accentColor)
+                    .overlay {
+                        Image(systemName: "camera.fill")
+                            .foregroundColor(.white)
+                            .scaleEffect(1.6)
+                    }
+            }
         }
+        .padding(.horizontal)
+        .preferredColorScheme(.dark)
     }
 }
 

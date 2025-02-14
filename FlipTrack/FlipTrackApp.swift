@@ -10,7 +10,7 @@ struct FlipTrackApp: App {
     }()
 
     var body: some Scene {
-        WindowGroup { MainView() }
+        WindowGroup { EventView() /*MainView()*/ }
             .modelContainer(sharedModelContainer)
     }
 }
