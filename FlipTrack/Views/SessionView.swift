@@ -8,8 +8,6 @@ struct SessionView: View {
     
     let session: Session
 
-    let color1 = Color(hue: 0.54, saturation: 1, brightness: 1)
-    let color2 = Color(hue: 0.07, saturation: 1, brightness: 1)
     static let gold = Color.yellow.opacity(0.25)
 
     init(session: Session) {
@@ -31,7 +29,7 @@ struct SessionView: View {
     }
 
     func color(for playerIndex: Int) -> Color {
-        [color1, color2][playerIndex]
+        [Color.color1, Color.color2][playerIndex]
     }
 
     func winningColor(_ game: Game) -> Color {
@@ -50,6 +48,7 @@ struct SessionView: View {
             TotalsView(playerTotals: session.playerTotals,
                        playerWins: session.playerWins,
                        highScores: session.highScores,
+                       averageScores: session.averageScores,
                        colorFor: color(for:),
                        formattedNumber: formattedNumber,
                        gold: SessionView.gold)
@@ -57,7 +56,7 @@ struct SessionView: View {
             if session.games?.isEmpty == false {
                 GamesPlayedView(games: session.games ?? [],
                                 formattedNumber: formattedNumber,
-                                winningColor: winningColor)
+                                winningColor: winningColor, colorFor: color(for:))
             } else {
                 Spacer()
             }

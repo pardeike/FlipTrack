@@ -1,9 +1,9 @@
 import SwiftUI
 
 struct Bar: View {
-    let color1 = Color(hue: 0.54, saturation: 1, brightness: 1)
-    let color2 = Color(hue: 0.07, saturation: 1, brightness: 1)
-    func color(for playerIndex: Int) -> Color { [color1, color2][playerIndex] }
+    let color1b = Color.color1.mix(with: .black, by: 0.3)
+    let color2b = Color.color2.mix(with: .black, by: 0.3)
+    func color(for playerIndex: Int) -> Color { [color1b, color2b][playerIndex] }
     let values: [Int]
     var f: CGFloat { CGFloat(values[0]) / CGFloat(values[0] + values[1]) }
     var body: some View {
@@ -20,12 +20,12 @@ struct Bar: View {
                     .overlay(alignment: .leading) {
                         Text("\(values[0]) Andreas")
                             .padding(.leading, 6)
-                            .foregroundStyle(.black).font(.caption)
+                            .foregroundStyle(.white).bold().font(.caption)
                     }
                     .overlay(alignment: .trailing) {
                         Text("Fredrik \(values[1])")
                             .padding(.trailing, 6)
-                            .foregroundStyle(.black).font(.caption)
+                            .foregroundStyle(.white).bold().font(.caption)
                     }
             }
         }

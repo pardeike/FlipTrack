@@ -1,4 +1,5 @@
 import UIKit
+import SwiftUI
 
 extension UIImage {
     
@@ -53,4 +54,9 @@ extension Session {
         }
         return session
     }
+}
+
+extension Color {
+    static let color1 = Color(hue: 0.07, saturation: 1, brightness: 1)
+    static let color2 = Color(hue: 0.54, saturation: 1, brightness: 1)
 }

@@ -35,6 +35,15 @@ public final class Session: Identifiable, Hashable {
         return highest
     }
     
+    public var averageScores: [Int] {
+        guard let games, games.count > 0 else { return [0, 0] }
+        let n = Double(games.count)
+        return [
+            Int(Double(playerTotals[0]) / n),
+            Int(Double(playerTotals[1]) / n),
+        ]
+    }
+    
     public var firstPlayerIndex: Int { ((games?.count ?? 0) + 1) % 2 }
     public var firstPlayer: String { [player1, player2][firstPlayerIndex] }
     public var secondPlayer: String { [player1, player2][1 - firstPlayerIndex] }
