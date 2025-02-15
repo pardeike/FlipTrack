@@ -18,11 +18,12 @@ struct MainView: View {
                     CameraPreview()
                         .aspectRatio(2.0, contentMode: .fit)
                     Button("Take Photo") {
-                        camera.takePhoto { image in
-                            scores = [0]
-                            Task {
-                                let scores = await Analyzer.extractScore(image, 320, 0.2)
-                                if scores.count == 2 { self.scores = scores }
+                        Task {
+                            camera.takePhoto { image in
+                                Task {
+                                    let scores = await Analyzer.extractScore(image, 320, 0.2)
+                                    if scores.count == 2 { self.scores = scores }
+                                }
                             }
                         }
                     }

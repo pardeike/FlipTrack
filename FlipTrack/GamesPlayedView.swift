@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct GamesPlayedView: View {
+    @Environment(\.modelContext) private var context
+    
     let games: [Game]
     let formattedNumber: (Int) -> String
     let winningColor: (Game) -> Color
@@ -26,6 +28,7 @@ struct GamesPlayedView: View {
             }
             .frame(maxWidth: .infinity)
             .background(Color(white: 0.1))
+            .padding(.bottom, -8)
             ScrollView(.vertical) {
                 LazyVGrid(columns: columns) {
                     Text("#").padding(.trailing, 4)
@@ -57,9 +60,15 @@ struct GamesPlayedView: View {
                         }
                         .padding(6)
                         .background(winningColor(game).opacity(0.25))
+                        .gesture(
+                            LongPressGesture(minimumDuration: 2).onEnded { _ in
+                                context.delete(game)
+                                try! context.save()
+                            }
+                        )
                     }
                 }
-                .font(.title2)
+                .font(.title3)
             }
             .background(Color(white: 0.1))
             .defaultScrollAnchor(.bottom)
@@ -70,9 +79,11 @@ struct GamesPlayedView: View {
 }
 
 #Preview {
-    GamesPlayedView(games: EventViewModel.sampleGames,
-                    formattedNumber: { "\($0)" },
-                    winningColor: { [Color.red, Color.green][$0.winningIndex] })
+    let games = [
+        Game(nr: 1, scores: [12000, 32720], session: Session(date: Date.now )),
+        Game(nr: 2, scores: [480230, 19260], session: Session(date: Date.now.addingTimeInterval(24 * 3600))),
+    ]
+    GamesPlayedView(games: games, formattedNumber: { "\($0)" }, winningColor: { [Color.red, Color.green][$0.winningIndex] })
     .preferredColorScheme(.dark)
     
 }

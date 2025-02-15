@@ -1,28 +1,22 @@
 import SwiftUI
 import Foundation
 
-struct EventView: View {
-    let event: Event
-    @StateObject private var viewModel = EventViewModel()
-    @State private var eventDate: Date
-    @Environment(\.dismiss) private var dismiss
+struct SessionView: View {
+    let session: Session
 
     let color1 = Color(hue: 0.54, saturation: 1, brightness: 1)
     let color2 = Color(hue: 0.07, saturation: 1, brightness: 1)
     static let gold = Color.yellow.opacity(0.25)
 
-    init(event: Event) {
-        self.event = event
-        _eventDate = State(initialValue: event.date)
+    init(session: Session) {
+        self.session = session
     }
 
-    func formattedEventDate(for date: Date) -> String {
-        let calendar = Calendar.current
-        let hour = calendar.component(.hour, from: date)
-        let adjustedDate = (hour < 2) ? (calendar.date(byAdding: .day, value: -1, to: date) ?? date) : date
+    func formattedDate(_ date: Date) -> String {
         let formatter = DateFormatter()
+        formatter.timeZone = .current
         formatter.dateStyle = .medium
-        return formatter.string(from: adjustedDate)
+        return formatter.string(from: date)
     }
 
     func formattedNumber(_ number: Int) -> String {
@@ -46,20 +40,20 @@ struct EventView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            CurrentGameView(firstPlayer: viewModel.firstPlayer,
-                            secondPlayer: viewModel.secondPlayer,
-                            firstPlayerIndex: viewModel.firstPlayerIndex,
+            CurrentGameView(firstPlayer: session.firstPlayer,
+                            secondPlayer: session.secondPlayer,
+                            firstPlayerIndex: session.firstPlayerIndex,
                             colorFor: color(for:),
-                            gold: EventView.gold)
+                            gold: SessionView.gold)
 
-            TotalsView(playerTotals: viewModel.playerTotals,
-                       playerWins: viewModel.playerWins,
+            TotalsView(playerTotals: session.playerTotals,
+                       playerWins: session.playerWins,
                        colorFor: color(for:),
                        formattedNumber: formattedNumber,
-                       gold: EventView.gold)
+                       gold: SessionView.gold)
 
-            if !viewModel.games.isEmpty {
-                GamesPlayedView(games: viewModel.games,
+            if session.games?.isEmpty == false {
+                GamesPlayedView(games: session.games ?? [],
                                 formattedNumber: formattedNumber,
                                 winningColor: winningColor)
             } else {
@@ -67,8 +61,17 @@ struct EventView: View {
             }
 
             Button(action: {
-                Task {
-                    await viewModel.addGame(scores: [rndScore, rndScore])
+                camera.takePhoto { image in
+                    Task {
+                        let scores = await Analyzer.extractScore(image, 320, 0.2)
+                        if scores.count == 2 {
+                            let newGame = Game(nr: (session.games?.count ?? 0) + 1, scores: scores, session: session)
+                            session.games = session.games ?? []
+                            session.games?.append(newGame)
+                            session.modelContext?.insert(newGame)
+                            try? session.modelContext?.save()
+                        }
+                    }
                 }
             }) {
                 Circle()
@@ -83,12 +86,12 @@ struct EventView: View {
         }
         .padding(.horizontal)
         .preferredColorScheme(.dark)
-        .navigationTitle(formattedEventDate(for: eventDate))
+        .navigationTitle(formattedDate(session.date))
         .navigationBarTitleDisplayMode(.inline)
     }
 }
 
 
 #Preview {
-    EventView(event: Event(date: Date()))
+    SessionView(session: Session(date: Date()))
 }

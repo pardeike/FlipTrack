@@ -1,6 +1,6 @@
 import SwiftUI
 
-public struct EventHeaderView: View {
+public struct SessionHeaderView: View {
     public let formattedDate: String
     public let onBack: () -> Void
 
@@ -29,6 +29,6 @@ public struct EventHeaderView: View {
 }
 
 #Preview {
-    EventHeaderView(formattedDate: "2021-01-01") { }
+    SessionHeaderView(formattedDate: "2021-01-01") { }
         .preferredColorScheme(.dark)
 }

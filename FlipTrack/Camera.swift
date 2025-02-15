@@ -1,10 +1,9 @@
 import AVFoundation
 import SwiftUI
 
-let camera = Camera()
-
 class Camera {
     
+    var authorized = false
     let session: AVCaptureSession
     var photoOutput: AVCapturePhotoOutput?
     
