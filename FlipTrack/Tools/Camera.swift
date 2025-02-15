@@ -6,7 +6,7 @@ class Camera {
     let session: AVCaptureSession
     var photoOutput: AVCapturePhotoOutput?
     
-    typealias ImageCompletion = (UIImage) -> Void
+    typealias ImageCompletion = (UIImage?) -> Void
     var myDelegate: Delegate?
     
     init() {
@@ -34,10 +34,13 @@ class Camera {
     }
     
     class Delegate: NSObject, AVCapturePhotoCaptureDelegate {
-        let imageComletion: (UIImage) -> Void
+        let imageComletion: ImageCompletion
         public init(_ imageComletion: @escaping ImageCompletion) { self.imageComletion = imageComletion }
         func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
-            guard let data = photo.fileDataRepresentation(), let image = UIImage(data: data) else { return }
+            guard let data = photo.fileDataRepresentation(), let image = UIImage(data: data) else {
+                imageComletion(nil)
+                return
+            }
             if let normalizedImage = image.fixedOrientation().croppedBy(2.0) {
                 imageComletion(normalizedImage)
             }
@@ -54,7 +57,7 @@ class Camera {
         settings.isAutoRedEyeReductionEnabled = false
         settings.isShutterSoundSuppressionEnabled = false
         settings.photoQualityPrioritization = .quality
-        photoOutput?.capturePhoto(with: settings, delegate: myDelegate!)
+        self.photoOutput?.capturePhoto(with: settings, delegate: self.myDelegate!)
     }
 }
 

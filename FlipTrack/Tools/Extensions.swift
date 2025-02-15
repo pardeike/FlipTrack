@@ -33,3 +33,24 @@ extension UIImage {
         return normalizedImage ?? self
     }
 }
+
+extension UIDevice {
+    static var isXcodePreview: Bool {
+        ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != nil
+    }
+    static var isSimulator: Bool {
+        ProcessInfo.processInfo.environment["SIMULATOR_DEVICE_NAME"] != nil
+    }
+}
+
+extension Session {
+    static func dummy(_ deltaDays: Int = 0, _ scores: [[Int]] = []) -> Session {
+        let session = Session(date: Date.now.addingTimeInterval(-24 * 3600 * Double(deltaDays)))
+        var nr = 1
+        for score in scores {
+            session.games?.append(Game(nr: nr, scores: score, session: session))
+            nr += 1
+        }
+        return session
+    }
+}

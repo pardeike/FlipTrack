@@ -7,19 +7,10 @@ struct SessionView: View {
     @State var cameraReady = false
     
     let session: Session
-    let imageSize = 320
-    let compression = 0.2
 
     let color1 = Color(hue: 0.54, saturation: 1, brightness: 1)
     let color2 = Color(hue: 0.07, saturation: 1, brightness: 1)
     static let gold = Color.yellow.opacity(0.25)
-    
-#if targetEnvironment(simulator)
-    var rScore: Int {
-        let n = Int.random(in: 5..<300)
-        return n * n * n * 10
-    }
-#endif
 
     init(session: Session) {
         self.session = session
@@ -44,7 +35,8 @@ struct SessionView: View {
     }
 
     func winningColor(_ game: Game) -> Color {
-        color(for: game.winningIndex)
+        if game.winningIndex == -1 { return .clear }
+        return color(for: game.winningIndex)
     }
 
     var body: some View {
@@ -69,46 +61,15 @@ struct SessionView: View {
                 Spacer()
             }
             
-            if apiKey.isEmpty {
+            if apiKey.isEmpty && !UIDevice.isSimulator {
                 Button("Paste API Key") {
                     apiKey = UIPasteboard.general.string ?? ""
                 }
                 .buttonStyle(.borderedProminent)
             }
 
-            if cameraReady && !apiKey.isEmpty {
-                Button(action: {
-#if targetEnvironment(simulator)
-                    let scores = [rScore, rScore]
-                    let newGame = Game(nr: (session.games?.count ?? 0) + 1, scores: scores, session: session)
-                    session.games = session.games ?? []
-                    session.games?.append(newGame)
-                    session.modelContext?.insert(newGame)
-                    try? session.modelContext?.save()
-#else
-                    DotMatrixReader.takePhoto { image in
-                        Task {
-                            let scores = await DotMatrixReader.extractScore(apiKey, image, imageSize, compression)
-                            if scores.count == 2 {
-                                let newGame = Game(nr: (session.games?.count ?? 0) + 1, scores: scores, session: session)
-                                session.games = session.games ?? []
-                                session.games?.append(newGame)
-                                session.modelContext?.insert(newGame)
-                                try? session.modelContext?.save()
-                            }
-                        }
-                    }
-#endif
-                }) {
-                    Circle()
-                        .frame(width: 60, height: 60)
-                        .foregroundColor(.accentColor)
-                        .overlay {
-                            Image(systemName: "camera.fill")
-                                .foregroundColor(.white)
-                                .scaleEffect(1.6)
-                        }
-                }
+            if UIDevice.isSimulator || (cameraReady && !apiKey.isEmpty) {
+                CameraButton(session: session)
             }
         }
         .padding(.horizontal)
@@ -127,7 +88,10 @@ struct SessionView: View {
     }
 }
 
+#Preview("extreme") {
+    SessionView(session: Session.dummy(0, [[69068440, 12353550], [512353550, 1920]]))
+}
 
-#Preview {
-    SessionView(session: Session(date: Date()))
+#Preview("equal") {
+    SessionView(session: Session.dummy(0, [[10000, 10000]]))
 }

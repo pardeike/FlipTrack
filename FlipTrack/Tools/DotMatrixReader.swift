@@ -21,11 +21,24 @@ class DotMatrixReader {
     }
     
     static func takePhoto(_ imageCompletion: @escaping Camera.ImageCompletion) {
-        camera.takePhoto(imageCompletion)
+        if UIDevice.isSimulator {
+            imageCompletion(UIImage())
+        } else {
+            camera.takePhoto(imageCompletion)
+        }
+    }
+    
+    static var rScore: Int {
+        let n = Int.random(in: 5..<300)
+        return n * n * n * 10
     }
     
     static let url = URL(string: "https://api.openai.com/v1/chat/completions")!
     static func extractScore(_ apiKey: String, _ image: UIImage, _ maxSize: Int, _ quality: CGFloat) async -> [Int] {
+        if await UIDevice.isSimulator {
+            try? await Task.sleep(for: .seconds(2))
+            return [rScore, rScore]
+        }
         guard let imageData = renderedJPEGData(from: image, maxSize: maxSize, quality: quality) else { return [] }
         let base64 = imageData.base64EncodedString()
         let body = """

@@ -2,7 +2,7 @@ import SwiftData
 import Foundation
 
 @Model
-public final class Session: Identifiable {
+public final class Session: Identifiable, Hashable {
     public var id = UUID()
     public var date = Date()
     public var player1 = "Andreas"
@@ -22,7 +22,7 @@ public final class Session: Identifiable {
     
     public var playerWins: [Int] {
         var wins = [0, 0]
-        _ = games?.map { wins[$0.winningIndex] += 1 }
+        _ = games?.filter { $0.winningIndex >= 0 }.map { wins[$0.winningIndex] += 1 }
         return wins
     }
     
