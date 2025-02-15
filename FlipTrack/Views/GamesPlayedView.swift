@@ -1,5 +1,4 @@
 import SwiftUI
-import _SwiftData_SwiftUI
 
 struct ScoreEditView: View {
     let game: Game
