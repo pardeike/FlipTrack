@@ -26,6 +26,15 @@ public final class Session: Identifiable, Hashable {
         return wins
     }
     
+    public var highScores: [Int] {
+        var highest = [0, 0]
+        _ = games?.map {
+            highest[0] = max(highest[0], $0.scores[0])
+            highest[1] = max(highest[1], $0.scores[1])
+        }
+        return highest
+    }
+    
     public var firstPlayerIndex: Int { ((games?.count ?? 0) + 1) % 2 }
     public var firstPlayer: String { [player1, player2][firstPlayerIndex] }
     public var secondPlayer: String { [player1, player2][1 - firstPlayerIndex] }

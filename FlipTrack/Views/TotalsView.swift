@@ -3,6 +3,7 @@ import SwiftUI
 public struct TotalsView: View {
     public let playerTotals: [Int]
     public let playerWins: [Int]
+    public let highScores: [Int]
     public let colorFor: (Int) -> Color
     public let formattedNumber: (Int) -> String
     public let gold: Color
@@ -14,13 +15,26 @@ public struct TotalsView: View {
     private var playerWinIndex: Int {
         playerWins[0] == playerWins[1] ? -1 : (playerWins[0] > playerWins[1] ? 0 : 1)
     }
+    
+    func highestScoreBGColor(_ idx: Int) -> Color {
+        let hs = highScores
+        if hs[0] == hs[1] { return .clear }
+        return [.black, .white][hs[idx] > hs[1 - idx] ? 0 : 1]
+    }
+    
+    func highestScoreColor(_ idx: Int) -> Color {
+        let hs = highScores
+        if hs[0] == hs[1] { return .clear }
+        return [gold, .clear][hs[idx] > hs[1 - idx] ? 0 : 1]
+    }
 
     private var background1: [Color] { [.clear, gold, .clear] }
     private var background2: [Color] { [.clear, .clear, gold] }
 
-    public init(playerTotals: [Int], playerWins: [Int], colorFor: @escaping (Int) -> Color, formattedNumber: @escaping (Int) -> String, gold: Color) {
+    public init(playerTotals: [Int], playerWins: [Int], highScores: [Int], colorFor: @escaping (Int) -> Color, formattedNumber: @escaping (Int) -> String, gold: Color) {
         self.playerTotals = playerTotals
         self.playerWins = playerWins
+        self.highScores = highScores
         self.colorFor = colorFor
         self.formattedNumber = formattedNumber
         self.gold = gold
@@ -45,6 +59,21 @@ public struct TotalsView: View {
             .bold()
             .frame(maxWidth: .infinity)
             .padding(.bottom, 6)
+            GridRow {
+                Text(formattedNumber(highScores[0]))
+                    .bold()
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+                    .background(highestScoreColor(0))
+                Text(formattedNumber(highScores[1]))
+                    .bold()
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+                    .background(highestScoreColor(1))
+            }
+            .font(.title2)
             GridRow {
                 Text(formattedNumber(playerTotals[0]))
                     .foregroundColor(colorFor(0))
@@ -81,6 +110,7 @@ public struct TotalsView: View {
 #Preview {
     TotalsView(playerTotals: [1000, 2000],
                playerWins: [33, 22],
+               highScores: [4000, 6000],
                colorFor: { [Color.red, Color.green][$0] },
                formattedNumber: { "(\($0))" },
                gold: .yellow)

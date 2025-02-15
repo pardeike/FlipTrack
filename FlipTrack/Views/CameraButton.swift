@@ -11,8 +11,8 @@ struct CameraButton: View {
     @State var state = ProcessingState.ready
     
     let session: Session
-    let imageSize = 480
-    let compression = 0.4
+    let imageSize = 960
+    let compression = 0.8
     
     func processImage(_ image: UIImage) async {
         state = .processing

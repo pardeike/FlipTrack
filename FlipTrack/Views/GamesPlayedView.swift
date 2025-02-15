@@ -78,6 +78,13 @@ struct GamesPlayedView: View {
         editScoreIndex = scoreIndex
         isEditing = true
     }
+    
+    func textColor(_ game: Game, _ index: Int) -> Color {
+        guard let session = game.session else { return .white }
+        let hs = session.highScores
+        if game.scores[index] == hs[index] { return .yellow }
+        return .white
+    }
 
     var body: some View {
         VStack {
@@ -111,6 +118,7 @@ struct GamesPlayedView: View {
                                         .foregroundColor(.yellow)
                                 }
                                 Text(formattedNumber(game.scores[0]))
+                                    .foregroundStyle(textColor(game, 0))
                                     .onTapGesture(count: 2) {
                                         startEdit(game, 0)
                                     }
@@ -122,6 +130,7 @@ struct GamesPlayedView: View {
                                         .foregroundColor(.yellow)
                                 }
                                 Text(formattedNumber(game.scores[1]))
+                                    .foregroundStyle(textColor(game, 1))
                                     .onTapGesture(count: 2) { startEdit(game, 1) }
                                     .padding(.trailing, 6)
                             }

@@ -49,6 +49,7 @@ struct SessionView: View {
 
             TotalsView(playerTotals: session.playerTotals,
                        playerWins: session.playerWins,
+                       highScores: session.highScores,
                        colorFor: color(for:),
                        formattedNumber: formattedNumber,
                        gold: SessionView.gold)

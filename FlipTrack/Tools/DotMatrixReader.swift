@@ -80,7 +80,7 @@ class DotMatrixReader {
         let (w, h) = (image.size.width, image.size.height)
         let f = CGFloat(maxSize) / max(w, h)
         let size = CGSize(width: w * f, height: h * f)
-        #if ENHANCE
+        //#if ENHANCE
         guard let inputCIImage = CIImage(image: image) else { return nil }
         
         guard let colorControlsFilter = CIFilter(name: "CIColorControls") else { return nil }
@@ -103,9 +103,9 @@ class DotMatrixReader {
         let renderedImage = renderer.image { _ in
             processedImage.draw(in: CGRect(origin: .zero, size: size))
         }
-        #else
-        let renderedImage = image
-        #endif 
+        //#else
+        //let renderedImage = image
+        //#endif 
         return renderedImage.jpegData(compressionQuality: quality)
     }
 
