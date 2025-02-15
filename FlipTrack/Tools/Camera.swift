@@ -3,7 +3,6 @@ import SwiftUI
 
 class Camera {
     
-    var authorized = false
     let session: AVCaptureSession
     var photoOutput: AVCapturePhotoOutput?
     
@@ -64,7 +63,7 @@ struct CameraPreview: UIViewRepresentable {
     func makeUIView(context: Context) -> VideoPreviewView {
         let view = VideoPreviewView()
         view.backgroundColor = .black
-        view.videoPreviewLayer.session = camera.session
+        view.videoPreviewLayer.session = DotMatrixReader.session
         view.videoPreviewLayer.videoGravity = .resizeAspectFill
         view.videoPreviewLayer.connection?.videoRotationAngle = 90
         return view

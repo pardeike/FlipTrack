@@ -10,25 +10,27 @@ struct Bar: View {
     let values: [Int]
     var f: CGFloat { CGFloat(values[0]) / CGFloat(values[0] + values[1]) }
     var body: some View {
-        GeometryReader { geo in
-            Rectangle()
-                .fill(color(for: 1))
-                .frame(width: geo.size.width, height: 20)
-                .overlay(alignment: .leading) {
-                    Rectangle()
-                        .fill(color(for: 0))
-                        .frame(width: geo.size.width * f, height: 20)
-                }
-                .overlay(alignment: .leading) {
-                    Text("\(values[0]) Andreas")
-                        .padding(.leading, 6)
-                        .foregroundStyle(.black).font(.caption)
-                }
-                .overlay(alignment: .trailing) {
-                    Text("Fredrik \(values[1])")
-                        .padding(.trailing, 6)
-                        .foregroundStyle(.black).font(.caption)
-                }
+        if values[0] + values[1] > 0 {
+            GeometryReader { geo in
+                Rectangle()
+                    .fill(color(for: 1))
+                    .frame(width: geo.size.width, height: 20)
+                    .overlay(alignment: .leading) {
+                        Rectangle()
+                            .fill(color(for: 0))
+                            .frame(width: geo.size.width * f, height: 20)
+                    }
+                    .overlay(alignment: .leading) {
+                        Text("\(values[0]) Andreas")
+                            .padding(.leading, 6)
+                            .foregroundStyle(.black).font(.caption)
+                    }
+                    .overlay(alignment: .trailing) {
+                        Text("Fredrik \(values[1])")
+                            .padding(.trailing, 6)
+                            .foregroundStyle(.black).font(.caption)
+                    }
+            }
         }
     }
 }
@@ -36,6 +38,7 @@ struct Bar: View {
 struct SessionsView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \Session.date) private var sessions: [Session]
+    @State var authorized = false
     
     func formattedDate(_ date: Date) -> String {
         let formatter = DateFormatter()
@@ -45,7 +48,7 @@ struct SessionsView: View {
     }
     
     var reversedSessions: [Session] {
-        Array(sessions.reversed())
+        sessions.sorted(using: SortDescriptor(\Session.date)).reversed()
     }
     
     func addSession() {
@@ -65,7 +68,7 @@ struct SessionsView: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(sessions.reversed()) { session in
+                ForEach(reversedSessions) { session in
                     NavigationLink {
                         SessionView(session: session)
                     } label: {
@@ -91,10 +94,10 @@ struct SessionsView: View {
         .onAppear {
             if AVCaptureDevice.authorizationStatus(for: .video) != .authorized {
                 AVCaptureDevice.requestAccess(for: .video) { granted in
-                    camera.authorized = granted
+                    authorized = granted
                 }
             } else {
-                camera.authorized = true
+                authorized = true
             }
         }
         .preferredColorScheme(.dark)

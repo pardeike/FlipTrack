@@ -14,6 +14,12 @@ struct GamesPlayedView: View {
             GridItem(.flexible(minimum: 0, maximum: .infinity), spacing: 0, alignment: .trailing)
         ]
     }
+    
+#if targetEnvironment(simulator)
+    let longPressDuration = 0.25
+#else
+    let longPressDuration = 3
+#endif
 
     var body: some View {
         VStack {
@@ -34,7 +40,7 @@ struct GamesPlayedView: View {
                     Text("#").padding(.trailing, 4)
                     Text("Andreas").padding(.trailing, 4)
                     Text("Fredrik").padding(.trailing, 10)
-                    ForEach(Array(games.enumerated()), id: \.element.id) { _, game in
+                    ForEach(Array(games.sorted(using: SortDescriptor(\Game.nr)).enumerated()), id: \.element.id) { _, game in
                         Group {
                             HStack {
                                 Spacer()
@@ -61,7 +67,7 @@ struct GamesPlayedView: View {
                         .padding(6)
                         .background(winningColor(game).opacity(0.25))
                         .gesture(
-                            LongPressGesture(minimumDuration: 2).onEnded { _ in
+                            LongPressGesture(minimumDuration: longPressDuration).onEnded { _ in
                                 context.delete(game)
                                 try! context.save()
                             }

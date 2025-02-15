@@ -2,6 +2,15 @@ import SwiftUI
 import AVFoundation
 import SwiftData
 
+@Model
+final class Item {
+    var timestamp: Date
+    
+    init(timestamp: Date) {
+        self.timestamp = timestamp
+    }
+}
+
 struct MainView: View {
     @Environment(\.modelContext) private var modelContext
     @AppStorage("openai-api-key") private var apiKey: String = ""
@@ -19,9 +28,9 @@ struct MainView: View {
                         .aspectRatio(2.0, contentMode: .fit)
                     Button("Take Photo") {
                         Task {
-                            camera.takePhoto { image in
+                            DotMatrixReader.takePhoto { image in
                                 Task {
-                                    let scores = await Analyzer.extractScore(image, 320, 0.2)
+                                    let scores = await DotMatrixReader.extractScore(apiKey, image, 320, 0.2)
                                     if scores.count == 2 { self.scores = scores }
                                 }
                             }

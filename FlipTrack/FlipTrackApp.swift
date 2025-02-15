@@ -1,8 +1,6 @@
 import SwiftUI
 import SwiftData
 
-let camera = Camera()
-
 @main
 struct FlipTrackApp: App {
     let sharedModelContainer: ModelContainer = {

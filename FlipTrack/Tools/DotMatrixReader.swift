@@ -1,6 +1,10 @@
 import UIKit
+import AVFoundation
 
-class Analyzer {
+class DotMatrixReader {
+    
+    static let camera = Camera()
+    static var session: AVCaptureSession { camera.session }
     
     struct ImageResponse: Decodable {
         struct Choice: Decodable {
@@ -16,8 +20,12 @@ class Analyzer {
         let choices: [Choice]
     }
     
+    static func takePhoto(_ imageCompletion: @escaping Camera.ImageCompletion) {
+        camera.takePhoto(imageCompletion)
+    }
+    
     static let url = URL(string: "https://api.openai.com/v1/chat/completions")!
-    static func extractScore(_ image: UIImage, _ maxSize: Int, _ quality: CGFloat) async -> [Int] {
+    static func extractScore(_ apiKey: String, _ image: UIImage, _ maxSize: Int, _ quality: CGFloat) async -> [Int] {
         guard let imageData = renderedJPEGData(from: image, maxSize: maxSize, quality: quality) else { return [] }
         let base64 = imageData.base64EncodedString()
         let body = """
@@ -42,7 +50,6 @@ class Analyzer {
         }
         """
         var request = URLRequest(url: url)
-        guard let apiKey = UserDefaults.standard.string(forKey: "openai-api-key") else { return [] }
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.httpMethod = "POST"
