@@ -28,9 +28,14 @@ public struct TotalsView: View {
         return avg[0] > avg[1] ? 0 : 1
     }
 
-    private let bgColor: (AnyView) -> AnyView = Color(white: 0.1).asBackground()
-    private var background1: [Color] { [.clear, Color.highlight, .clear] }
-    private var background2: [Color] { [.clear, .clear, Color.highlight] }
+    func fgColor(_ idx: Int, _ player: Int) -> Color {
+        if idx == player { return .yellow }
+        return .white
+    }
+    
+    var bgColor: (AnyView) -> AnyView { Color(white: 0.1).asBackground() }
+    var bg1: Color { colorFor(0).mix(with: .black, by: 0.5) }
+    var bg2: Color { colorFor(1).mix(with: .black, by: 0.5) }
 
     public init(playerTotals: [Int], playerWins: [Int], highScores: [Int], averageScores: [Int], colorFor: @escaping (Int) -> Color, formattedNumber: @escaping (Int) -> String) {
         self.playerTotals = playerTotals
@@ -43,131 +48,143 @@ public struct TotalsView: View {
 
     public var body: some View {
         VStack(spacing: 0) {
-            SectionHeader(title: "STATS")
+            SectionHeader(title: "STATS").padding(.bottom, -8)
             // players
             PrefixedRow(background1: bgColor, background2: bgColor, column1: {
-                Text(" ")
+                Text("")
             }, column2: {
                 HStack {
                     Spacer()
                     Text("Andreas")
-                        .foregroundColor(colorFor(0))
-                        .font(.headline)
-                        .bold()
+                        .padding(.vertical, 2)
                         .padding(.trailing, 6)
+                        .font(.title3)
                 }
             }, column3: {
                 HStack {
                     Spacer()
                     Text("Fredrik")
-                        .foregroundColor(colorFor(1))
-                        .font(.headline)
+                        .padding(.vertical, 2)
                         .padding(.trailing, 6)
-                        .bold()
+                        .font(.title3)
                 }
             })
+            
             // games
             PrefixedRow(background1: bgColor, background2: bgColor, column1: {
-                Text("#").bold()
-                    .foregroundStyle(Color.gold)
-                    .font(.title2)
+                Image(systemName: "trophy.fill")
+                    .foregroundStyle(.yellow)
             }, column2: {
                 HStack {
                     Spacer()
                     Text("\(playerWins[0])")
-                        .foregroundColor(colorFor(0))
-                        .padding(.vertical, 2)
+                        .foregroundColor(fgColor(playerWinIndex, 0))
+                        .padding(.vertical, 6)
                         .padding(.trailing, 6)
-                        .font(.title2)
+                        .font(.title3)
+                        .bold()
                 }
-                .if(playerWinIndex == 0) { $0.frame(maxWidth: .infinity).goldShine() }
+                .background { bg1 }
             }, column3: {
                 HStack {
                     Spacer()
                     Text("\(playerWins[1])")
-                        .foregroundColor(colorFor(1))
-                        .padding(.vertical, 2)
+                        .foregroundColor(fgColor(playerWinIndex, 1))
+                        .padding(.vertical, 6)
                         .padding(.trailing, 6)
-                        .font(.title2)
+                        .font(.title3)
+                        .bold()
                 }
-                .if(playerWinIndex == 1) { $0.frame(maxWidth: .infinity).goldShine() }
+                .background { bg2 }
             })
+            .padding(.bottom, 2)
+            
             // highest
             PrefixedRow(background1: bgColor, background2: bgColor, column1: {
                 Image(systemName: "star.fill")
-                    .foregroundStyle(Color.gold)
+                    .foregroundStyle(.yellow)
             }, column2: {
                 HStack {
                     Spacer()
                     Text(formattedNumber(highScores[0]))
-                        .bold()
-                        .foregroundColor(colorFor(0))
+                        .foregroundColor(fgColor(highestScoreIndex(), 0))
                         .padding(.vertical, 6)
                         .padding(.trailing, 6)
-                        .font(.title2)
+                        .font(.title3)
+                        .bold()
                 }
-                .if(highestScoreIndex() == 0) { $0.frame(maxWidth: .infinity).goldShine() }
+                .background { bg1 }
             }, column3: {
                 HStack {
                     Spacer()
                     Text(formattedNumber(highScores[1]))
-                        .bold()
-                        .foregroundColor(colorFor(1))
+                        .foregroundColor(fgColor(highestScoreIndex(), 1))
                         .padding(.vertical, 6)
                         .padding(.trailing, 6)
-                        .font(.title2)
+                        .font(.title3)
+                        .bold()
                 }
-                .if(highestScoreIndex() == 1) { $0.frame(maxWidth: .infinity).goldShine() }
+                .background { bg2 }
             })
+            .padding(.bottom, 2)
+            
             // total
             PrefixedRow(background1: bgColor, background2: bgColor, column1: {
                 Image(systemName: "sum")
-                    .fontWeight(.heavy).foregroundStyle(Color.gold)
+                    .bold()
+                    .foregroundStyle(.yellow.opacity(0.75))
             }, column2: {
                 HStack {
                     Spacer()
                     Text(formattedNumber(playerTotals[0]))
-                        .foregroundColor(colorFor(0))
+                        .foregroundColor(fgColor(playerTotalIndex, 0))
                         .padding(.vertical, 6)
                         .padding(.trailing, 6)
-                        .font(.title2)
+                        .font(.title3)
+                        .opacity(0.75)
                 }
-                .if(playerTotalIndex == 0) { $0.frame(maxWidth: .infinity).goldShine() }
+                .background { bg1 }
             }, column3: {
                 HStack {
                     Spacer()
                     Text(formattedNumber(playerTotals[1]))
-                        .foregroundColor(colorFor(1))
+                        .foregroundColor(fgColor(playerTotalIndex, 1))
                         .padding(.vertical, 6)
                         .padding(.trailing, 6)
-                        .font(.title2)
+                        .font(.title3)
+                        .opacity(0.75)
                 }
-                .if(playerTotalIndex == 1) { $0.frame(maxWidth: .infinity).goldShine() }
+                .background { bg2 }
             })
+            .padding(.bottom, 2)
+            
             // average
             PrefixedRow(background1: bgColor, background2: bgColor, column1: {
                 Image(systemName: "divide")
-                    .fontWeight(.heavy).foregroundStyle(Color.gold)
+                    .bold()
+                    .foregroundStyle(.yellow.opacity(0.75))
             }, column2: {
                 HStack {
                     Spacer()
                     Text("~ " + formattedNumber(averageScores[0]))
-                        .foregroundColor(colorFor(0))
+                        .foregroundColor(fgColor(averageScoreIndex(), 0))
                         .padding(.vertical, 6)
                         .padding(.trailing, 6)
-                        .font(.title2)
+                        .font(.title3)
+                        .opacity(0.75)
                 }
-                .if(averageScoreIndex() == 0) { $0.frame(maxWidth: .infinity).goldShine() }
+                .background { bg1 }
             }, column3: {
                 HStack {
                     Spacer()
                     Text("~ " + formattedNumber(averageScores[1]))
-                        .foregroundColor(colorFor(1))
+                        .foregroundColor(fgColor(averageScoreIndex(), 1))
                         .padding(.vertical, 6)
                         .padding(.trailing, 6)
-                        .font(.title2)
+                        .font(.title3)
+                        .opacity(0.75)
                 }
-                .if(averageScoreIndex() == 1) { $0.frame(maxWidth: .infinity).goldShine() }
+                .background { bg2 }
             })
             .padding(.bottom, 20)
         }

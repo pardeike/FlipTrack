@@ -75,8 +75,7 @@ extension Color {
     static let color1b = color1.mix(with: .black, by: 0.3)
     static let color2 = Color(hue: 0.54, saturation: 1, brightness: 1)
     static let color2b = color2.mix(with: .black, by: 0.3)
-    static let gold = Color.yellow
-    static let highlight = gold.mix(with: .black, by: 0.3)
+    static let highlight = Color.yellow.mix(with: .black, by: 0.3)
     func asBackground() -> (AnyView) -> AnyView {
         { view in AnyView(view.background(self)) }
     }

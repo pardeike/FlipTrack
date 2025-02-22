@@ -35,7 +35,7 @@ struct GamesPlayedView: View {
     func textColor(_ game: Game, _ index: Int) -> Color {
         guard let session = game.session else { return .white }
         let hs = session.highScores
-        if game.scores[index] == hs[index] { return Color.gold }
+        if game.scores[index] == hs[index] { return Color.yellow }
         return .white
     }
     
@@ -61,7 +61,7 @@ struct GamesPlayedView: View {
                                     Spacer()
                                     if isHighestScore(game, 0) {
                                         Image(systemName: "star.fill")
-                                            .foregroundColor(Color.gold)
+                                            .foregroundColor(Color.yellow)
                                     }
                                     Text(formattedNumber(game.scores[0]))
                                         .foregroundStyle(textColor(game, 0))
@@ -76,12 +76,11 @@ struct GamesPlayedView: View {
                                     Spacer()
                                     if isHighestScore(game, 1) {
                                         Image(systemName: "star.fill")
-                                            .foregroundColor(Color.gold)
+                                            .foregroundColor(Color.yellow)
                                     }
                                     Text(formattedNumber(game.scores[1]))
                                         .foregroundStyle(textColor(game, 1))
                                         .onTapGesture(count: 2) { startEdit(game, 1) }
-                                        .padding(.trailing, 6)
                                 }
                                 .font(.title3)
                                 .padding(6)

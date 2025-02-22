@@ -37,8 +37,8 @@ struct MaxHeight {
 
 struct PrefixedRow<Column1: View, Column2: View, Column3: View>: View {
     var firstColumnWidth = CGFloat(50)
-    let background1: (AnyView) -> AnyView
-    let background2: (AnyView) -> AnyView
+    var background1: (AnyView) -> AnyView = { $0 }
+    var background2: (AnyView) -> AnyView = { $0 }
     let column1: () -> Column1
     let column2: () -> Column2
     let column3: () -> Column3
@@ -74,8 +74,8 @@ struct PrefixedRow<Column1: View, Column2: View, Column3: View>: View {
     let t1 = Text("Andreas").font(.title2).bold().foregroundColor(.blue).padding()
     let t2 = Text("Fredrik").font(.title2).bold().foregroundColor(.black).padding()
     VStack(spacing: 0) {
-        PrefixedRow(background1: Color.goldShine, background2: Color.gray.asBackground()) { star } column2: { t1 } column3: { t2 }
-        PrefixedRow(background1: { view in AnyView(view.goldShine()) }, background2: Color.gray.asBackground()) { star } column2: { t1 } column3: { t2 }
-        PrefixedRow(background1: { view in AnyView(view.goldShine()) }, background2: Color.gray.asBackground()) { star } column2: { t1 } column3: { t2 }
+        PrefixedRow(background1: Color.yellow.asBackground(), background2: Color.gray.asBackground()) { star } column2: { t1 } column3: { t2 }
+        PrefixedRow(background1: Color.yellow.asBackground(), background2: Color.gray.asBackground()) { star } column2: { t1 } column3: { t2 }
+        PrefixedRow(background1: Color.yellow.asBackground(), background2: Color.gray.asBackground()) { star } column2: { t1 } column3: { t2 }
     }
 }

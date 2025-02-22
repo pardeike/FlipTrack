@@ -5,24 +5,43 @@ struct CurrentGameView: View {
     let secondPlayer: String
     let firstPlayerIndex: Int
     let colorFor: (Int) -> Color
+    
+    func bgColor(_ index: Int) -> Color {
+        index == firstPlayerIndex
+        ? colorFor(0).mix(with: .black, by: 0.5)
+        : colorFor(1).mix(with: .black, by: 0.5)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
             SectionHeader(title: "CURRENT")
-            PrefixedRow(background1: Color.goldShine, background2: Color(white: 0.1).asBackground(), column1: {
-                Image(systemName: "arrow.right.circle.fill").foregroundColor(colorFor(firstPlayerIndex))
+            PrefixedRow(background1: Color(white: 0.1).asBackground(), background2: Color(white: 0.1).asBackground(), column1: {
+                Image(systemName: "arcade.stick")
+                    .foregroundStyle(.yellow)
             }, column2: {
-                Text(firstPlayer)
-                    .foregroundColor(colorFor(firstPlayerIndex))
-                    .font(.title)
-                    .bold()
-                    .padding(.vertical, 6)
+                HStack {
+                    Image(systemName: "1.square.fill")
+                        .scaleEffect(1.25)
+                        .padding(.trailing, 6)
+                    Text(firstPlayer)
+                        .font(.title2)
+                        .bold()
+                        .padding(.vertical, 6)
+                }
+                .frame(maxWidth: .infinity)
+                .background { bgColor(0) }
             }, column3: {
-                Text(secondPlayer)
-                    .foregroundColor(colorFor(1 - firstPlayerIndex).opacity(0.1))
-                    .font(.title)
-                    .bold()
-                    .padding(.vertical, 6)
+                HStack {
+                    Image(systemName: "2.square.fill")
+                        .scaleEffect(1.25)
+                        .padding(.trailing, 6)
+                    Text(secondPlayer)
+                        .font(.title2)
+                        .bold()
+                        .padding(.vertical, 6)
+                }
+                .frame(maxWidth: .infinity)
+                .background { bgColor(1) }
             })
             .padding(.bottom, 20)
         }

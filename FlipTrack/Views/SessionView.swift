@@ -71,7 +71,7 @@ struct SessionView: View {
                                                 .frame(width: 400, height: 200)
                                                 .padding(2)
                                         }
-                                        .background(Color.gold)
+                                        .background(Color.yellow)
                                         .offset(CGSize(width: 0, height: -170))
                                     }
                                 }
