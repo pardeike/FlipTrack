@@ -1,5 +1,19 @@
 import UIKit
+import AVFoundation
 import SwiftUI
+
+extension View {
+    @ViewBuilder func `if`<Content: View>(
+        _ condition: Bool,
+        transform: (Self) -> Content
+    ) -> some View {
+        if condition {
+            transform(self)
+        } else {
+            self
+        }
+    }
+}
 
 extension UIImage {
     
@@ -58,5 +72,44 @@ extension Session {
 
 extension Color {
     static let color1 = Color(hue: 0.07, saturation: 1, brightness: 1)
+    static let color1b = color1.mix(with: .black, by: 0.3)
     static let color2 = Color(hue: 0.54, saturation: 1, brightness: 1)
+    static let color2b = color2.mix(with: .black, by: 0.3)
+    static let gold = Color.yellow
+    static let highlight = gold.mix(with: .black, by: 0.3)
+    func asBackground() -> (AnyView) -> AnyView {
+        { view in AnyView(view.background(self)) }
+    }
+}
+
+extension NumberFormatter {
+    static let american: NumberFormatter = ({
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.locale = Locale(identifier: "en_US")
+        return formatter
+    })()
+}
+
+extension CIImage {
+    func preprocessImage() -> CIImage {
+        // Step 1: Adjust contrast and saturation.
+        let colorControls = CIFilter(name: "CIColorControls")!
+        colorControls.setValue(self, forKey: kCIInputImageKey)
+        // Increase contrast to help the digits pop out.
+        colorControls.setValue(1.5, forKey: kCIInputContrastKey)
+        // Reduce saturation to remove distracting color noise.
+        colorControls.setValue(0.0, forKey: kCIInputSaturationKey)
+        
+        // Step 2: Apply a median filter to smooth out the dot noise.
+        let medianFilter = CIFilter(name: "CIMedianFilter")!
+        medianFilter.setValue(colorControls.outputImage, forKey: kCIInputImageKey)
+        
+        // Step 3: Sharpen the image to enhance the edges.
+        let sharpenFilter = CIFilter(name: "CISharpenLuminance")!
+        sharpenFilter.setValue(medianFilter.outputImage, forKey: kCIInputImageKey)
+        sharpenFilter.setValue(0.5, forKey: kCIInputSharpnessKey)
+        
+        return sharpenFilter.outputImage!
+    }
 }

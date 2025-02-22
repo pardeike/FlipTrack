@@ -1,76 +1,60 @@
 import SwiftUI
 
-enum ProcessingState {
-    case ready
-    case capturing
-    case processing
-}
-
 struct CameraButton: View {
-    @AppStorage("openai-api-key") private var apiKey: String = ""
-    @State var state = ProcessingState.ready
-    
+    @State var isPressed = false
+    @Binding var scanning: Bool
     let session: Session
-    let imageSize = 960
-    let compression = 0.8
     
-    func processImage(_ image: UIImage) async {
-        state = .processing
-        defer { state = .ready }
-        let scores = await DotMatrixReader.extractScore(apiKey, image, imageSize, compression)
-        if scores.count == 2 {
-            let nr = (session.games?.count ?? 0) + 1
-            let newGame = Game(nr: nr, scores: scores, session: session)
-            session.games = session.games ?? []
-            session.games?.append(newGame)
-            session.modelContext?.insert(newGame)
-            try? session.modelContext?.save()
-        }
+    init(session: Session, scanning: Binding<Bool>) {
+        self.session = session
+        _scanning = scanning
     }
     
-    var buttonImageName: String {
-        switch state {
-            case .ready: return "camera.fill"
-            case .capturing: return "camera"
-            case .processing: return "arkit"
-        }
-    }
-    
-    var buttonColor: Color {
-        switch state {
-            case .ready: return .accentColor
-            case .capturing: return .red
-            case .processing: return .gray
-        }
+    func updateState(_ active: Bool) {
+        isPressed = active
+        DispatchQueue.main.async { scanning = active }
     }
     
     var body: some View {
-        Button(action: {
-            guard state == .ready else { return }
-            state = .capturing
-            DotMatrixReader.takePhoto { image in
-                if let image {
-                    Task { await processImage(image) }
-                } else {
-                    state = .ready
-                }
+        RoundedRectangle(cornerSize: .init(width: 8, height: 8))
+            .frame(width: 160, height: 50)
+            .foregroundColor(scanning ? .gray : .accentColor)
+            .overlay {
+                Image(systemName: "camera.fill")
+                    .animation(nil, value: UUID())
+                    .foregroundColor(.white)
+                    .scaleEffect(1.6)
             }
-        }) {
-            RoundedRectangle(cornerSize: .init(width: 8, height: 8))
-                .frame(width: 160, height: 50)
-                .foregroundColor(buttonColor)
-                .overlay {
-                    Image(systemName: buttonImageName)
-                        .animation(nil, value: UUID())
-                        .foregroundColor(.white)
-                        .scaleEffect(1.6)
+            .animation(nil, value: UUID())
+            .onLongPressGesture(
+                minimumDuration: 0,
+                perform: { },
+                onPressingChanged: { pressed in
+                    if pressed && isPressed == false {
+                        updateState(true)
+                        Scanner.startScanning { scores in
+                            updateState(false)
+                            Scanner.stopScanning()
+                            Task {
+                                let count = session.games?.count ?? 0
+                                session.games?.append(Game(nr: count + 1, scores: scores, session: session))
+                            }
+                        }
+                    }
+                    if pressed == false && isPressed {
+                        updateState(false)
+                        Scanner.stopScanning()
+                    }
                 }
-                .animation(nil, value: UUID())
-        }
-        .animation(nil, value: UUID())
+            )
     }
 }
 
 #Preview {
-    CameraButton(state: .ready, session: Session.dummy())
+    @Previewable @State var scanning = false
+    Spacer()
+    if scanning {
+        CameraPreview().frame(width: 320, height: 240)
+    }
+    CameraButton(session: Session.dummy(), scanning: $scanning)
 }

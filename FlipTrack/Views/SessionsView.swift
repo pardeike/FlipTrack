@@ -64,7 +64,7 @@ struct SessionsView: View {
                         HStack(alignment: .center) {
                             Text(formattedDate(session.date)).font(.title2)
                             Spacer()
-                            Bar(values: session.playerWins).padding()
+                            OverviewBalanceBar(values: session.playerWins).padding()
                                 .padding(.top, 6)
                         }
                     }

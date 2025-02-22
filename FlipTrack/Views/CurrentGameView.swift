@@ -5,58 +5,34 @@ struct CurrentGameView: View {
     let secondPlayer: String
     let firstPlayerIndex: Int
     let colorFor: (Int) -> Color
-    let gold: Color
 
     var body: some View {
-        VStack {
-            Grid(alignment: .center) {
-                GridRow {
-                    Text("CURRENT")
-                        .font(.headline)
-                        .foregroundColor(.gray)
-                        .padding(6)
-                        .gridCellColumns(3)
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .background(Color(white: 0.1))
-            .padding(.bottom, -8)
-            
-            LazyVGrid(columns: [
-                GridItem(.fixed(50), spacing: 0, alignment: .center),
-                GridItem(.flexible(minimum: 0, maximum: .infinity), spacing: 0, alignment: .trailing),
-                GridItem(.flexible(minimum: 0, maximum: .infinity), spacing: 0, alignment: .trailing)
-            ]) {
-                Image(systemName: "arrow.right.circle.fill")
-                    .foregroundStyle(.yellow)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding(.vertical, 6)
-                    .background(gold)
+        VStack(spacing: 0) {
+            SectionHeader(title: "CURRENT")
+            PrefixedRow(background1: Color.goldShine, background2: Color(white: 0.1).asBackground(), column1: {
+                Image(systemName: "arrow.right.circle.fill").foregroundColor(colorFor(firstPlayerIndex))
+            }, column2: {
                 Text(firstPlayer)
                     .foregroundColor(colorFor(firstPlayerIndex))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 6)
-                    .background(gold)
                     .font(.title)
                     .bold()
+                    .padding(.vertical, 6)
+            }, column3: {
                 Text(secondPlayer)
                     .foregroundColor(colorFor(1 - firstPlayerIndex).opacity(0.1))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 6)
                     .font(.title)
                     .bold()
-            }
-            .background(Color(white: 0.1))
+                    .padding(.vertical, 6)
+            })
             .padding(.bottom, 20)
         }
     }
 }
 
 #Preview {
-    CurrentGameView(firstPlayer: "A",
-        secondPlayer: "B",
+    CurrentGameView(firstPlayer: "Andreas",
+        secondPlayer: "Fredrik",
         firstPlayerIndex: 0,
-        colorFor: { [Color.red, Color.green][$0] },
-        gold: .yellow)
+        colorFor: { [Color.red, Color.green][$0] })
         .preferredColorScheme(.dark)
 }

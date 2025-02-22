@@ -10,6 +10,10 @@ struct GamesPlayedView: View {
     @State var editGame: Game? = nil
     @State var editScoreIndex = 0
     
+    func bgColor(_ game: Game) -> (AnyView) -> AnyView {
+        winningColor(game).mix(with: .black, by: 0.5).asBackground()
+    }
+    
     let numberFormatter = ({
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
@@ -31,7 +35,7 @@ struct GamesPlayedView: View {
     func textColor(_ game: Game, _ index: Int) -> Color {
         guard let session = game.session else { return .white }
         let hs = session.highScores
-        if game.scores[index] == hs[index] { return .yellow }
+        if game.scores[index] == hs[index] { return Color.gold }
         return .white
     }
     
@@ -44,33 +48,20 @@ struct GamesPlayedView: View {
     var sortedGames: [Game] { games.sorted(using: SortDescriptor(\Game.nr)).reversed() }
     
     var body: some View {
-        VStack {
-            Grid(alignment: .center) {
-                GridRow {
-                    Text("GAMES")
-                        .font(.headline)
-                        .foregroundColor(.gray)
-                        .padding(6)
-                        .gridCellColumns(3)
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .background(Color(white: 0.1))
-            .padding(.bottom, -8)
+        VStack(spacing: 0) {
+            SectionHeader(title: "GAMES")
             ScrollView(.vertical) {
                 ScrollViewReader { scrollReader in
-                    LazyVGrid(columns: columns) {
-                        ForEach(sortedGames) { game in
-                            Group {
-                                HStack {
-                                    Spacer()
-                                    Text("\(game.nr)")
-                                }
+                    ForEach(sortedGames) { game in
+                        VStack(spacing: 0) {
+                            PrefixedRow(background1: bgColor(game), background2: bgColor(game), column1: {
+                                Text("\(game.nr)").font(.title3).padding(6)
+                            }, column2: {
                                 HStack {
                                     Spacer()
                                     if isHighestScore(game, 0) {
                                         Image(systemName: "star.fill")
-                                            .foregroundColor(.yellow)
+                                            .foregroundColor(Color.gold)
                                     }
                                     Text(formattedNumber(game.scores[0]))
                                         .foregroundStyle(textColor(game, 0))
@@ -78,34 +69,37 @@ struct GamesPlayedView: View {
                                             startEdit(game, 0)
                                         }
                                 }
+                                .font(.title3)
+                                .padding(6)
+                            }, column3: {
                                 HStack {
                                     Spacer()
                                     if isHighestScore(game, 1) {
                                         Image(systemName: "star.fill")
-                                            .foregroundColor(.yellow)
+                                            .foregroundColor(Color.gold)
                                     }
                                     Text(formattedNumber(game.scores[1]))
                                         .foregroundStyle(textColor(game, 1))
                                         .onTapGesture(count: 2) { startEdit(game, 1) }
                                         .padding(.trailing, 6)
                                 }
-                            }
-                            .padding(6)
-                            .background(winningColor(game).opacity(0.3))
-                            .gesture(
-                                LongPressGesture(minimumDuration: UIDevice.isSimulator ? 0.25 : 3)
-                                    .onEnded { _ in
-                                        if let context = game.modelContext {
-                                            context.delete(game)
-                                            try! context.save()
-                                            scrollReader.scrollTo(0)
-                                        }
-                                    }
-                            )
+                                .font(.title3)
+                                .padding(6)
+                            })
                         }
+                        .padding(.bottom, -6)
+                        .gesture(
+                            LongPressGesture(minimumDuration: UIDevice.isSimulator ? 0.25 : 3)
+                                .onEnded { _ in
+                                    if let context = game.modelContext {
+                                        context.delete(game)
+                                        try! context.save()
+                                        scrollReader.scrollTo(0)
+                                    }
+                                }
+                        )
                     }
                 }
-                .font(.title3)
             }
             .background(Color(white: 0.1))
             .scrollIndicators(.hidden)

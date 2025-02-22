@@ -1,14 +1,13 @@
 import SwiftUI
 import AVFoundation
 import Foundation
+import Combine
 
 struct SessionView: View {
-    @AppStorage("openai-api-key") private var apiKey: String = ""
     @State var cameraReady = false
-    
+    @State var scanning = false
+    @State var showingPrefs = false
     let session: Session
-
-    static let gold = Color.yellow.opacity(0.25)
 
     init(session: Session) {
         self.session = session
@@ -42,16 +41,14 @@ struct SessionView: View {
             CurrentGameView(firstPlayer: session.firstPlayer,
                             secondPlayer: session.secondPlayer,
                             firstPlayerIndex: session.firstPlayerIndex,
-                            colorFor: color(for:),
-                            gold: SessionView.gold)
+                            colorFor: color(for:))
 
             TotalsView(playerTotals: session.playerTotals,
                        playerWins: session.playerWins,
                        highScores: session.highScores,
                        averageScores: session.averageScores,
                        colorFor: color(for:),
-                       formattedNumber: formattedNumber,
-                       gold: SessionView.gold)
+                       formattedNumber: formattedNumber)
 
             if session.games?.isEmpty == false {
                 GamesPlayedView(games: session.games ?? [],
@@ -60,16 +57,35 @@ struct SessionView: View {
             } else {
                 Spacer()
             }
-            
-            if apiKey.isEmpty && !UIDevice.isSimulator {
-                Button("Paste API Key") {
-                    apiKey = UIPasteboard.general.string ?? ""
-                }
-                .buttonStyle(.borderedProminent)
-            }
 
-            if UIDevice.isSimulator || (cameraReady && !apiKey.isEmpty) {
-                CameraButton(session: session)
+            if UIDevice.isSimulator || cameraReady {
+                ZStack {
+                    HStack {
+                        Spacer()
+                        CameraButton(session: session, scanning: $scanning)
+                            .overlay(
+                                Group {
+                                    if scanning {
+                                        VStack {
+                                            CameraPreview()
+                                                .frame(width: 400, height: 200)
+                                                .padding(2)
+                                        }
+                                        .background(Color.gold)
+                                        .offset(CGSize(width: 0, height: -170))
+                                    }
+                                }
+                            )
+                        Spacer()
+                    }
+                    HStack {
+                        Spacer()
+                        Button { showingPrefs = true } label: {
+                            Image(systemName: "gear").imageScale(.large).padding()
+                        }
+                    }
+                }
+                
             }
         }
         .padding(.horizontal)
@@ -84,6 +100,9 @@ struct SessionView: View {
             } else {
                 cameraReady = true
             }
+        }
+        .sheet(isPresented: $showingPrefs) {
+            PreferencesView()
         }
     }
 }

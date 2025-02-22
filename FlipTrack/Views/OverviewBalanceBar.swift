@@ -1,9 +1,7 @@
 import SwiftUI
 
-struct Bar: View {
-    let color1b = Color.color1.mix(with: .black, by: 0.3)
-    let color2b = Color.color2.mix(with: .black, by: 0.3)
-    func color(for playerIndex: Int) -> Color { [color1b, color2b][playerIndex] }
+struct OverviewBalanceBar: View {
+    func color(for playerIndex: Int) -> Color { [Color.color1b, Color.color2b][playerIndex] }
     let values: [Int]
     var f: CGFloat { CGFloat(values[0]) / CGFloat(values[0] + values[1]) }
     var body: some View {
