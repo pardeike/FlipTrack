@@ -6,10 +6,6 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		E1B2E1D42D5D24C900C233B7 /* CameraPreview in Frameworks */ = {isa = PBXBuildFile; productRef = E1B2E1D32D5D24C900C233B7 /* CameraPreview */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXFileReference section */
 		E12254982D5C006A00B1EFAE /* FlipTrack.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FlipTrack.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -40,7 +36,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E1B2E1D42D5D24C900C233B7 /* CameraPreview in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -83,7 +78,6 @@
 			);
 			name = FlipTrack;
 			packageProductDependencies = (
-				E1B2E1D32D5D24C900C233B7 /* CameraPreview */,
 			);
 			productName = FlipTrack;
 			productReference = E12254982D5C006A00B1EFAE /* FlipTrack.app */;
@@ -114,7 +108,6 @@
 			mainGroup = E122548F2D5C006A00B1EFAE;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				E1B2E1D22D5D24C900C233B7 /* XCRemoteSwiftPackageReference "CameraPreview" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E12254992D5C006A00B1EFAE /* Products */;
@@ -352,25 +345,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		E1B2E1D22D5D24C900C233B7 /* XCRemoteSwiftPackageReference "CameraPreview" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/ribtiago/CameraPreview";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		E1B2E1D32D5D24C900C233B7 /* CameraPreview */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E1B2E1D22D5D24C900C233B7 /* XCRemoteSwiftPackageReference "CameraPreview" */;
-			productName = CameraPreview;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = E12254902D5C006A00B1EFAE /* Project object */;
 }

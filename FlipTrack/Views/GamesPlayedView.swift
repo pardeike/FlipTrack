@@ -20,7 +20,7 @@ struct GamesPlayedView: View {
         formatter.groupingSeparator = "."
         return formatter
     })()
-
+    
     var columns: [GridItem] {[
         GridItem(.fixed(50), spacing: 0, alignment: .trailing),
         GridItem(.flexible(minimum: 0, maximum: .infinity), spacing: 0, alignment: .trailing),
@@ -54,49 +54,74 @@ struct GamesPlayedView: View {
                 ScrollViewReader { scrollReader in
                     ForEach(sortedGames) { game in
                         VStack(spacing: 0) {
-                            PrefixedRow(background1: bgColor(game), background2: bgColor(game), column1: {
-                                Text("\(game.nr)").font(.title3).padding(6)
-                            }, column2: {
-                                HStack {
-                                    Spacer()
-                                    if isHighestScore(game, 0) {
-                                        Image(systemName: "star.fill")
-                                            .foregroundColor(Color.yellow)
-                                    }
-                                    Text(formattedNumber(game.scores[0]))
-                                        .foregroundStyle(textColor(game, 0))
-                                        .onTapGesture(count: 2) {
-                                            startEdit(game, 0)
+                            PrefixedRow(
+                                background1: bgColor(game),
+                                background2: bgColor(game),
+                                column1: {
+                                    Menu {
+                                        Button("Switch") {
+                                            if let context = game.modelContext {
+                                                let s = game.scores[0]
+                                                game.scores[0] = game.scores[1]
+                                                game.scores[1] = s
+                                                try! context.save()
+                                            }
                                         }
-                                }
-                                .font(.title3)
-                                .padding(6)
-                            }, column3: {
-                                HStack {
-                                    Spacer()
-                                    if isHighestScore(game, 1) {
-                                        Image(systemName: "star.fill")
-                                            .foregroundColor(Color.yellow)
+                                        Button("Delete", role: .destructive) {
+                                            if let context = game.modelContext {
+                                                context.delete(game)
+                                                try! context.save()
+                                                scrollReader.scrollTo(0)
+                                            }
+                                        }
+                                    } label: {
+                                        Text("\(game.nr)")
+                                            .foregroundColor(Color.white)
                                     }
-                                    Text(formattedNumber(game.scores[1]))
-                                        .foregroundStyle(textColor(game, 1))
-                                        .onTapGesture(count: 2) { startEdit(game, 1) }
+                                    .font(.title3)
+                                    .padding(6)
+                                },
+                                column2: {
+                                    HStack {
+                                        Spacer()
+                                        if isHighestScore(game, 0) {
+                                            Image(systemName: "star.fill")
+                                                .foregroundColor(Color.yellow)
+                                        }
+                                        Menu {
+                                            Button("Edit") {
+                                                startEdit(game, 0)
+                                            }
+                                        } label: {
+                                            Text(formattedNumber(game.scores[0]))
+                                                .foregroundStyle(textColor(game, 0))
+                                        }
+                                        .font(.title3)
+                                        .padding(6)
+                                    }
+                                },
+                                column3: {
+                                    HStack {
+                                        Spacer()
+                                        if isHighestScore(game, 1) {
+                                            Image(systemName: "star.fill")
+                                                .foregroundColor(Color.yellow)
+                                        }
+                                        Menu {
+                                            Button("Edit") {
+                                                startEdit(game, 1)
+                                            }
+                                        } label: {
+                                            Text(formattedNumber(game.scores[1]))
+                                                .foregroundStyle(textColor(game, 1))
+                                        }
+                                        .font(.title3)
+                                        .padding(6)
+                                    }
                                 }
-                                .font(.title3)
-                                .padding(6)
-                            })
+                            )
                         }
                         .padding(.bottom, -6)
-                        .gesture(
-                            LongPressGesture(minimumDuration: UIDevice.isSimulator ? 0.25 : 3)
-                                .onEnded { _ in
-                                    if let context = game.modelContext {
-                                        context.delete(game)
-                                        try! context.save()
-                                        scrollReader.scrollTo(0)
-                                    }
-                                }
-                        )
                     }
                 }
             }
@@ -116,9 +141,9 @@ struct GamesPlayedView: View {
 }
 
 #Preview {
-    let games = [
-        Game(nr: 1, scores: [12000, 32720], session: Session(date: Date.now )),
-        Game(nr: 2, scores: [480230, 19260], session: Session(date: Date.now.addingTimeInterval(24 * 3600))),
+    @Previewable @State var games = [
+        Game(nr: 1, scores: [32720, 12000], session: Session(date: Date.now)),
+        Game(nr: 2, scores: [19260, 480230], session: Session(date: Date.now.addingTimeInterval(24 * 3600))),
     ]
     GamesPlayedView(
         games: games,

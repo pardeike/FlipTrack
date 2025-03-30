@@ -93,7 +93,7 @@ struct SessionView: View {
         .navigationTitle(formattedDate(session.date))
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            if AVCaptureDevice.authorizationStatus(for: .video) != .authorized {
+           if AVCaptureDevice.authorizationStatus(for: .video) != .authorized {
                 AVCaptureDevice.requestAccess(for: .video) { granted in
                     cameraReady = granted
                 }
@@ -108,9 +108,11 @@ struct SessionView: View {
 }
 
 #Preview("extreme") {
-    SessionView(session: Session.dummy(0, [[69068440, 12353550], [512353550, 1920]]))
+    @Previewable @State var session = Session.dummy(0, [[69068440, 12353550], [512353550, 1920]])
+    SessionView(session: session)
 }
 
 #Preview("equal") {
-    SessionView(session: Session.dummy(0, [[10000, 10000]]))
+    @Previewable @State var session = Session.dummy(0, [[10000, 10000]])
+    SessionView(session: session)
 }

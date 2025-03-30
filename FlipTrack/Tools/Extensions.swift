@@ -62,9 +62,10 @@ extension Session {
     static func dummy(_ deltaDays: Int = 0, _ scores: [[Int]] = []) -> Session {
         let session = Session(date: Date.now.addingTimeInterval(-24 * 3600 * Double(deltaDays)))
         var nr = 1
-        for score in scores {
-            session.games?.append(Game(nr: nr, scores: score, session: session))
+        session.games = scores.map {
+            let game = Game(nr: nr, scores: $0, session: session)
             nr += 1
+            return game
         }
         return session
     }

@@ -46,7 +46,12 @@ class Scanner {
     }
     
     static func scoreFromText(_ text: String) -> Int? {
-        if let num = NumberFormatter.american.number(from: text) {
+        let cleanText = text
+            .replacing("O", with: "0")
+            .replacing("S", with: "5")
+            .replacing("l", with: "1")
+            .replacing("B", with: "8")
+        if let num = NumberFormatter.american.number(from: cleanText) {
             let score = Int(truncating: num)
             if score % 10 == 0 && score >= 100 && score < 10_000_000_000 { return score }
         }
@@ -58,14 +63,19 @@ class Scanner {
         var scores: [(score: Int, rect: CGRect)] = []
         for observation in observations {
             guard let candidate = observation.topCandidates(1).first else { continue }
-            let text = candidate.string.trimmingCharacters(in: .whitespacesAndNewlines)
-            if text == "FREEPLAY" || text == "FREE PLAY" || text == "FREEPLAY." || text == "FREE PLAY." {
+            let text = candidate.string.uppercased()
+            if try! /FREE ?PLAY\.?/.wholeMatch(in: text) != nil {
+                // let start = candidate.string.firstIndex(of: "F")!
+                // let end = candidate.string.lastIndex(of: "Y")!
+                // let range = Range(uncheckedBounds: (start, end))
+                // let pos = try! candidate.boundingBox(for: range)!
+                // print("### \(text) @ \(pos.topLeft) \(pos.topRight) \(pos.bottomLeft) \(pos.bottomRight)")
                 hasFreePlay = true
             } else {
                 if let score = scoreFromText(text) {
                     scores.append((score: score, rect: observation.boundingBox))
                 } else if hasFreePlay && text.contains("0") {
-                    print("# - [\(text)]")
+                    // print("# - [\(text)]")
                 }
             }
         }
@@ -76,13 +86,13 @@ class Scanner {
         let rightScore = sortedScores.last!.score
         let currentScores = [leftScore, rightScore]
         if previousScores != currentScores {
-            print("# New scan \(leftScore), \(rightScore)")
+            // print("# New scan \(leftScore), \(rightScore)")
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             previousScores = currentScores
             scanRepeatCount = 1
         } else {
             scanRepeatCount += 1
-            print("# Scan nr \(scanRepeatCount): \(leftScore), \(rightScore)")
+            // print("# Scan nr \(scanRepeatCount): \(leftScore), \(rightScore)")
             if scanRepeatCount >= store.config.requiredScanCount {
                 UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
                 callback?(currentScores)

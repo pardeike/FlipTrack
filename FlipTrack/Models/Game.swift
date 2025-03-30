@@ -15,7 +15,7 @@ public final class Game: Identifiable, Hashable {
 
     public init(nr: Int, scores: [Int], session: Session) {
         self.nr = nr
-        self.scores = nr % 2 == 0 ? scores : scores.reversed()
+        self.scores = scores // nr % 2 == 0 ? scores : scores.reversed()
         self.session = session
     }
 

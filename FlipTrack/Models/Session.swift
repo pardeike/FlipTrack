@@ -7,8 +7,8 @@ public final class Session: Identifiable, Hashable {
     public var date = Date()
     public var player1 = "Andreas"
     public var player2 = "Fredrik"
-    @Relationship(inverse: \Game.session)
-    public var games: [Game]? = []
+    @Relationship(deleteRule: .cascade, inverse: \Game.session)
+    public var games: [Game]?
 
     public init(date: Date) {
         self.date = date
