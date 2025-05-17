@@ -10,7 +10,8 @@ class Scanner {
     static var callback: (([Int]) -> Void)? = nil
     
     static var previousScores: [Int] = []
-    static var scanRepeatCount = 0
+    static var scanHistory: [[Int]] = []
+    static var scanCounts: [String: Int] = [:]
     static let scannerDelegate = ScannerDelegate()
     
     class ScannerDelegate: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
@@ -19,7 +20,9 @@ class Scanner {
                            from connection: AVCaptureConnection) {
             guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
             let rawImage = CIImage(cvPixelBuffer: pixelBuffer)
-            let filteredImage = store.config.filterImage ? rawImage.preprocessImage() : rawImage
+            let filteredImage = store.config.filterImage
+                ? rawImage.preprocessImage(strength: store.config.filterStrength)
+                : rawImage
             let requestHandler = VNImageRequestHandler(ciImage: filteredImage, options: [:])
             let textRequest = VNRecognizeTextRequest { request, error in
                 if let observations = request.results as? [VNRecognizedTextObservation] {
@@ -34,6 +37,9 @@ class Scanner {
     
     static func startScanning(_ cb: @escaping ([Int]) -> Void) {
         callback = cb
+        scanHistory.removeAll()
+        scanCounts.removeAll()
+        previousScores.removeAll()
         let videoOutput = AVCaptureVideoDataOutput()
         videoOutput.setSampleBufferDelegate(scannerDelegate, queue: DispatchQueue(label: "videoQueue"))
         if camera.session.canAddOutput(videoOutput) {
@@ -86,17 +92,23 @@ class Scanner {
         let rightScore = sortedScores.last!.score
         let currentScores = [leftScore, rightScore]
         if previousScores != currentScores {
-            // print("# New scan \(leftScore), \(rightScore)")
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             previousScores = currentScores
-            scanRepeatCount = 1
-        } else {
-            scanRepeatCount += 1
-            // print("# Scan nr \(scanRepeatCount): \(leftScore), \(rightScore)")
-            if scanRepeatCount >= store.config.requiredScanCount {
-                UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
-                callback?(currentScores)
-            }
+        }
+
+        scanHistory.append(currentScores)
+        let key = "\(currentScores[0]),\(currentScores[1])"
+        scanCounts[key, default: 0] += 1
+        if scanHistory.count > store.config.historyLimit {
+            let old = scanHistory.removeFirst()
+            let oldKey = "\(old[0]),\(old[1])"
+            if let c = scanCounts[oldKey], c > 1 { scanCounts[oldKey] = c - 1 } else { scanCounts.removeValue(forKey: oldKey) }
+        }
+        if scanCounts[key, default: 0] >= store.config.requiredScanCount {
+            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+            callback?(currentScores)
+            scanHistory.removeAll()
+            scanCounts.removeAll()
         }
     }
 }
