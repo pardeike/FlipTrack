@@ -37,7 +37,11 @@ struct CameraButton: View {
                             Scanner.stopScanning()
                             Task {
                                 let count = session.games?.count ?? 0
-                                session.games?.append(Game(nr: count + 1, scores: scores, session: session))
+                                var ordered = scores
+                                if session.firstPlayerIndex == 1 {
+                                    ordered = [scores[1], scores[0]]
+                                }
+                                session.games?.append(Game(nr: count + 1, scores: ordered, session: session))
                             }
                         }
                     }

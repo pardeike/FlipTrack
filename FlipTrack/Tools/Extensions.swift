@@ -92,24 +92,25 @@ extension NumberFormatter {
 }
 
 extension CIImage {
-    func preprocessImage() -> CIImage {
-        // Step 1: Adjust contrast and saturation.
+    func preprocessImage(strength: Float = 0.5) -> CIImage {
+        let colorMatrix = CIFilter(name: "CIColorMatrix")!
+        colorMatrix.setValue(self, forKey: kCIInputImageKey)
+        colorMatrix.setValue(CIVector(x: 1 + strength, y: 0, z: 0, w: 0), forKey: "inputRVector")
+        colorMatrix.setValue(CIVector(x: 0, y: 1, z: 0, w: 0), forKey: "inputGVector")
+        colorMatrix.setValue(CIVector(x: 0, y: 0, z: 1 - strength, w: 0), forKey: "inputBVector")
+
         let colorControls = CIFilter(name: "CIColorControls")!
-        colorControls.setValue(self, forKey: kCIInputImageKey)
-        // Increase contrast to help the digits pop out.
+        colorControls.setValue(colorMatrix.outputImage, forKey: kCIInputImageKey)
         colorControls.setValue(1.5, forKey: kCIInputContrastKey)
-        // Reduce saturation to remove distracting color noise.
         colorControls.setValue(0.0, forKey: kCIInputSaturationKey)
-        
-        // Step 2: Apply a median filter to smooth out the dot noise.
+
         let medianFilter = CIFilter(name: "CIMedianFilter")!
         medianFilter.setValue(colorControls.outputImage, forKey: kCIInputImageKey)
-        
-        // Step 3: Sharpen the image to enhance the edges.
+
         let sharpenFilter = CIFilter(name: "CISharpenLuminance")!
         sharpenFilter.setValue(medianFilter.outputImage, forKey: kCIInputImageKey)
         sharpenFilter.setValue(0.5, forKey: kCIInputSharpnessKey)
-        
+
         return sharpenFilter.outputImage!
     }
 }
