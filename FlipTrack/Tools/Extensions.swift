@@ -97,9 +97,9 @@ extension CIImage {
                          sharpness: Float = 0.5) -> CIImage {
         let colorMatrix = CIFilter(name: "CIColorMatrix")!
         colorMatrix.setValue(self, forKey: kCIInputImageKey)
-        colorMatrix.setValue(CIVector(x: 1 + strength, y: 0, z: 0, w: 0), forKey: "inputRVector")
+        colorMatrix.setValue(CIVector(x: 1 + CGFloat(strength), y: 0, z: 0, w: 0), forKey: "inputRVector")
         colorMatrix.setValue(CIVector(x: 0, y: 1, z: 0, w: 0), forKey: "inputGVector")
-        colorMatrix.setValue(CIVector(x: 0, y: 0, z: 1 - strength, w: 0), forKey: "inputBVector")
+        colorMatrix.setValue(CIVector(x: 0, y: 0, z: 1 - CGFloat(strength), w: 0), forKey: "inputBVector")
 
         let colorControls = CIFilter(name: "CIColorControls")!
         colorControls.setValue(colorMatrix.outputImage, forKey: kCIInputImageKey)
