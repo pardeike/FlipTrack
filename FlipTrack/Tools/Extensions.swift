@@ -92,7 +92,9 @@ extension NumberFormatter {
 }
 
 extension CIImage {
-    func preprocessImage(strength: Float = 0.5) -> CIImage {
+    func preprocessImage(strength: Float = 0.5,
+                         contrast: Float = 1.5,
+                         sharpness: Float = 0.5) -> CIImage {
         let colorMatrix = CIFilter(name: "CIColorMatrix")!
         colorMatrix.setValue(self, forKey: kCIInputImageKey)
         colorMatrix.setValue(CIVector(x: 1 + strength, y: 0, z: 0, w: 0), forKey: "inputRVector")
@@ -101,7 +103,7 @@ extension CIImage {
 
         let colorControls = CIFilter(name: "CIColorControls")!
         colorControls.setValue(colorMatrix.outputImage, forKey: kCIInputImageKey)
-        colorControls.setValue(1.5, forKey: kCIInputContrastKey)
+        colorControls.setValue(contrast, forKey: kCIInputContrastKey)
         colorControls.setValue(0.0, forKey: kCIInputSaturationKey)
 
         let medianFilter = CIFilter(name: "CIMedianFilter")!
@@ -109,7 +111,7 @@ extension CIImage {
 
         let sharpenFilter = CIFilter(name: "CISharpenLuminance")!
         sharpenFilter.setValue(medianFilter.outputImage, forKey: kCIInputImageKey)
-        sharpenFilter.setValue(0.5, forKey: kCIInputSharpnessKey)
+        sharpenFilter.setValue(sharpness, forKey: kCIInputSharpnessKey)
 
         return sharpenFilter.outputImage!
     }

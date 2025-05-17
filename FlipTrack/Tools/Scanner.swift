@@ -21,7 +21,10 @@ class Scanner {
             guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
             let rawImage = CIImage(cvPixelBuffer: pixelBuffer)
             let filteredImage = store.config.filterImage
-                ? rawImage.preprocessImage(strength: store.config.filterStrength)
+                ? rawImage.preprocessImage(
+                    strength: store.config.filterStrength,
+                    contrast: store.config.contrast,
+                    sharpness: store.config.sharpness)
                 : rawImage
             let requestHandler = VNImageRequestHandler(ciImage: filteredImage, options: [:])
             let textRequest = VNRecognizeTextRequest { request, error in

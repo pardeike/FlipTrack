@@ -30,6 +30,14 @@ struct PreferencesView: View {
                         Text("Filter Strength: \(String(format: "%.1f", configStore.config.filterStrength))")
                         Slider(value: $configStore.config.filterStrength, in: 0...1)
                     }
+                    HStack {
+                        Text("Contrast: \(String(format: "%.1f", configStore.config.contrast))")
+                        Slider(value: $configStore.config.contrast, in: 0.5...3)
+                    }
+                    HStack {
+                        Text("Sharpness: \(String(format: "%.1f", configStore.config.sharpness))")
+                        Slider(value: $configStore.config.sharpness, in: 0...2)
+                    }
                 }
             }
         }
