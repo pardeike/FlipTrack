@@ -1,105 +1,114 @@
 import SwiftUI
 import SwiftData
-import AVFoundation
-import Foundation
 
 struct SessionsView: View {
     @Environment(\.modelContext) private var context
-    @Query(sort: \Session.date) private var sessions: [Session]
+    @Query(sort: \Session.date, order: .reverse) private var sessions: [Session]
+    @State private var path: [Session] = []
     @State private var saveError: String?
+    @State private var deletingSession: Session?
     var debugSessions: [Session]? = nil
-    
-    func formattedDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.timeZone = .current
-        formatter.dateStyle = .medium
-        return formatter.string(from: date)
-    }
-    
-    var sortedSessions: [Session] {
-        (debugSessions ?? sessions).sorted(using: SortDescriptor(\Session.date)).reversed()
-    }
-    
-    func addSession() {
-        let newSession = Session(date: Date())
-        context.insert(newSession)
-        saveChanges()
-    }
-    
-    func deleteSession(at offsets: IndexSet) {
-        offsets.forEach { index in
-            let session = sortedSessions[index]
-            context.delete(session)
-        }
-        saveChanges()
-    }
 
-    private func saveChanges() {
-        do { try context.save() }
-        catch {
-            context.rollback()
-            saveError = error.localizedDescription
-        }
+    private var sortedSessions: [Session] {
+        (debugSessions ?? sessions).sorted { $0.date > $1.date }
     }
 
     var body: some View {
-        NavigationStack {
-            Image("Logo")
-                .resizable()
-                .scaledToFit()
-                .padding(.horizontal)
-                .overlay {
-                    LinearGradient(gradient: Gradient(stops: [
-                        .init(color: .black, location: 0),
-                        .init(color: .clear, location: 0.25),
-                        .init(color: .clear, location: 0.75),
-                        .init(color: .black, location: 1),
-                    ]), startPoint: .leading, endPoint: .trailing)
-                }
-                .overlay {
-                    LinearGradient(gradient: Gradient(stops: [
-                        .init(color: .black, location: 0),
-                        .init(color: .clear, location: 0.2),
-                        .init(color: .clear, location: 0.8),
-                        .init(color: .black, location: 1),
-                    ]), startPoint: .top, endPoint: .bottom)
-                }
-                .padding(.bottom, -20)
-            List {
-                ForEach(sortedSessions) { session in
-                    NavigationLink {
-                        SessionView(session: session)
-                    } label: {
-                        HStack(alignment: .center) {
-                            Text(formattedDate(session.date)).font(.title2)
-                            Spacer()
-                            OverviewBalanceBar(values: session.playerWins).padding()
-                                .padding(.top, 6)
+        NavigationStack(path: $path) {
+            VStack(spacing: 0) {
+                Image("Logo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxHeight: 100)
+                    .mask {
+                        LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.12),
+                                               .init(color: .black, location: 0.88), .init(color: .clear, location: 1)],
+                                       startPoint: .leading, endPoint: .trailing)
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 8)
+                    .accessibilityHidden(true)
+                if sortedSessions.isEmpty {
+                    ContentUnavailableView {
+                        Label("Ready to play?", systemImage: "pin.circle")
+                    } description: {
+                        Text("Start a session to keep scores, track wins, and see who comes out ahead.")
+                    } actions: {
+                        Button("New session", systemImage: "plus", action: addSession)
+                            .buttonStyle(.borderedProminent)
+                    }
+                } else {
+                    List {
+                        ForEach(sortedSessions) { session in
+                            NavigationLink(value: session) {
+                                VStack(alignment: .leading, spacing: 12) {
+                                    HStack(alignment: .firstTextBaseline) {
+                                        Text(session.date.formatted(date: .abbreviated, time: .omitted))
+                                            .font(.headline)
+                                        Spacer()
+                                        let count = session.games?.count ?? 0
+                                        Text("\(session.date.formatted(date: .omitted, time: .shortened)) · \(count == 1 ? "1 game" : "\(count) games")")
+                                            .font(.caption).foregroundStyle(.secondary)
+                                    }
+                                    if session.games?.isEmpty == false {
+                                        OverviewBalanceBar(values: session.playerWins, players: [session.player1, session.player2])
+                                    } else {
+                                        Text("\(session.firstPlayer) starts game \(session.upcomingGameNumber)")
+                                            .font(.subheadline).foregroundStyle(.secondary)
+                                    }
+                                }
+                                .padding(.vertical, 6)
+                            }
+                            .listRowBackground(Color(white: 0.08))
+                            .swipeActions {
+                                Button("Delete", systemImage: "trash", role: .destructive) { deletingSession = session }
+                            }
                         }
                     }
+                    .listStyle(.insetGrouped)
+                    .scrollContentBackground(.hidden)
                 }
-                .onDelete(perform: deleteSession)
             }
             .navigationTitle("Sessions")
             .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(for: Session.self) { SessionView(session: $0) }
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: addSession) {
-                        Image(systemName: "plus")
-                    }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("New session", systemImage: "plus", action: addSession)
                 }
             }
         }
         .preferredColorScheme(.dark)
+        .confirmationDialog("Delete this session?", isPresented: Binding(get: { deletingSession != nil }, set: { if !$0 { deletingSession = nil } }), titleVisibility: .visible) {
+            Button("Delete session", role: .destructive) {
+                if let deletingSession {
+                    context.delete(deletingSession)
+                    _ = saveChanges()
+                }
+                deletingSession = nil
+            }
+        } message: { Text("All games and scores in this session will be removed.") }
         .alert("Changes were not saved", isPresented: Binding(get: { saveError != nil }, set: { if !$0 { saveError = nil } })) {
             Button("OK", role: .cancel) { saveError = nil }
         } message: { Text(saveError ?? "") }
     }
+
+    private func addSession() {
+        let session = Session(date: .now)
+        context.insert(session)
+        if saveChanges() { path.append(session) }
+    }
+
+    private func saveChanges() -> Bool {
+        do { try context.save(); return true }
+        catch {
+            context.rollback()
+            saveError = error.localizedDescription
+            return false
+        }
+    }
 }
 
 #Preview {
-    SessionsView(debugSessions: [
-        Session.dummy(-1, [[69068440, 12353550], [512353550, 1920]]),
-        Session.dummy(0, [[10000, 10000]])
-    ])
+    SessionsView(debugSessions: [Session.dummy(0, [[69068440, 12353550], [512353550, 1920]])])
 }

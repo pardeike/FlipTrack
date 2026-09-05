@@ -4,165 +4,95 @@ import SwiftData
 struct GamesPlayedView: View {
     let games: [Game]
     let formattedNumber: (Int) -> String
-    let winningColor: (Game) -> Color
     let colorFor: (Int) -> Color
-    
-    @FocusState private var editFocus: Bool
     @State private var saveError: String?
-    @State var editGame: Game? = nil
-    @State var editScoreIndex = 0
-    
-    func bgColor(_ game: Game) -> (AnyView) -> AnyView {
-        winningColor(game).mix(with: .black, by: 0.5).asBackground()
-    }
-    
-    let numberFormatter = ({
+    @State private var editGame: Game?
+    @State private var editScoreIndex = 0
+    @State private var deletingGame: Game?
+
+    private let numberFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.groupingSeparator = "."
         return formatter
-    })()
-    
-    var columns: [GridItem] {[
-        GridItem(.fixed(50), spacing: 0, alignment: .trailing),
-        GridItem(.flexible(minimum: 0, maximum: .infinity), spacing: 0, alignment: .trailing),
-        GridItem(.flexible(minimum: 0, maximum: .infinity), spacing: 0, alignment: .trailing)
-    ]}
-    
-    func startEdit(_ game: Game, _ scoreIndex: Int) {
-        editScoreIndex = scoreIndex
-        editGame = game
-    }
-    
-    func textColor(_ game: Game, _ index: Int) -> Color {
-        guard let session = game.session else { return .white }
-        let hs = session.highScores
-        if game.scores[index] == hs[index] { return Color.yellow }
-        return .white
-    }
-    
-    func isHighestScore(_ game: Game, _ index: Int) -> Bool {
-        guard let session = game.session else { return false }
-        let hs = session.highScores
-        return game.scores[index] == max(hs[0], hs[1])
-    }
-    
-    var sortedGames: [Game] { games.sorted(using: SortDescriptor(\Game.nr)).reversed() }
-    
-    private func saveChanges(in context: ModelContext) {
-        do { try context.save() }
-        catch {
-            context.rollback()
-            saveError = error.localizedDescription
-        }
-    }
+    }()
+
+    private var sortedGames: [Game] { games.sorted { $0.nr > $1.nr } }
 
     var body: some View {
-        VStack(spacing: 0) {
-            SectionHeader(title: "GAMES")
-            ScrollView(.vertical) {
-                ScrollViewReader { scrollReader in
-                    ForEach(sortedGames) { game in
-                        VStack(spacing: 0) {
-                            PrefixedRow(
-                                background1: bgColor(game),
-                                background2: bgColor(game),
-                                column1: {
-                                    Menu {
-                                        Button("Switch") {
-                                            if let context = game.modelContext {
-                                                let s = game.scores[0]
-                                                game.scores[0] = game.scores[1]
-                                                game.scores[1] = s
-                                                saveChanges(in: context)
-                                            }
-                                        }
-                                        Button("Delete", role: .destructive) {
-                                            if let context = game.modelContext {
-                                                context.delete(game)
-                                                saveChanges(in: context)
-                                                scrollReader.scrollTo(0)
-                                            }
-                                        }
-                                    } label: {
-                                        Text("\(game.nr)")
-                                            .foregroundColor(Color.white)
-                                    }
-                                    .font(.title3)
-                                    .padding(6)
-                                },
-                                column2: {
-                                    HStack {
-                                        Spacer()
-                                        if isHighestScore(game, 0) {
-                                            Image(systemName: "star.fill")
-                                                .foregroundColor(Color.yellow)
-                                        }
-                                        Menu {
-                                            Button("Edit") {
-                                                startEdit(game, 0)
-                                            }
-                                        } label: {
-                                            Text(formattedNumber(game.scores[0]))
-                                                .foregroundStyle(textColor(game, 0))
-                                        }
-                                        .font(.title3)
-                                        .padding(6)
-                                    }
-                                },
-                                column3: {
-                                    HStack {
-                                        Spacer()
-                                        if isHighestScore(game, 1) {
-                                            Image(systemName: "star.fill")
-                                                .foregroundColor(Color.yellow)
-                                        }
-                                        Menu {
-                                            Button("Edit") {
-                                                startEdit(game, 1)
-                                            }
-                                        } label: {
-                                            Text(formattedNumber(game.scores[1]))
-                                                .foregroundStyle(textColor(game, 1))
-                                        }
-                                        .font(.title3)
-                                        .padding(6)
-                                    }
-                                }
-                            )
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("GAMES").font(.caption.weight(.semibold)).tracking(1)
+                Spacer()
+                Text("Tap a score to edit").font(.caption)
+            }
+            .foregroundStyle(.secondary)
+            ForEach(sortedGames) { game in
+                HStack(spacing: 6) {
+                    Menu {
+                        Button("Swap scores", systemImage: "arrow.left.arrow.right") {
+                            game.scores.swapAt(0, 1)
+                            saveChanges(in: game.modelContext)
                         }
-                        .padding(.bottom, -6)
+                        Button("Delete game", systemImage: "trash", role: .destructive) { deletingGame = game }
+                    } label: {
+                        Text("\(game.nr)")
+                            .font(.caption.weight(.semibold).monospacedDigit())
+                            .foregroundStyle(.secondary)
+                            .frame(width: 36, height: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .accessibilityLabel("Game \(game.nr) actions")
+                    ForEach(0..<2) { index in
+                        Button {
+                            editScoreIndex = index
+                            editGame = game
+                        } label: {
+                            HStack(spacing: 4) {
+                                if game.scores[index] == game.session?.highScores[index] {
+                                    Image(systemName: "star.fill").font(.caption2).foregroundStyle(.yellow)
+                                }
+                                Spacer(minLength: 0)
+                                Text(formattedNumber(game.scores[index]))
+                                    .font(.subheadline.weight(.medium).monospacedDigit())
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.6)
+                            }
+                            .padding(.horizontal, 10)
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                            .foregroundStyle(.primary)
+                            .background(colorFor(index).opacity(game.winningIndex == index ? 0.24 : 0.08), in: RoundedRectangle(cornerRadius: 9))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Game \(game.nr), \(index == 0 ? game.session?.player1 ?? "Player 1" : game.session?.player2 ?? "Player 2"), \(game.scores[index]). Edit score")
                     }
                 }
             }
-            .background(Color(white: 0.1))
-            .scrollIndicators(.hidden)
-            .padding(.bottom, 20)
         }
+        .padding(14)
+        .background(Color(white: 0.08), in: RoundedRectangle(cornerRadius: 16))
+        .confirmationDialog("Delete game \(deletingGame?.nr ?? 0)?", isPresented: Binding(get: { deletingGame != nil }, set: { if !$0 { deletingGame = nil } }), titleVisibility: .visible) {
+            Button("Delete game", role: .destructive) {
+                if let game = deletingGame, let context = game.modelContext {
+                    context.delete(game)
+                    saveChanges(in: context)
+                }
+                deletingGame = nil
+            }
+        } message: { Text("This removes both scores. The next starting player stays the same.") }
         .alert("Changes were not saved", isPresented: Binding(get: { saveError != nil }, set: { if !$0 { saveError = nil } })) {
             Button("OK", role: .cancel) { saveError = nil }
         } message: { Text(saveError ?? "") }
         .sheet(item: $editGame) {
-            ScoreEditView(
-                game: $0,
-                scoreIndex: editScoreIndex,
-                numberFormatter: numberFormatter,
-                done: { editGame = nil }
-            )
+            ScoreEditView(game: $0, scoreIndex: editScoreIndex, numberFormatter: numberFormatter, done: { editGame = nil })
         }
     }
-}
 
-#Preview {
-    @Previewable @State var games = [
-        Game(nr: 1, scores: [32720, 12000], session: Session(date: Date.now)),
-        Game(nr: 2, scores: [19260, 480230], session: Session(date: Date.now.addingTimeInterval(24 * 3600))),
-    ]
-    GamesPlayedView(
-        games: games,
-        formattedNumber: { "\($0)" },
-        winningColor: { [Color.clear, Color.red, Color.green][$0.winningIndex + 1] },
-        colorFor: { [Color.red, Color.green][$0] }
-    )
-    .preferredColorScheme(.dark)
+    private func saveChanges(in context: ModelContext?) {
+        do { try context?.save() }
+        catch {
+            context?.rollback()
+            saveError = error.localizedDescription
+        }
+    }
 }

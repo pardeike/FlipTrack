@@ -1,202 +1,69 @@
 import SwiftUI
 
-public struct TotalsView: View {
-    public let playerTotals: [Int]
-    public let playerWins: [Int]
-    public let highScores: [Int]
-    public let averageScores: [Int]
-    public let colorFor: (Int) -> Color
-    public let formattedNumber: (Int) -> String
+struct TotalsView: View {
+    let playerTotals: [Int]
+    let playerWins: [Int]
+    let highScores: [Int]
+    let averageScores: [Int]
+    let colorFor: (Int) -> Color
+    let formattedNumber: (Int) -> String
+    var players = ["Andreas", "Fredrik"]
 
-    private var playerTotalIndex: Int {
-        playerTotals[0] == playerTotals[1] ? -1 : (playerTotals[0] > playerTotals[1] ? 0 : 1)
-    }
-
-    private var playerWinIndex: Int {
-        playerWins[0] == playerWins[1] ? -1 : (playerWins[0] > playerWins[1] ? 0 : 1)
-    }
-    
-    func highestScoreIndex() -> Int {
-        let hs = highScores
-        if hs[0] == hs[1] { return -1 }
-        return hs[0] > hs[1] ? 0 : 1
-    }
-    
-    func averageScoreIndex() -> Int {
-        let avg = averageScores
-        if avg[0] == avg[1] { return -1 }
-        return avg[0] > avg[1] ? 0 : 1
-    }
-
-    func fgColor(_ idx: Int, _ player: Int) -> Color {
-        if idx == player { return .yellow }
-        return .white
-    }
-    
-    var bgColor: (AnyView) -> AnyView { Color(white: 0.1).asBackground() }
-    var bg1: Color { colorFor(0).mix(with: .black, by: 0.5) }
-    var bg2: Color { colorFor(1).mix(with: .black, by: 0.5) }
-
-    public init(playerTotals: [Int], playerWins: [Int], highScores: [Int], averageScores: [Int], colorFor: @escaping (Int) -> Color, formattedNumber: @escaping (Int) -> String) {
-        self.playerTotals = playerTotals
-        self.playerWins = playerWins
-        self.highScores = highScores
-        self.averageScores = averageScores
-        self.colorFor = colorFor
-        self.formattedNumber = formattedNumber
-    }
-
-    public var body: some View {
+    var body: some View {
         VStack(spacing: 0) {
-            SectionHeader(title: "STATS").padding(.bottom, -8)
-            // players
-            PrefixedRow(background1: bgColor, background2: bgColor, column1: {
-                Text("")
-            }, column2: {
-                HStack {
-                    Spacer()
-                    Text("Andreas")
-                        .padding(.vertical, 2)
-                        .padding(.trailing, 6)
-                        .font(.title3)
+            HStack {
+                Text("STATS")
+                    .font(.caption.weight(.semibold))
+                    .tracking(1)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 64, alignment: .leading)
+                ForEach(0..<2) { index in
+                    Text(players[index])
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(colorFor(index))
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .lineLimit(1)
                 }
-            }, column3: {
-                HStack {
-                    Spacer()
-                    Text("Fredrik")
-                        .padding(.vertical, 2)
-                        .padding(.trailing, 6)
-                        .font(.title3)
-                }
-            })
-            
-            // games
-            PrefixedRow(background1: bgColor, background2: bgColor, column1: {
-                Image(systemName: "trophy.fill")
-                    .foregroundStyle(.yellow)
-            }, column2: {
-                HStack {
-                    Spacer()
-                    Text("\(playerWins[0])")
-                        .foregroundColor(fgColor(playerWinIndex, 0))
-                        .padding(.vertical, 6)
-                        .padding(.trailing, 6)
-                        .font(.title3)
-                        .bold()
-                }
-                .background { bg1 }
-            }, column3: {
-                HStack {
-                    Spacer()
-                    Text("\(playerWins[1])")
-                        .foregroundColor(fgColor(playerWinIndex, 1))
-                        .padding(.vertical, 6)
-                        .padding(.trailing, 6)
-                        .font(.title3)
-                        .bold()
-                }
-                .background { bg2 }
-            })
-            .padding(.bottom, 2)
-            
-            // highest
-            PrefixedRow(background1: bgColor, background2: bgColor, column1: {
-                Image(systemName: "star.fill")
-                    .foregroundStyle(.yellow)
-            }, column2: {
-                HStack {
-                    Spacer()
-                    Text(formattedNumber(highScores[0]))
-                        .foregroundColor(fgColor(highestScoreIndex(), 0))
-                        .padding(.vertical, 6)
-                        .padding(.trailing, 6)
-                        .font(.title3)
-                        .bold()
-                }
-                .background { bg1 }
-            }, column3: {
-                HStack {
-                    Spacer()
-                    Text(formattedNumber(highScores[1]))
-                        .foregroundColor(fgColor(highestScoreIndex(), 1))
-                        .padding(.vertical, 6)
-                        .padding(.trailing, 6)
-                        .font(.title3)
-                        .bold()
-                }
-                .background { bg2 }
-            })
-            .padding(.bottom, 2)
-            
-            // total
-            PrefixedRow(background1: bgColor, background2: bgColor, column1: {
-                Image(systemName: "sum")
-                    .bold()
-                    .foregroundStyle(.yellow.opacity(0.75))
-            }, column2: {
-                HStack {
-                    Spacer()
-                    Text(formattedNumber(playerTotals[0]))
-                        .foregroundColor(fgColor(playerTotalIndex, 0))
-                        .padding(.vertical, 6)
-                        .padding(.trailing, 6)
-                        .font(.title3)
-                        .opacity(0.75)
-                }
-                .background { bg1 }
-            }, column3: {
-                HStack {
-                    Spacer()
-                    Text(formattedNumber(playerTotals[1]))
-                        .foregroundColor(fgColor(playerTotalIndex, 1))
-                        .padding(.vertical, 6)
-                        .padding(.trailing, 6)
-                        .font(.title3)
-                        .opacity(0.75)
-                }
-                .background { bg2 }
-            })
-            .padding(.bottom, 2)
-            
-            // average
-            PrefixedRow(background1: bgColor, background2: bgColor, column1: {
-                Image(systemName: "divide")
-                    .bold()
-                    .foregroundStyle(.yellow.opacity(0.75))
-            }, column2: {
-                HStack {
-                    Spacer()
-                    Text("~ " + formattedNumber(averageScores[0]))
-                        .foregroundColor(fgColor(averageScoreIndex(), 0))
-                        .padding(.vertical, 6)
-                        .padding(.trailing, 6)
-                        .font(.title3)
-                        .opacity(0.75)
-                }
-                .background { bg1 }
-            }, column3: {
-                HStack {
-                    Spacer()
-                    Text("~ " + formattedNumber(averageScores[1]))
-                        .foregroundColor(fgColor(averageScoreIndex(), 1))
-                        .padding(.vertical, 6)
-                        .padding(.trailing, 6)
-                        .font(.title3)
-                        .opacity(0.75)
-                }
-                .background { bg2 }
-            })
-            .padding(.bottom, 20)
+            }
+            .padding(.bottom, 10)
+            stat("Wins", icon: "trophy.fill", values: playerWins, emphasis: true)
+            Divider().padding(.vertical, 8)
+            stat("Best", icon: "star.fill", values: highScores)
+            stat("Total", icon: "sum", values: playerTotals)
+                .padding(.top, 10)
+            stat("Average", icon: "divide", values: averageScores)
+                .padding(.top, 10)
+        }
+        .padding(14)
+        .background(Color(white: 0.08), in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    private func stat(_ title: String, icon: String, values: [Int], emphasis: Bool = false) -> some View {
+        HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 3) {
+                Image(systemName: icon)
+                    .foregroundStyle(emphasis ? Color.yellow : .secondary)
+                Text(title).font(.caption2)
+            }
+            .foregroundStyle(.secondary)
+            .frame(width: 64, alignment: .leading)
+            ForEach(0..<2) { index in
+                Text(formattedNumber(values[index]))
+                    .font(emphasis ? .title2.weight(.semibold) : .subheadline.weight(.medium))
+                    .monospacedDigit()
+                    .foregroundStyle(values[index] > values[1 - index] ? colorFor(index) : .primary)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+                    .accessibilityLabel("\(players[index]), \(title), \(values[index])")
+            }
         }
     }
 }
 
 #Preview {
-    TotalsView(playerTotals: [1000, 2000],
-               playerWins: [33, 22],
-               highScores: [4000, 6000],
-               averageScores: [2533, 3434],
-               colorFor: { [Color.red, Color.green][$0] },
-               formattedNumber: { "(\($0))" })
-    .preferredColorScheme(.dark)
+    TotalsView(playerTotals: [243535350, 142530330], playerWins: [3, 2],
+               highScores: [131160670, 86549090], averageScores: [48707070, 28506066],
+               colorFor: { [Color.color1, Color.color2][$0] }, formattedNumber: { $0.formatted() })
+        .padding().preferredColorScheme(.dark)
 }

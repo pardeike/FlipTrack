@@ -6,9 +6,13 @@ The continuous scanner targets the Indiana Jones two-player final-score display.
 ## Use
 
 Create or open a session, mount the iPhone in portrait with the entire display
-visible, and tap **Start monitoring**. Leave FlipTrack open. It keeps the phone
+visible, and tap **Start monitoring**. Tap the camera preview to enlarge it while aligning the mount. Leave FlipTrack open. It keeps the phone
 awake while monitoring, records confirmed final scores, and continues watching
-for the next game. Stop monitoring to correct or delete an entry.
+for the next game. Stop monitoring to correct or delete an entry. Tap a score to edit it, or the game number for score swapping and deletion.
+
+Use **Add scores** to enter a game manually in the display's left/right order.
+The session list shows games played and wins for each player. New sessions open
+immediately, and the game card shows who starts next.
 
 Fredrik starts the first game, matching the existing app. The second player from
 one game starts the next. Scores are stored under the players' names, regardless

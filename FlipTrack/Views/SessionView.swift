@@ -7,6 +7,8 @@ struct SessionView: View {
     @EnvironmentObject private var configStore: ConfigStore
     @StateObject private var scanner = Scanner()
     @State private var showingPrefs = false
+    @State private var showingManualEntry = false
+    @State private var showingCamera = false
     let session: Session
 
     func formattedNumber(_ number: Int) -> String {
@@ -14,33 +16,50 @@ struct SessionView: View {
     }
 
     func color(for playerIndex: Int) -> Color { [Color.color1, Color.color2][playerIndex] }
-    func winningColor(_ game: Game) -> Color { game.winningIndex == -1 ? .clear : color(for: game.winningIndex) }
 
     var body: some View {
-        VStack(spacing: 0) {
-            CurrentGameView(firstPlayer: session.firstPlayer,
-                            secondPlayer: session.secondPlayer,
-                            firstPlayerIndex: session.firstPlayerIndex,
-                            colorFor: color(for:))
-            TotalsView(playerTotals: session.playerTotals,
-                       playerWins: session.playerWins,
-                       highScores: session.highScores,
-                       averageScores: session.averageScores,
-                       colorFor: color(for:), formattedNumber: formattedNumber)
-            if session.games?.isEmpty == false {
-                GamesPlayedView(games: session.games ?? [], formattedNumber: formattedNumber,
-                                winningColor: winningColor, colorFor: color(for:))
-                    .disabled(scanner.isMonitoring)
-            } else {
-                Spacer(minLength: 0)
+        ScrollView {
+            VStack(spacing: 14) {
+                CurrentGameView(firstPlayer: session.firstPlayer,
+                                secondPlayer: session.secondPlayer,
+                                firstPlayerIndex: session.firstPlayerIndex,
+                                colorFor: color(for:), gameNumber: session.upcomingGameNumber)
+                TotalsView(playerTotals: session.playerTotals,
+                           playerWins: session.playerWins,
+                           highScores: session.highScores,
+                           averageScores: session.averageScores,
+                           colorFor: color(for:), formattedNumber: formattedNumber, players: [session.player1, session.player2])
+                if session.games?.isEmpty == false {
+                    GamesPlayedView(games: session.games ?? [], formattedNumber: formattedNumber,
+                                    colorFor: color(for:))
+                        .disabled(scanner.isMonitoring)
+                } else {
+                    VStack(spacing: 8) {
+                        Image(systemName: "flag.checkered")
+                            .font(.title2).foregroundStyle(.secondary)
+                        Text("Your next game goes here").font(.subheadline.weight(.medium))
+                        Text("Monitor the display, or add the scores yourself.")
+                            .font(.caption).foregroundStyle(.secondary)
+                        Button("Add scores", systemImage: "plus") { showingManualEntry = true }
+                            .font(.subheadline)
+                            .disabled(scanner.isMonitoring)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 22)
+                }
             }
+            .padding(.horizontal)
+            .padding(.vertical, 12)
         }
-        .padding(.horizontal)
         .safeAreaInset(edge: .bottom) { monitorControls }
         .preferredColorScheme(.dark)
         .navigationTitle(session.date.formatted(date: .abbreviated, time: .omitted))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Add scores", systemImage: "plus") { showingManualEntry = true }
+                    .disabled(scanner.isMonitoring)
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Settings", systemImage: "gear") {
                     scanner.stop()
@@ -53,18 +72,51 @@ struct SessionView: View {
             if phase == .background { scanner.stop() }
         }
         .sheet(isPresented: $showingPrefs) { PreferencesView() }
+        .sheet(isPresented: $showingManualEntry) { ManualGameView(session: session) }
+        .sheet(isPresented: $showingCamera) {
+            NavigationStack {
+                VStack(spacing: 16) {
+                    if scanner.isMonitoring {
+                        CameraPreview(session: scanner.camera.session)
+                    } else {
+                        ContentUnavailableView("Camera paused", systemImage: "camera", description: Text(scanner.error ?? scanner.status))
+                    }
+                    Text("Keep the whole display in view.")
+                        .font(.subheadline).foregroundStyle(.secondary)
+                    Text(scanner.error ?? scanner.status)
+                        .font(.callout)
+                }
+                .padding()
+                .background(.black)
+                .navigationTitle("Camera view")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) { Button("Done") { showingCamera = false } }
+                }
+            }
+        }
     }
 
     private var monitorControls: some View {
         HStack(spacing: 12) {
             if scanner.isMonitoring {
-                CameraPreview(session: scanner.camera.session)
-                    .frame(width: 100, height: 150)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .accessibilityLabel("Live camera preview")
+                Button { showingCamera = true } label: {
+                    ZStack(alignment: .bottomTrailing) {
+                        if !showingCamera { CameraPreview(session: scanner.camera.session) }
+                        Image(systemName: "arrow.up.left.and.arrow.down.right")
+                            .font(.caption).padding(6)
+                            .background(.black.opacity(0.6), in: Circle())
+                            .padding(6)
+                    }
+                    .frame(width: 88, height: 132)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Enlarge camera view")
             }
             VStack(spacing: 10) {
-                Text(scanner.error ?? scanner.status)
+                Label(scanner.error ?? scanner.status,
+                      systemImage: scanner.error != nil ? "exclamationmark.circle" : scanner.isMonitoring ? "viewfinder" : "camera")
                     .font(.callout)
                     .foregroundStyle(scanner.error == nil ? Color.secondary : .red)
                     .multilineTextAlignment(.center)

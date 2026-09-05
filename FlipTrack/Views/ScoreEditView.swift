@@ -5,55 +5,62 @@ struct ScoreEditView: View {
     let scoreIndex: Int
     let numberFormatter: NumberFormatter
     let done: () -> Void
-    
     @State private var saveError: String?
     @State private var editedScore = ""
-    @FocusState var focus: Bool
-    
-    func formatted(_ game: Game) -> String {
-        let num = NSNumber(value: game.scores[scoreIndex])
-        return numberFormatter.string(from: num) ?? ""
+    @FocusState private var focus: Bool
+
+    private var player: String {
+        guard let session = game.session else { return "Player \(scoreIndex + 1)" }
+        return scoreIndex == 0 ? session.player1 : session.player2
     }
-    
+
+    private var score: Int? {
+        guard let value = Int(editedScore), (0..<10_000_000_000).contains(value) else { return nil }
+        return value
+    }
+
     var body: some View {
-        Group {
-            VStack(alignment: .center) {
-                Text(formatted(game))
-                    .bold()
-                    .foregroundStyle(.red)
-                    .padding(.top, 16)
-                TextField("Score", text: $editedScore)
-                    .bold()
-                    .focused($focus)
-                    .keyboardType(.numberPad)
-                    .multilineTextAlignment(.center)
-                    .presentationDetents([.height(160)])
-                    .presentationDragIndicator(.hidden)
-                    .onAppear() { focus = true }
-                Button(" Save ") {
-                    if let newScore = Int(editedScore), newScore >= 0, newScore < 10_000_000_000, game.scores[scoreIndex] != newScore {
-                        game.scores[scoreIndex] = newScore
-                        do { try game.modelContext?.save() }
+        NavigationStack {
+            Form {
+                Section {
+                    TextField("Score", text: $editedScore)
+                        .font(.title2.monospacedDigit())
+                        .keyboardType(.numberPad)
+                        .focused($focus)
+                        .accessibilityLabel("\(player)'s score")
+                    if let score {
+                        Text(numberFormatter.string(from: NSNumber(value: score)) ?? "")
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
+                } header: { Text("\(player) · game \(game.nr)") }
+            }
+            .navigationTitle("Edit score")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel", action: done) }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        guard let score else { return }
+                        game.scores[scoreIndex] = score
+                        do { try game.modelContext?.save(); done() }
                         catch {
                             game.modelContext?.rollback()
                             saveError = error.localizedDescription
-                            return
                         }
                     }
-                    done()
+                    .disabled(score == nil)
+                    .accessibilityIdentifier("saveScore")
                 }
-                .disabled(Int(editedScore).map { $0 < 0 || $0 >= 10_000_000_000 } ?? true)
-                .controlSize(.small)
-                .buttonStyle(.borderedProminent)
-                .padding(.top, 16)
             }
-            .font(.title)
         }
+        .presentationDetents([.medium, .large])
         .alert("Score was not saved", isPresented: Binding(get: { saveError != nil }, set: { if !$0 { saveError = nil } })) {
             Button("OK", role: .cancel) { saveError = nil }
         } message: { Text(saveError ?? "") }
         .onAppear {
             editedScore = String(game.scores[scoreIndex])
+            focus = true
         }
     }
 }

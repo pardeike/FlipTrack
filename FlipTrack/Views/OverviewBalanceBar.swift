@@ -1,30 +1,30 @@
 import SwiftUI
 
 struct OverviewBalanceBar: View {
-    func color(for playerIndex: Int) -> Color { [Color.color1b, Color.color2b][playerIndex] }
     let values: [Int]
-    var f: CGFloat { CGFloat(values[0]) / CGFloat(values[0] + values[1]) }
+    var players = ["Andreas", "Fredrik"]
+
     var body: some View {
-        if values[0] + values[1] > 0 {
-            GeometryReader { geo in
-                Rectangle()
-                    .fill(color(for: 1))
-                    .frame(width: geo.size.width, height: 20)
-                    .overlay(alignment: .leading) {
-                        Rectangle()
-                            .fill(color(for: 0))
-                            .frame(width: geo.size.width * f, height: 20)
-                    }
-                    .overlay(alignment: .leading) {
-                        Text("\(values[0]) Andreas")
-                            .padding(.leading, 6)
-                            .foregroundStyle(.white).bold().font(.caption)
-                    }
-                    .overlay(alignment: .trailing) {
-                        Text("Fredrik \(values[1])")
-                            .padding(.trailing, 6)
-                            .foregroundStyle(.white).bold().font(.caption)
-                    }
+        VStack(spacing: 8) {
+            HStack {
+                Text("\(players[0])  \(values[0])").foregroundStyle(Color.color1)
+                Spacer()
+                Text("\(values[1])  \(players[1])").foregroundStyle(Color.color2)
+            }
+            .font(.subheadline.weight(.medium).monospacedDigit())
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+            if values[0] + values[1] > 0 {
+                GeometryReader { geometry in
+                    Rectangle().fill(Color.color2.opacity(0.65))
+                        .overlay(alignment: .leading) {
+                            Rectangle().fill(Color.color1.opacity(0.65))
+                                .frame(width: geometry.size.width * CGFloat(values[0]) / CGFloat(values[0] + values[1]))
+                        }
+                        .clipShape(Capsule())
+                }
+                .frame(height: 4)
+                .accessibilityHidden(true)
             }
         }
     }

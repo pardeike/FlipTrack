@@ -4,7 +4,7 @@ import SwiftUI
 @MainActor
 final class Scanner: ObservableObject {
     @Published private(set) var isMonitoring = false
-    @Published private(set) var status = "Point the rear camera at the whole score display."
+    @Published private(set) var status = "Aim at the whole score display."
     @Published private(set) var error: String?
     let camera = Camera()
     private var detector = EndGameDetector()
