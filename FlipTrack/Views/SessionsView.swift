@@ -1,11 +1,12 @@
 import SwiftUI
-import _SwiftData_SwiftUI
+import SwiftData
 import AVFoundation
 import Foundation
 
 struct SessionsView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \Session.date) private var sessions: [Session]
+    @State private var saveError: String?
     var debugSessions: [Session]? = nil
     
     func formattedDate(_ date: Date) -> String {
@@ -22,7 +23,7 @@ struct SessionsView: View {
     func addSession() {
         let newSession = Session(date: Date())
         context.insert(newSession)
-        try? context.save()
+        saveChanges()
     }
     
     func deleteSession(at offsets: IndexSet) {
@@ -30,7 +31,15 @@ struct SessionsView: View {
             let session = sortedSessions[index]
             context.delete(session)
         }
-        try? context.save()
+        saveChanges()
+    }
+
+    private func saveChanges() {
+        do { try context.save() }
+        catch {
+            context.rollback()
+            saveError = error.localizedDescription
+        }
     }
 
     var body: some View {
@@ -82,6 +91,9 @@ struct SessionsView: View {
             }
         }
         .preferredColorScheme(.dark)
+        .alert("Changes were not saved", isPresented: Binding(get: { saveError != nil }, set: { if !$0 { saveError = nil } })) {
+            Button("OK", role: .cancel) { saveError = nil }
+        } message: { Text(saveError ?? "") }
     }
 }
 

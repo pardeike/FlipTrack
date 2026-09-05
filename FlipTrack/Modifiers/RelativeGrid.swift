@@ -15,7 +15,7 @@ struct RelativeWidthObserverModifier: ViewModifier {
     @State private var measuredWidth = CGFloat.zero
     
     struct Key: PreferenceKey {
-        static var defaultValue = CGFloat.zero
+        static let defaultValue = CGFloat.zero
         static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
             value = max(value, nextValue())
         }

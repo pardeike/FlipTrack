@@ -1,117 +1,86 @@
-import UIKit
 import AVFoundation
-import Vision
-import CoreImage
+import SwiftUI
 
-class Scanner {
-    
-    static let store = ConfigStore()
-    static let camera = Camera()
-    static var callback: (([Int]) -> Void)? = nil
-    
-    static var previousScores: [Int] = []
-    static var scanHistory: [[Int]] = []
-    static var scanCounts: [String: Int] = [:]
-    static let scannerDelegate = ScannerDelegate()
-    
-    class ScannerDelegate: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
-        func captureOutput(_ output: AVCaptureOutput,
-                           didOutput sampleBuffer: CMSampleBuffer,
-                           from connection: AVCaptureConnection) {
-            guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
-            let rawImage = CIImage(cvPixelBuffer: pixelBuffer)
-            let filteredImage = store.config.filterImage
-                ? rawImage.preprocessImage(
-                    strength: store.config.filterStrength,
-                    contrast: store.config.contrast,
-                    sharpness: store.config.sharpness)
-                : rawImage
-            let requestHandler = VNImageRequestHandler(ciImage: filteredImage, options: [:])
-            let textRequest = VNRecognizeTextRequest { request, error in
-                if let observations = request.results as? [VNRecognizedTextObservation] {
-                    processTextObservations(observations)
-                }
-            }
-            textRequest.recognitionLevel = .accurate
-            textRequest.usesLanguageCorrection = false
-            try? requestHandler.perform([textRequest])
-        }
-    }
-    
-    static func startScanning(_ cb: @escaping ([Int]) -> Void) {
-        callback = cb
-        scanHistory.removeAll()
-        scanCounts.removeAll()
-        previousScores.removeAll()
-        let videoOutput = AVCaptureVideoDataOutput()
-        videoOutput.setSampleBufferDelegate(scannerDelegate, queue: DispatchQueue(label: "videoQueue"))
-        if camera.session.canAddOutput(videoOutput) {
-            camera.session.addOutput(videoOutput)
-        }
-    }
-    
-    static func stopScanning() {
-        camera.session.outputs.forEach { camera.session.removeOutput($0) }
-    }
-    
-    static func scoreFromText(_ text: String) -> Int? {
-        let cleanText = text
-            .replacing("O", with: "0")
-            .replacing("S", with: "5")
-            .replacing("l", with: "1")
-            .replacing("B", with: "8")
-        if let num = NumberFormatter.american.number(from: cleanText) {
-            let score = Int(truncating: num)
-            if score % 10 == 0 && score >= 100 && score < 10_000_000_000 { return score }
-        }
-        return nil
-    }
-    
-    static func processTextObservations(_ observations: [VNRecognizedTextObservation]) {
-        var hasFreePlay = false
-        var scores: [(score: Int, rect: CGRect)] = []
-        for observation in observations {
-            guard let candidate = observation.topCandidates(1).first else { continue }
-            let text = candidate.string.uppercased()
-            if try! /FREE ?PLAY\.?/.wholeMatch(in: text) != nil {
-                // let start = candidate.string.firstIndex(of: "F")!
-                // let end = candidate.string.lastIndex(of: "Y")!
-                // let range = Range(uncheckedBounds: (start, end))
-                // let pos = try! candidate.boundingBox(for: range)!
-                // print("### \(text) @ \(pos.topLeft) \(pos.topRight) \(pos.bottomLeft) \(pos.bottomRight)")
-                hasFreePlay = true
+@MainActor
+final class Scanner: ObservableObject {
+    @Published private(set) var isMonitoring = false
+    @Published private(set) var status = "Point the rear camera at the whole score display."
+    @Published private(set) var error: String?
+    let camera = Camera()
+    private var detector = EndGameDetector()
+    private var generation = UUID()
+    private var previousIdleTimerDisabled: Bool?
+
+    func start(configuration: Configuration, lastScores: [Int], save: @escaping @MainActor (DisplayResult) throws -> Void) {
+        guard !isMonitoring else { return }
+        generation = UUID()
+        let token = generation
+        error = nil
+        status = "Starting camera…"
+        isMonitoring = true
+        detector = EndGameDetector(lastScores: lastScores, requiredReadings: configuration.requiredScanCount, historyLimit: configuration.historyLimit)
+        previousIdleTimerDisabled = UIApplication.shared.isIdleTimerDisabled
+        UIApplication.shared.isIdleTimerDisabled = true
+        Task { [self] in
+            let permission = AVCaptureDevice.authorizationStatus(for: .video)
+            let granted: Bool
+            if permission == .notDetermined {
+                granted = await requestPermission()
             } else {
-                if let score = scoreFromText(text) {
-                    scores.append((score: score, rect: observation.boundingBox))
-                } else if hasFreePlay && text.contains("0") {
-                    // print("# - [\(text)]")
+                granted = permission == .authorized
+            }
+            guard generation == token, isMonitoring else { return }
+            guard granted else {
+                fail("Allow camera access for FlipTrack in Settings.")
+                return
+            }
+            camera.start(configuration: configuration) { [weak self] event in
+                guard let self, self.generation == token, self.isMonitoring else { return }
+                switch event {
+                case .started:
+                    self.status = "Watching for final scores"
+                case .failed(let message):
+                    self.fail(message)
+                case .frame(let text, let time):
+                    let result = EndGameLayout.result(in: text)
+                    let readable = EndGameLayout.hasDisplayText(in: text)
+                    if let confirmed = self.detector.observe(result, at: time, readable: readable) {
+                        do {
+                            try save(confirmed)
+                            UINotificationFeedbackGenerator().notificationOccurred(.success)
+                            self.status = "Game saved. Waiting for the next game."
+                        } catch {
+                            self.fail("Scores were not saved: \(error.localizedDescription)")
+                        }
+                    } else if !self.detector.armed || (result != nil && result == self.detector.lastRegistered) {
+                        self.status = "Game saved. Waiting for the next game."
+                    } else if result != nil {
+                        self.status = "Checking final scores…"
+                    } else {
+                        self.status = "Watching for final scores"
+                    }
                 }
             }
         }
-        guard hasFreePlay, scores.count == 2 else { return }
-        
-        let sortedScores = scores.sorted { $0.rect.midX < $1.rect.midX }
-        let leftScore = sortedScores.first!.score
-        let rightScore = sortedScores.last!.score
-        let currentScores = [leftScore, rightScore]
-        if previousScores != currentScores {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            previousScores = currentScores
-        }
+    }
 
-        scanHistory.append(currentScores)
-        let key = "\(currentScores[0]),\(currentScores[1])"
-        scanCounts[key, default: 0] += 1
-        if scanHistory.count > store.config.historyLimit {
-            let old = scanHistory.removeFirst()
-            let oldKey = "\(old[0]),\(old[1])"
-            if let c = scanCounts[oldKey], c > 1 { scanCounts[oldKey] = c - 1 } else { scanCounts.removeValue(forKey: oldKey) }
+    private func requestPermission() async -> Bool {
+        await AVCaptureDevice.requestAccess(for: .video)
+    }
+
+    func stop() {
+        generation = UUID()
+        isMonitoring = false
+        camera.stop()
+        if let previousIdleTimerDisabled {
+            UIApplication.shared.isIdleTimerDisabled = previousIdleTimerDisabled
+            self.previousIdleTimerDisabled = nil
         }
-        if scanCounts[key, default: 0] >= store.config.requiredScanCount {
-            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
-            callback?(currentScores)
-            scanHistory.removeAll()
-            scanCounts.removeAll()
-        }
+        status = "Monitoring paused"
+    }
+
+    private func fail(_ message: String) {
+        stop()
+        error = message
     }
 }

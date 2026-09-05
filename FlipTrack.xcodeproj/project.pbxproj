@@ -150,7 +150,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FlipTrack/Info.plist;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Take a photo of the scores";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Watch the pinball display and automatically record final scores";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -166,7 +166,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = net.pardeike.lab.FlipTrack;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -181,7 +181,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FlipTrack/Info.plist;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Take a photo of the scores";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Watch the pinball display and automatically record final scores";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -197,7 +197,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = net.pardeike.lab.FlipTrack;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;

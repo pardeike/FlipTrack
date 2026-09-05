@@ -1,6 +1,7 @@
 import Foundation
 
-class ConfigStore: ObservableObject {
+@MainActor
+final class ConfigStore: ObservableObject {
     @Published var config: Configuration {
         didSet {
             if let data = try? JSONEncoder().encode(config) {
@@ -11,6 +12,9 @@ class ConfigStore: ObservableObject {
     
     init() {
         let data = UserDefaults.standard.data(forKey: "Configuration") ?? Data()
-        config = (try? JSONDecoder().decode(Configuration.self, from: data)) ?? Configuration()
+        var loaded = (try? JSONDecoder().decode(Configuration.self, from: data)) ?? Configuration()
+        loaded.requiredScanCount = max(4, min(10, loaded.requiredScanCount))
+        loaded.historyLimit = max(loaded.requiredScanCount, min(20, loaded.historyLimit))
+        config = loaded
     }
 }

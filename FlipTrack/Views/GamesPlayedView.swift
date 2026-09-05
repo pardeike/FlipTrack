@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 struct GamesPlayedView: View {
     let games: [Game]
@@ -7,6 +8,7 @@ struct GamesPlayedView: View {
     let colorFor: (Int) -> Color
     
     @FocusState private var editFocus: Bool
+    @State private var saveError: String?
     @State var editGame: Game? = nil
     @State var editScoreIndex = 0
     
@@ -47,6 +49,14 @@ struct GamesPlayedView: View {
     
     var sortedGames: [Game] { games.sorted(using: SortDescriptor(\Game.nr)).reversed() }
     
+    private func saveChanges(in context: ModelContext) {
+        do { try context.save() }
+        catch {
+            context.rollback()
+            saveError = error.localizedDescription
+        }
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             SectionHeader(title: "GAMES")
@@ -64,13 +74,13 @@ struct GamesPlayedView: View {
                                                 let s = game.scores[0]
                                                 game.scores[0] = game.scores[1]
                                                 game.scores[1] = s
-                                                try! context.save()
+                                                saveChanges(in: context)
                                             }
                                         }
                                         Button("Delete", role: .destructive) {
                                             if let context = game.modelContext {
                                                 context.delete(game)
-                                                try! context.save()
+                                                saveChanges(in: context)
                                                 scrollReader.scrollTo(0)
                                             }
                                         }
@@ -129,6 +139,9 @@ struct GamesPlayedView: View {
             .scrollIndicators(.hidden)
             .padding(.bottom, 20)
         }
+        .alert("Changes were not saved", isPresented: Binding(get: { saveError != nil }, set: { if !$0 { saveError = nil } })) {
+            Button("OK", role: .cancel) { saveError = nil }
+        } message: { Text(saveError ?? "") }
         .sheet(item: $editGame) {
             ScoreEditView(
                 game: $0,

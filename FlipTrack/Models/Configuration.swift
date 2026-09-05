@@ -1,5 +1,5 @@
-struct Configuration: Codable {
-    var requiredScanCount = 3
+struct Configuration: Codable, Sendable {
+    var requiredScanCount = 4
     var historyLimit = 10
     var fstopsDown = Float(-1)
     var qualityMode = true

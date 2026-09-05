@@ -7,11 +7,15 @@ public final class Session: Identifiable, Hashable {
     public var date = Date()
     public var player1 = "Andreas"
     public var player2 = "Fredrik"
+    // Raw display order, independent of score corrections and player assignment.
+    public var lastCapturedScores: [Int] = []
+    public var nextGameNumber: Int = 1
     @Relationship(deleteRule: .cascade, inverse: \Game.session)
     public var games: [Game]?
 
     public init(date: Date) {
         self.date = date
+        games = []
     }
     
     public var playerTotals: [Int] {
@@ -44,7 +48,25 @@ public final class Session: Identifiable, Hashable {
         ]
     }
     
-    public var firstPlayerIndex: Int { ((games?.count ?? 0) + 1) % 2 }
+    public var upcomingGameNumber: Int { max(nextGameNumber, (games?.map(\.nr).max() ?? 0) + 1) }
+    public var firstPlayerIndex: Int { upcomingGameNumber % 2 }
+
+    @MainActor
+    func record(_ result: DisplayResult, in context: ModelContext) throws {
+        let number = upcomingGameNumber
+        let ordered = firstPlayerIndex == 0 ? result.scores : result.scores.reversed().map { $0 }
+        let game = Game(nr: number, scores: ordered, session: self)
+        // Set the relationship once. SwiftData maintains its inverse.
+        context.insert(game)
+        nextGameNumber = number + 1
+        lastCapturedScores = result.scores
+        do {
+            try context.save()
+        } catch {
+            context.rollback()
+            throw error
+        }
+    }
     public var firstPlayer: String { [player1, player2][firstPlayerIndex] }
     public var secondPlayer: String { [player1, player2][1 - firstPlayerIndex] }
 }
