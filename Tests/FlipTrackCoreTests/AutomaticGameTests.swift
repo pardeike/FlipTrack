@@ -46,44 +46,6 @@ private let zero = DisplayResult(left: 0, right: 0)
     #expect(!detector.armed)
 }
 
-@Test func actionPersonTracksTurnsThenBecomesNextStarter() {
-    var state = AutomaticGameState(firstPlayerIndex: 1)
-    #expect(state.phase == .ready)
-    #expect(state.actionPlayerIndex == 1)
-    state.gameStarted()
-    #expect(state.phase == .playing)
-    state.playerIndicated(1)
-    #expect(state.actionPlayerIndex == 0)
-    #expect(state.otherPlayerIndex == 1)
-    state.gameFinished(finalScore)
-    #expect(state.phase == .switchPlayers)
-    #expect(state.actionPlayerIndex == 0)
-    #expect(state.finishedScores == [37_531_870, 24_274_100])
-    // Attract-mode player prompts cannot dismiss the switch screen.
-    state.playerIndicated(1)
-    #expect(state.phase == .switchPlayers)
-    #expect(state.actionPlayerIndex == 0)
-    state.gameStarted()
-    #expect(state.phase == .playing)
-    #expect(state.actionPlayerIndex == 0)
-    state.playerIndicated(1)
-    #expect(state.actionPlayerIndex == 1)
-    state.gameFinished(DisplayResult(left: 1000, right: 2000))
-    #expect(state.actionPlayerIndex == 1)
-    #expect(state.finishedScores == [1000, 2000])
-}
-
-@Test func resumesWithThePersonWhoStartsNext() {
-    let state = AutomaticGameState(firstPlayerIndex: 0, lastScores: finalScore.scores)
-    #expect(state.phase == .switchPlayers)
-    #expect(state.actionPlayerIndex == 0)
-    #expect(state.finishedScores == [37_531_870, 24_274_100])
-}
-
-private func text(_ value: String, x: CGFloat = 0.1, y: CGFloat = 0.7, confidence: Float = 1, inside: Bool = true) -> DisplayText {
-    DisplayText(text: value, confidence: confidence, bounds: CGRect(x: x, y: y, width: 0.1, height: 0.1), isInsideDisplay: inside)
-}
-
 @Test func zeroLayoutNeedsAScoreboard() {
     func label(_ value: String, _ bounds: CGRect) -> DisplayText {
         DisplayText(text: value, confidence: 1, bounds: bounds)
@@ -118,23 +80,6 @@ private func text(_ value: String, x: CGFloat = 0.1, y: CGFloat = 0.7, confidenc
         }
         #expect(GameDisplayLayout.isNewGame(in: shifted))
     }
-}
-
-@Test func explicitPlayerPromptsNeedAgreement() {
-    #expect(GameDisplayLayout.activePlayer(in: [text("PLAYER 1")]) == 0)
-    #expect(GameDisplayLayout.activePlayer(in: [text("PLAYER 2 UP")]) == 1)
-    #expect(GameDisplayLayout.activePlayer(in: [text("PLAYER 1"), text("PLAYER 2")]) == nil)
-    #expect(GameDisplayLayout.activePlayer(in: [text("HIGH SCORE PLAYER 1")]) == nil)
-    #expect(GameDisplayLayout.activePlayer(in: [text("PLAYER 3")]) == nil)
-    #expect(GameDisplayLayout.activePlayer(in: [text("PLAYER 1", confidence: 0.2)]) == nil)
-    #expect(GameDisplayLayout.activePlayer(in: [text("PLAYER 1", inside: false)]) == nil)
-    var detector = PlayerPromptDetector()
-    #expect(detector.observe(0, at: 0) == nil)
-    #expect(detector.observe(1, at: 0.5) == nil)
-    #expect(detector.observe(1, at: 1) == 1)
-    #expect(detector.observe(nil, at: 1.5) == nil)
-    #expect(detector.observe(0, at: 2) == nil)
-    #expect(detector.observe(0, at: 5) == nil)
 }
 
 @Test func pauseDropsPartialEvidenceButKeepsSavedGameProtection() {
@@ -177,74 +122,14 @@ private func text(_ value: String, x: CGFloat = 0.1, y: CGFloat = 0.7, confidenc
     }
 }
 
-@Test func bonusAdvancesOnceUntilReadablePlayResumes() {
-    var detector = TurnEndDetector()
-    var state = AutomaticGameState(firstPlayerIndex: 1)
-    for tick in 0...12 {
-        if detector.observe(true, at: Double(tick) * 0.5, readable: true) { state.turnFinished() }
-    }
-    #expect(state.actionPlayerIndex == 0)
-    #expect(state.phase == .turnEnded)
-    detector.discardPendingReadings()
-    for tick in 20...25 {
-        #expect(detector.observe(true, at: Double(tick) * 0.5, readable: true) == false)
-    }
-    for tick in 26...35 {
-        #expect(detector.observe(false, at: Double(tick) * 0.5, readable: false) == false)
-    }
-    #expect(detector.observe(true, at: 18, readable: true) == false)
-    #expect(detector.observe(true, at: 18.5, readable: true) == false)
-    for tick in 38...42 { _ = detector.observe(false, at: Double(tick) * 0.5, readable: true) }
-    #expect(detector.observe(true, at: 21.5, readable: true) == false)
-    #expect(detector.observe(true, at: 22, readable: true) == true)
-    state.turnFinished()
-    #expect(state.actionPlayerIndex == 1)
-    state.gameFinished(finalScore)
-    let saved = state
-    state.turnFinished()
-    #expect(state == saved)
-}
-
 @Test func bonusHeadingMustMatchAndBeAtTopCenter() {
     func header(_ value: String, x: CGFloat = 0.25, y: CGFloat = 0.7) -> DisplayText {
         DisplayText(text: value, confidence: 1, bounds: CGRect(x: x, y: y, width: 0.5, height: 0.12), isInsideDisplay: true)
     }
-    #expect(GameDisplayLayout.isTurnEnd(in: [header("TOTAL BONUS")]))
-    #expect(GameDisplayLayout.isTurnEnd(in: [header("total  bonus")]))
-    #expect(!GameDisplayLayout.isTurnEnd(in: [header("BONUS")]))
-    #expect(!GameDisplayLayout.isTurnEnd(in: [header("TOTAL BONUS X2")]))
-    #expect(!GameDisplayLayout.isTurnEnd(in: [header("TOTAL BONUS", y: 0.1)]))
-    #expect(!GameDisplayLayout.isTurnEnd(in: [header("TOTAL BONUS", x: 0)]))
-    var detector = TurnEndDetector()
-    #expect(detector.observe(true, at: 0, readable: true) == false)
-    #expect(detector.observe(false, at: 0.5, readable: false) == false)
-    #expect(detector.observe(true, at: 1, readable: true) == false)
-    #expect(detector.observe(true, at: 4, readable: true) == false)
-}
-
-@Test func completeTwoPlayerGamesKeepNamesAndStarterOrder() {
-    var state = AutomaticGameState(firstPlayerIndex: 1)
-    for starter in [1, 0] {
-        state.gameStarted()
-        #expect(state.actionPlayerIndex == starter)
-        for _ in 0..<3 {
-            state.turnFinished()
-            #expect(state.phase == .turnEnded)
-            #expect(state.actionPlayerIndex == 1 - starter)
-            state.playerIndicated(1)
-            #expect(state.phase == .playing)
-            #expect(state.actionPlayerIndex == 1 - starter)
-            state.turnFinished()
-            #expect(state.actionPlayerIndex == starter)
-            state.playerIndicated(0)
-        }
-        state.gameFinished(finalScore)
-        #expect(state.phase == .switchPlayers)
-        #expect(state.actionPlayerIndex == 1 - starter)
-        #expect(state.finishedScores == (starter == 0 ? finalScore.scores : Array(finalScore.scores.reversed())))
-        state.turnFinished()
-        state.playerIndicated(1)
-        #expect(state.phase == .switchPlayers)
-        #expect(state.actionPlayerIndex == 1 - starter)
-    }
+    #expect(GameDisplayLayout.isBonusScreen(in: [header("TOTAL BONUS")]))
+    #expect(GameDisplayLayout.isBonusScreen(in: [header("total  bonus")]))
+    #expect(!GameDisplayLayout.isBonusScreen(in: [header("BONUS")]))
+    #expect(!GameDisplayLayout.isBonusScreen(in: [header("TOTAL BONUS X2")]))
+    #expect(!GameDisplayLayout.isBonusScreen(in: [header("TOTAL BONUS", y: 0.1)]))
+    #expect(!GameDisplayLayout.isBonusScreen(in: [header("TOTAL BONUS", x: 0)]))
 }

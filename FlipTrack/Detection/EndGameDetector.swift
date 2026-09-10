@@ -49,7 +49,7 @@ enum EndGameLayout {
         guard !observations.contains(where: {
             $0.confidence >= 0.5 && $0.text.uppercased().range(of: #"^BALL(?:\s|$)"#, options: .regularExpression) != nil
         }) else { return nil }
-        guard !GameDisplayLayout.isTurnEnd(in: observations) else { return nil }
+        guard !GameDisplayLayout.isBonusScreen(in: observations) else { return nil }
         let readable = observations.filter { $0.confidence >= 0.5 }
         let anchors = readable.filter {
             $0.text.uppercased().replacingOccurrences(of: " ", with: "")

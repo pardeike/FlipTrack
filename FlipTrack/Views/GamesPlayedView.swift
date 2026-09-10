@@ -5,6 +5,7 @@ struct GamesPlayedView: View {
     let games: [Game]
     let formattedNumber: (Int) -> String
     let colorFor: (Int) -> Color
+    var allowsEditing = true
     @State private var saveError: String?
     @State private var editGame: Game?
     @State private var editScoreIndex = 0
@@ -24,7 +25,7 @@ struct GamesPlayedView: View {
             HStack {
                 Text("GAMES").font(.caption.weight(.semibold)).tracking(1)
                 Spacer()
-                Text("Tap a score to edit").font(.caption)
+                Text(allowsEditing ? "Tap a score to edit" : "Stop scanning to edit").font(.caption)
             }
             .foregroundStyle(.secondary)
             ForEach(sortedGames) { game in
@@ -42,6 +43,7 @@ struct GamesPlayedView: View {
                             .frame(width: 36, height: 44)
                             .contentShape(Rectangle())
                     }
+                    .disabled(!allowsEditing)
                     .accessibilityLabel("Game \(game.nr) actions")
                     ForEach(0..<2) { index in
                         Button {
@@ -64,7 +66,8 @@ struct GamesPlayedView: View {
                             .background(colorFor(index).opacity(game.winningIndex == index ? 0.24 : 0.08), in: RoundedRectangle(cornerRadius: 9))
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel("Game \(game.nr), \(index == 0 ? game.session?.player1 ?? "Player 1" : game.session?.player2 ?? "Player 2"), \(game.scores[index]). Edit score")
+                        .disabled(!allowsEditing)
+                        .accessibilityLabel("Game \(game.nr), \(index == 0 ? game.session?.player1 ?? "Player 1" : game.session?.player2 ?? "Player 2"), \(game.scores[index])\(allowsEditing ? ". Edit score" : "")")
                     }
                 }
             }

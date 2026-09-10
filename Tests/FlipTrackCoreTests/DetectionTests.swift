@@ -173,7 +173,7 @@ func bonusPhoto() throws {
         }
         for variant in variants {
             let text = try DisplayReader.read(variant)
-            #expect(GameDisplayLayout.isTurnEnd(in: text), "Bonus OCR at \(height): \(text.map(\.text))")
+            #expect(GameDisplayLayout.isBonusScreen(in: text), "Bonus OCR at \(height): \(text.map(\.text))")
             #expect(EndGameLayout.result(in: text) == nil)
             #expect(!GameDisplayLayout.isNewGame(in: text))
         }
@@ -222,7 +222,7 @@ func centeredTripodPhotos() throws {
             let cropped = resized.cropped(to: DisplayReader.centeredScanRect(in: video))
             let text = try DisplayReader.read(cropped)
             #expect(EndGameLayout.result(in: text)?.scores == fixture.scores, "\(height): \(text.map(\.text))")
-            #expect(GameDisplayLayout.isTurnEnd(in: text) == fixture.bonus, "\(height): \(text.map(\.text))")
+            #expect(GameDisplayLayout.isBonusScreen(in: text) == fixture.bonus, "\(height): \(text.map(\.text))")
         }
     }
 }

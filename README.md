@@ -6,13 +6,19 @@ The continuous scanner targets the Indiana Jones two-player final-score display.
 ## Use
 
 Create or open a session, mount the iPhone in portrait with the entire display
-visible, and tap **Start monitoring**. Tap the camera preview to enlarge it while aligning the mount. Leave FlipTrack open. It keeps the phone
-awake while monitoring, records confirmed final scores, and continues watching
-for the next game. Automatic mode gives the person who should act a large name
-and prompt: **Come and play**, **Your turn**, **Up next**, or **Start the next game**. The other player is
-a smaller reference showing their last score and session wins. After saving,
-the next starter is called forward. Three readings of both scores at zero over
-one second return the view to play; 0–0 is never saved as a result.
+visible, and tap the red record-style button to start scanning. The main page
+keeps the starter/order card, totals, and individual score pairs visible.
+The small scan control shows whether scanning is active, paused, or off.
+Tap the camera button for a full-screen alignment preview, then **Scores** to
+return to the table. The score page creates no camera preview; capture and OCR
+continue while scanning.
+
+FlipTrack keeps the iPhone awake throughout the app while it is active,
+including the score table, settings, and camera view. Normal idle-timer behavior
+is restored when the app becomes inactive or enters the background.
+Automatic turn switching and “Up next” prompts have been removed. The existing
+starter/order card follows the session's game numbering. Confirmed score pairs
+continue to be saved as individual games.
 
 Stop monitoring to correct or delete an entry. Tap a score to edit it, or the game number for score swapping and deletion.
 
@@ -37,7 +43,7 @@ The optional image filter remains available. Tap the small pause button in the
 top corner before picking up the phone. The camera stops and the current game
 state stays on screen. Put the phone back and tap play to resume. Going to the
 background also pauses monitoring; returning does not resume it automatically.
-Recovering from a camera interruption requires tapping **Start monitoring** again.
+Recovering from a camera interruption requires tapping the scan button again.
 
 ## Recognition
 
@@ -62,19 +68,8 @@ complete display and legible digits are still necessary. Two consecutive games
 with exactly the same left/right scores are suppressed as duplicates. The end
 layout is assumed to appear only after a game, as confirmed for this machine.
 
-Turn-end detection recognizes the centered **TOTAL BONUS** heading above the
-bonus amount, including a full-image fallback when glare hides the display frame.
-Two readings over at least half a second advance to the other player and show
-**Up next**, naming who just finished. A held bonus screen advances only once;
-two seconds of readable non-bonus frames rearm detection. Unreadable frames and
-pausing do not rearm it. The bonus amount is never saved as a final score.
-After the final score pair is saved, **Start the next game** names the next starter.
-
-Current-player detection accepts a single explicit PLAYER 1 or PLAYER 2 prompt
-inside a detected display, confirmed across two readings. It retains the last
-known player through animations and unreadable frames. The supplied photos do
-not show turn prompts, so active-player recognition still needs validation on
-the machine. Start-screen detection is checked against six real zero–zero
+A recognized **TOTAL BONUS** layout is excluded from final-score capture; it
+does not change players. Start-screen detection is checked against six zero–zero
 photos: a large 00, a smaller 00 to its right, and BALL 1 / FREE PLAY below.
 The geometry is relative to those labels, allowing a changed mounting position.
 A BALL label also prevents live scores from being treated as a final result.
