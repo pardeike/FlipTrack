@@ -44,7 +44,9 @@ rather than merely deleting a row and leaving the wrong number/order behind.
   Status distinguishes paused, stopped, looking, unreadable, candidate available,
   save failure, and saved. It does not claim someone should play.
 - Camera alignment: full-screen preview and optional centered guide, same scan
-  controls, explicit return to scores. No preview layer exists on the table.
+  controls, explicit return to scores. Available while stopped or paused without
+  OCR or saving; closing preview then stops the camera. No preview layer exists
+  on the table.
 - Game editor: both scores, swap scores, game number, recorded starter.
   The game-number menu provides deletion with confirmation.
   Input is a local draft until Save; Cancel leaves persistent values unchanged.
@@ -79,7 +81,8 @@ screen, TOTAL BONUS, GAME OVER, or FREE PLAY alone as a game identity boundary.
 
 - Foreground keep-awake is app-owned; restore the prior idle-timer setting when
   inactive/backgrounded.
-- Capture and OCR stop on pause/background; no hidden preview on score screen.
+- OCR stops on pause/background; the camera also stops unless the foreground
+  alignment preview is visible. No hidden preview on the score screen.
 - Retain bounded OCR cadence and one-at-a-time processing; drop stale frames.
 - Crop before filtering/OCR when centered scanning is enabled.
 - Avoid repeated identical status publishes and redundant OCR where practical.

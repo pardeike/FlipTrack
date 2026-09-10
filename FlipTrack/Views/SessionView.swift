@@ -200,7 +200,12 @@ struct SessionView: View {
         }
         .onDisappear { if !showingCamera { scanner.stop() } }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .background { scanner.pause(.background) }
+            if phase == .background {
+                scanner.setPreview(false, configuration: configStore.config)
+                scanner.pause(.background)
+            } else if phase == .active, showingCamera {
+                scanner.setPreview(true, configuration: configStore.config)
+            }
         }
         .sheet(item: $editor) { item in
             switch item {
@@ -208,6 +213,9 @@ struct SessionView: View {
             case .scores: ManualGameView(session: session)
             case .details: SessionDetailsView(session: session)
             }
+        }
+        .onChange(of: showingCamera) { _, visible in
+            scanner.setPreview(visible, configuration: configStore.config)
         }
         .fullScreenCover(isPresented: $showingCamera, onDismiss: {
             if let pending = editorAfterCamera {
@@ -217,14 +225,14 @@ struct SessionView: View {
         }) {
             NavigationStack {
                 VStack(spacing: 16) {
-                    if scanner.isMonitoring && !scanner.isPaused {
+                    if (scanner.isMonitoring && !scanner.isPaused) || scanner.previewRunning {
                         CameraPreview(session: scanner.camera.session, showsScanArea: scanner.usesCenteredScanArea)
                     } else {
-                        ContentUnavailableView("Camera paused", systemImage: "camera", description: Text(scanner.error ?? scanner.status))
+                        ContentUnavailableView(scanner.previewError == nil ? "Starting camera…" : "Camera unavailable", systemImage: "camera", description: Text(scanner.previewError ?? "Preview only · Scores are not being recorded."))
                     }
                     Text(scanner.usesCenteredScanArea ? "Center the whole display inside the guide." : "Keep the whole display in view.")
                         .font(.subheadline).foregroundStyle(.secondary)
-                    Text(scanner.error ?? scanner.status)
+                    Text(scanner.isMonitoring && !scanner.isPaused ? scanner.error ?? scanner.status : "Preview only · Scores are not being recorded.")
                         .font(.callout)
                 }
                 .padding()
@@ -302,7 +310,6 @@ struct SessionView: View {
                 .labelStyle(.iconOnly)
                 .font(.title2)
                 .frame(width: 44, height: 44)
-                .disabled(!scanner.isMonitoring && !showingCamera)
                 .accessibilityIdentifier("showCameraPreview")
         }
         .padding(.horizontal)

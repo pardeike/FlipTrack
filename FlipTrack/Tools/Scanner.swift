@@ -9,12 +9,17 @@ final class Scanner: ObservableObject {
     var error: String? { state.error }
     @Published private(set) var status = "Aim at the whole score display."
     @Published private(set) var usesCenteredScanArea = false
+    @Published private(set) var previewError: String?
+    @Published private(set) var previewRunning = false
+    private var previewConfiguration: Configuration?
     let camera = Camera()
     private var detector = EndGameDetector()
     private var generation = UUID()
 
     func start(configuration: Configuration, lastScores: [Int], allowRepeatedScores: Bool = false, rejectedSignatures: [String] = [], save: @escaping @MainActor (DisplayResult) throws -> Void) {
         guard !isMonitoring || isPaused else { return }
+        previewRunning = false
+        previewError = nil
         generation = UUID()
         let token = generation
         let rejected = Set(rejectedSignatures)
@@ -95,6 +100,7 @@ final class Scanner: ObservableObject {
         camera.stop()
         detector.discardPendingReadings()
         status = reason.message
+        startPreviewIfNeeded()
     }
 
     func stop() {
@@ -102,6 +108,51 @@ final class Scanner: ObservableObject {
         state = .off
         camera.stop()
         status = "Tap record to scan the current game."
+        startPreviewIfNeeded()
+    }
+
+    /// Preview owns camera access only while recording is stopped or paused.
+    /// It never feeds recognition or changes the recording intent.
+    func setPreview(_ visible: Bool, configuration: Configuration) {
+        previewConfiguration = visible ? configuration : nil
+        if visible {
+            startPreviewIfNeeded()
+        } else {
+            previewRunning = false
+            previewError = nil
+            if !isMonitoring || isPaused {
+                generation = UUID()
+                camera.stop()
+            }
+        }
+    }
+
+    private func startPreviewIfNeeded() {
+        guard let configuration = previewConfiguration, !isMonitoring || isPaused else { return }
+        generation = UUID()
+        let token = generation
+        previewRunning = false
+        previewError = nil
+        usesCenteredScanArea = configuration.useCenteredScanArea
+        Task { [self] in
+            let permission = AVCaptureDevice.authorizationStatus(for: .video)
+            let granted = permission == .notDetermined ? await requestPermission() : permission == .authorized
+            guard generation == token, previewConfiguration != nil else { return }
+            guard granted else {
+                previewError = "Allow camera access for FlipTrack in Settings."
+                return
+            }
+            camera.start(configuration: configuration, recognizesScores: false) { [weak self] event in
+                guard let self, self.generation == token else { return }
+                switch event {
+                case .started: self.previewRunning = true
+                case .failed(let message):
+                    self.previewRunning = false
+                    self.previewError = message
+                case .frame: break
+                }
+            }
+        }
     }
 
     func restorePausedSession() {

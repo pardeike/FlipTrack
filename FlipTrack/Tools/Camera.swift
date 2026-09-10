@@ -16,6 +16,7 @@ final class Camera: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unc
     private var configuration = Configuration()
     private var onEvent: (@MainActor @Sendable (Event) -> Void)?
     private var lastFrame = -Double.infinity
+    private var recognizesScores = true
 
     override init() {
         super.init()
@@ -25,8 +26,9 @@ final class Camera: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unc
 
     deinit { NotificationCenter.default.removeObserver(self) }
 
-    func start(configuration: Configuration, onEvent: @escaping @MainActor @Sendable (Event) -> Void) {
+    func start(configuration: Configuration, recognizesScores: Bool = true, onEvent: @escaping @MainActor @Sendable (Event) -> Void) {
         queue.async {
+            self.recognizesScores = recognizesScores
             self.configuration = configuration
             self.onEvent = onEvent
             self.lastFrame = -Double.infinity
@@ -105,7 +107,7 @@ final class Camera: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unc
     }
 
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        guard onEvent != nil else { return }
+        guard onEvent != nil, recognizesScores else { return }
         let now = ProcessInfo.processInfo.systemUptime
         guard now - lastFrame >= 0.5, let buffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
         lastFrame = now
