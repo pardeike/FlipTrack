@@ -13,7 +13,8 @@ struct AutomaticGameView: View {
         switch state.phase {
         case .ready: "Come and play"
         case .playing: "Your turn"
-        case .switchPlayers: "Switch"
+        case .turnEnded: "Up next"
+        case .switchPlayers: "Start the next game"
         }
     }
 
@@ -29,7 +30,7 @@ struct AutomaticGameView: View {
                 .padding(.top, 16)
 
                 VStack(spacing: 16) {
-                    Image(systemName: state.phase == .switchPlayers ? "arrow.left.arrow.right" : "arcade.stick")
+                    Image(systemName: (state.phase == .switchPlayers || state.phase == .turnEnded) ? "arrow.left.arrow.right" : "arcade.stick")
                         .font(.system(size: 32, weight: .medium))
                         .foregroundStyle(actionColor)
                         .accessibilityHidden(true)
@@ -41,9 +42,23 @@ struct AutomaticGameView: View {
                         .lineLimit(1).minimumScaleFactor(0.45)
                         .foregroundStyle(actionColor)
                         .accessibilityLabel("\(heading), \(players[state.actionPlayerIndex])")
-                    if state.phase == .switchPlayers {
-                        Text("You start the next game")
-                            .font(.headline)
+                    Group {
+                        switch state.phase {
+                        case .ready:
+                            Text("Start a two-player game. You play first.")
+                        case .playing:
+                            Text("Play when the machine is ready.")
+                        case .turnEnded:
+                            Text("\(players[state.otherPlayerIndex]) finished their turn.\nGet ready; play when the machine is ready.")
+                        case .switchPlayers:
+                            Text("Start a two-player game. You play first.")
+                        }
+                    }
+                    .font(.headline)
+                    .multilineTextAlignment(.center)
+                    if isPaused {
+                        Label("Monitoring paused · Tap play to resume", systemImage: "pause.circle.fill")
+                            .font(.subheadline).foregroundStyle(.orange)
                     }
                 }
                 .frame(maxWidth: .infinity)

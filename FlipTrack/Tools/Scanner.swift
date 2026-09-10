@@ -10,6 +10,7 @@ final class Scanner: ObservableObject {
     @Published private(set) var gameState = AutomaticGameState()
     let camera = Camera()
     private var detector = EndGameDetector()
+    private var turnDetector = TurnEndDetector()
     private var playerDetector = PlayerPromptDetector()
     private var generation = UUID()
     private var previousIdleTimerDisabled: Bool?
@@ -20,6 +21,7 @@ final class Scanner: ObservableObject {
         let token = generation
         error = nil
         if !isPaused {
+            turnDetector = TurnEndDetector()
             gameState = AutomaticGameState(firstPlayerIndex: firstPlayerIndex, lastScores: lastScores)
             detector = EndGameDetector(lastScores: lastScores, requiredReadings: configuration.requiredScanCount, historyLimit: configuration.historyLimit)
         }
@@ -56,6 +58,7 @@ final class Scanner: ObservableObject {
                         do {
                             try save(confirmed)
                             self.gameState.gameFinished(confirmed)
+                            self.turnDetector = TurnEndDetector()
                             self.playerDetector = PlayerPromptDetector()
                             UINotificationFeedbackGenerator().notificationOccurred(.success)
                             self.status = "Game saved. Waiting for the next game."
@@ -64,6 +67,7 @@ final class Scanner: ObservableObject {
                         }
                     } else if self.detector.detectedStart {
                         self.gameState.gameStarted()
+                        self.turnDetector = TurnEndDetector()
                         self.playerDetector = PlayerPromptDetector()
                         self.status = "New game detected"
                     } else if !self.detector.armed || (result != nil && result == self.detector.lastRegistered) {
@@ -75,7 +79,17 @@ final class Scanner: ObservableObject {
                     } else {
                         self.status = "Watching for final scores"
                     }
-                    if let slot = self.playerDetector.observe(GameDisplayLayout.activePlayer(in: text), at: time),
+                    let bonus = GameDisplayLayout.isTurnEnd(in: text)
+                    if self.turnDetector.observe(bonus, at: time, readable: readable),
+                       self.gameState.phase != .switchPlayers {
+                        self.gameState.turnFinished()
+                        self.playerDetector = PlayerPromptDetector()
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    }
+                    if bonus, self.gameState.phase == .turnEnded {
+                        self.status = "Turn finished. Next player’s turn."
+                    }
+                    if let slot = self.playerDetector.observe(bonus ? nil : GameDisplayLayout.activePlayer(in: text), at: time),
                        self.gameState.phase != .switchPlayers {
                         if self.gameState.activeSlot != slot || self.gameState.phase != .playing {
                             self.gameState.playerIndicated(slot)
@@ -96,6 +110,7 @@ final class Scanner: ObservableObject {
         isPaused = true
         camera.stop()
         detector.discardPendingReadings()
+        turnDetector.discardPendingReadings()
         playerDetector = PlayerPromptDetector()
         restoreIdleTimer()
         status = "Paused · Tap play to resume"

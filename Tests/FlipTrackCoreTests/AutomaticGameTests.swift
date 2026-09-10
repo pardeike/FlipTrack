@@ -176,3 +176,75 @@ private func text(_ value: String, x: CGFloat = 0.1, y: CGFloat = 0.7, confidenc
         #expect(!detector.detectedStart)
     }
 }
+
+@Test func bonusAdvancesOnceUntilReadablePlayResumes() {
+    var detector = TurnEndDetector()
+    var state = AutomaticGameState(firstPlayerIndex: 1)
+    for tick in 0...12 {
+        if detector.observe(true, at: Double(tick) * 0.5, readable: true) { state.turnFinished() }
+    }
+    #expect(state.actionPlayerIndex == 0)
+    #expect(state.phase == .turnEnded)
+    detector.discardPendingReadings()
+    for tick in 20...25 {
+        #expect(detector.observe(true, at: Double(tick) * 0.5, readable: true) == false)
+    }
+    for tick in 26...35 {
+        #expect(detector.observe(false, at: Double(tick) * 0.5, readable: false) == false)
+    }
+    #expect(detector.observe(true, at: 18, readable: true) == false)
+    #expect(detector.observe(true, at: 18.5, readable: true) == false)
+    for tick in 38...42 { _ = detector.observe(false, at: Double(tick) * 0.5, readable: true) }
+    #expect(detector.observe(true, at: 21.5, readable: true) == false)
+    #expect(detector.observe(true, at: 22, readable: true) == true)
+    state.turnFinished()
+    #expect(state.actionPlayerIndex == 1)
+    state.gameFinished(finalScore)
+    let saved = state
+    state.turnFinished()
+    #expect(state == saved)
+}
+
+@Test func bonusHeadingMustMatchAndBeAtTopCenter() {
+    func header(_ value: String, x: CGFloat = 0.25, y: CGFloat = 0.7) -> DisplayText {
+        DisplayText(text: value, confidence: 1, bounds: CGRect(x: x, y: y, width: 0.5, height: 0.12), isInsideDisplay: true)
+    }
+    #expect(GameDisplayLayout.isTurnEnd(in: [header("TOTAL BONUS")]))
+    #expect(GameDisplayLayout.isTurnEnd(in: [header("total  bonus")]))
+    #expect(!GameDisplayLayout.isTurnEnd(in: [header("BONUS")]))
+    #expect(!GameDisplayLayout.isTurnEnd(in: [header("TOTAL BONUS X2")]))
+    #expect(!GameDisplayLayout.isTurnEnd(in: [header("TOTAL BONUS", y: 0.1)]))
+    #expect(!GameDisplayLayout.isTurnEnd(in: [header("TOTAL BONUS", x: 0)]))
+    var detector = TurnEndDetector()
+    #expect(detector.observe(true, at: 0, readable: true) == false)
+    #expect(detector.observe(false, at: 0.5, readable: false) == false)
+    #expect(detector.observe(true, at: 1, readable: true) == false)
+    #expect(detector.observe(true, at: 4, readable: true) == false)
+}
+
+@Test func completeTwoPlayerGamesKeepNamesAndStarterOrder() {
+    var state = AutomaticGameState(firstPlayerIndex: 1)
+    for starter in [1, 0] {
+        state.gameStarted()
+        #expect(state.actionPlayerIndex == starter)
+        for _ in 0..<3 {
+            state.turnFinished()
+            #expect(state.phase == .turnEnded)
+            #expect(state.actionPlayerIndex == 1 - starter)
+            state.playerIndicated(1)
+            #expect(state.phase == .playing)
+            #expect(state.actionPlayerIndex == 1 - starter)
+            state.turnFinished()
+            #expect(state.actionPlayerIndex == starter)
+            state.playerIndicated(0)
+        }
+        state.gameFinished(finalScore)
+        #expect(state.phase == .switchPlayers)
+        #expect(state.actionPlayerIndex == 1 - starter)
+        #expect(state.finishedScores == (starter == 0 ? finalScore.scores : Array(finalScore.scores.reversed())))
+        state.turnFinished()
+        state.playerIndicated(1)
+        #expect(state.phase == .switchPlayers)
+        #expect(state.actionPlayerIndex == 1 - starter)
+    }
+}

@@ -9,7 +9,7 @@ Create or open a session, mount the iPhone in portrait with the entire display
 visible, and tap **Start monitoring**. Tap the camera preview to enlarge it while aligning the mount. Leave FlipTrack open. It keeps the phone
 awake while monitoring, records confirmed final scores, and continues watching
 for the next game. Automatic mode gives the person who should act a large name
-and prompt: **Come and play**, **Your turn**, or **Switch**. The other player is
+and prompt: **Come and play**, **Your turn**, **Up next**, or **Start the next game**. The other player is
 a smaller reference showing their last score and session wins. After saving,
 the next starter is called forward. Three readings of both scores at zero over
 one second return the view to play; 0–0 is never saved as a result.
@@ -55,6 +55,14 @@ There are no fixed screen coordinates or a required mounting distance. The
 complete display and legible digits are still necessary. Two consecutive games
 with exactly the same left/right scores are suppressed as duplicates. The end
 layout is assumed to appear only after a game, as confirmed for this machine.
+
+Turn-end detection recognizes the centered **TOTAL BONUS** heading above the
+bonus amount, including a full-image fallback when glare hides the display frame.
+Two readings over at least half a second advance to the other player and show
+**Up next**, naming who just finished. A held bonus screen advances only once;
+two seconds of readable non-bonus frames rearm detection. Unreadable frames and
+pausing do not rearm it. The bonus amount is never saved as a final score.
+After the final score pair is saved, **Start the next game** names the next starter.
 
 Current-player detection accepts a single explicit PLAYER 1 or PLAYER 2 prompt
 inside a detected display, confirmed across two readings. It retains the last

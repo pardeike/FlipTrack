@@ -1,7 +1,7 @@
 import Foundation
 
 struct AutomaticGameState: Equatable, Sendable {
-    enum Phase: Equatable, Sendable { case ready, playing, switchPlayers }
+    enum Phase: Equatable, Sendable { case ready, playing, turnEnded, switchPlayers }
 
     private(set) var phase: Phase
     private(set) var firstPlayerIndex: Int
@@ -33,6 +33,12 @@ struct AutomaticGameState: Equatable, Sendable {
         activeSlot = slot
     }
 
+    mutating func turnFinished() {
+        guard phase != .switchPlayers else { return }
+        phase = .turnEnded
+        activeSlot = 1 - activeSlot
+    }
+
     mutating func gameFinished(_ scores: DisplayResult) {
         finishedScores = firstPlayerIndex == 0 ? scores.scores : Array(scores.scores.reversed())
         firstPlayerIndex = 1 - firstPlayerIndex
@@ -44,6 +50,27 @@ struct AutomaticGameState: Equatable, Sendable {
 /// Explicit player prompts can name the person who is playing or being called
 /// to play. Two player labels are a scoreboard, not an active-player signal.
 enum GameDisplayLayout {
+    static func isTurnEnd(in observations: [DisplayText]) -> Bool {
+        observations.contains { header in
+            let normalized = header.text.uppercased().filter { !$0.isWhitespace }
+            guard header.confidence >= 0.7, normalized == "TOTALBONUS" else { return false }
+            let h = header.bounds
+            guard h.width > 0, h.height > 0 else { return false }
+            if header.isInsideDisplay {
+                return h.midY > 0.5 && abs(h.midX - 0.5) < 0.2
+            }
+            // Without a visible frame, the centered amount below the heading
+            // locates the bonus layout relative to the text, not the camera.
+            return observations.contains { amount in
+                let a = amount.bounds
+                return amount.confidence >= 0.5 && EndGameLayout.score(from: amount.text) != nil &&
+                    a.maxY < h.minY && h.midY - a.midY < h.height * 5 &&
+                    abs(a.midX - h.midX) < h.width * 0.2 &&
+                    a.height >= h.height * 0.8 && a.width < h.width * 1.5
+            }
+        }
+    }
+
     static func activePlayer(in observations: [DisplayText]) -> Int? {
         var slots = Set<Int>()
         for observation in observations where observation.isInsideDisplay && observation.confidence >= 0.7 {
@@ -112,5 +139,41 @@ struct PlayerPromptDetector {
         if since == nil { since = time }
         count += 1
         return count >= 2 && time - (since ?? time) >= 0.5 ? slot : nil
+    }
+}
+
+/// Emit once per bonus screen. Unreadable frames and pauses never rearm it.
+struct TurnEndDetector {
+    private var confirmation = PlayerPromptDetector()
+    private var latched = false
+    private var absentSince: TimeInterval?
+    private var lastTime: TimeInterval?
+
+    mutating func discardPendingReadings() {
+        confirmation = PlayerPromptDetector()
+        absentSince = nil
+        lastTime = nil
+    }
+
+    mutating func observe(_ bonus: Bool, at time: TimeInterval, readable: Bool) -> Bool {
+        if lastTime.map({ time <= $0 || time - $0 > 2 }) == true {
+            discardPendingReadings()
+        }
+        lastTime = time
+        if bonus {
+            absentSince = nil
+            let confirmed = confirmation.observe(0, at: time) != nil
+            guard confirmed, !latched else { return false }
+            latched = true
+            return true
+        }
+        _ = confirmation.observe(nil, at: time)
+        if readable {
+            if absentSince == nil { absentSince = time }
+            if time - (absentSince ?? time) >= 2 { latched = false }
+        } else {
+            absentSince = nil
+        }
+        return false
     }
 }

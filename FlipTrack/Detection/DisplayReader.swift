@@ -24,14 +24,14 @@ enum DisplayReader {
                 return observation
             }
             if EndGameLayout.result(in: text) != nil || GameDisplayLayout.isNewGame(in: text) ||
-                GameDisplayLayout.activePlayer(in: text) != nil { matches.append(text) }
+                GameDisplayLayout.activePlayer(in: text) != nil || GameDisplayLayout.isTurnEnd(in: text) { matches.append(text) }
             if EndGameLayout.hasDisplayText(in: text) { displayText = text }
         }
         if matches.count == 1 { return matches[0] }
         // Multiple matching displays are ambiguous; never pick one arbitrarily.
         if matches.count > 1 { return [] }
         let fullText = try recognize(image)
-        if EndGameLayout.result(in: fullText) != nil || GameDisplayLayout.isNewGame(in: fullText) { return fullText }
+        if EndGameLayout.result(in: fullText) != nil || GameDisplayLayout.isNewGame(in: fullText) || GameDisplayLayout.isTurnEnd(in: fullText) { return fullText }
         // Dot-matrix strokes can fragment at one OCR scale. Retry only a
         // potential two-zero screen; the same complete layout must still match.
         let zeroCount = fullText.filter { $0.text.range(of: #"^0{1,2}\s*-?$"#, options: .regularExpression) != nil }.count

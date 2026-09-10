@@ -159,3 +159,23 @@ func startScreenPhotos() throws {
         }
     }
 }
+
+@Test(.enabled(if: ProcessInfo.processInfo.environment["FLIPTRACK_BONUS_PHOTO"] != nil))
+func bonusPhoto() throws {
+    let path = try #require(ProcessInfo.processInfo.environment["FLIPTRACK_BONUS_PHOTO"])
+    let image = try #require(CIImage(contentsOf: URL(fileURLWithPath: path), options: [.applyOrientationProperty: true]))
+    for height in [image.extent.height, 1920, 1280] {
+        let resized = image.transformed(by: CGAffineTransform(scaleX: height / image.extent.height, y: height / image.extent.height))
+        var variants = [resized]
+        if height != image.extent.height {
+            let width = height * 9 / 16
+            variants.append(resized.cropped(to: CGRect(x: resized.extent.midX - width / 2, y: resized.extent.minY, width: width, height: height)))
+        }
+        for variant in variants {
+            let text = try DisplayReader.read(variant)
+            #expect(GameDisplayLayout.isTurnEnd(in: text), "Bonus OCR at \(height): \(text.map(\.text))")
+            #expect(EndGameLayout.result(in: text) == nil)
+            #expect(!GameDisplayLayout.isNewGame(in: text))
+        }
+    }
+}
