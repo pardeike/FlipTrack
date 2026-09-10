@@ -8,6 +8,9 @@ struct PreferencesView: View {
         NavigationStack {
             Form {
                 Section(header: Text("Scan Settings")) {
+                    Toggle("Centered scan area", isOn: $configStore.config.useCenteredScanArea)
+                    Text("Scan only the centered 4:3 guide. Keep the entire display inside it. Changes apply when monitoring starts.")
+                        .font(.caption).foregroundStyle(.secondary)
                     Stepper("Required Scan Count: \(configStore.config.requiredScanCount)",
                             value: $configStore.config.requiredScanCount,
                             in: 4...10)

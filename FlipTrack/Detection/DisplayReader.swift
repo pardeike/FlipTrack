@@ -4,6 +4,14 @@ import Vision
 /// Locate the display frame, correct perspective, then read the layout. No
 /// position or size is tied to the original holder photo.
 enum DisplayReader {
+    /// Largest landscape 4:3 rectangle that fits inside the upright frame.
+    static func centeredScanRect(in frame: CGRect) -> CGRect {
+        let width = min(frame.width, frame.height * 4 / 3)
+        let height = width * 3 / 4
+        return CGRect(x: frame.midX - width / 2, y: frame.midY - height / 2,
+                      width: width, height: height)
+    }
+
     static func read(_ input: CIImage) throws -> [DisplayText] {
         let image = input.transformed(by: CGAffineTransform(translationX: -input.extent.minX, y: -input.extent.minY))
         let rectangles = VNDetectRectanglesRequest()

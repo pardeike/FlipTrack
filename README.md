@@ -25,6 +25,12 @@ one game starts the next. Scores are stored under the players' names, regardless
 of their left/right positions on the display. Deleting an old entry does not
 change the next starter or reuse a game number.
 
+For a tripod, enable **Centered scan area** in Settings and center the entire
+display inside the yellow guide in the camera preview. OCR then uses only the
+largest centered landscape 4:3 rectangle that fits in the upright video frame.
+The shaded area is excluded. This option starts off, preserving full-frame
+scanning until you enable it.
+
 Settings apply the next time monitoring starts. High Quality captures at 1080p;
 the lower setting uses 720p. The exposure setting controls camera brightness.
 The optional image filter remains available. Tap the small pause button in the

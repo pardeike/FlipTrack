@@ -94,11 +94,11 @@ struct SessionView: View {
             NavigationStack {
                 VStack(spacing: 16) {
                     if scanner.isMonitoring && !scanner.isPaused {
-                        CameraPreview(session: scanner.camera.session)
+                        CameraPreview(session: scanner.camera.session, showsScanArea: scanner.usesCenteredScanArea)
                     } else {
                         ContentUnavailableView("Camera paused", systemImage: "camera", description: Text(scanner.error ?? scanner.status))
                     }
-                    Text("Keep the whole display in view.")
+                    Text(scanner.usesCenteredScanArea ? "Center the whole display inside the guide." : "Keep the whole display in view.")
                         .font(.subheadline).foregroundStyle(.secondary)
                     Text(scanner.error ?? scanner.status)
                         .font(.callout)
@@ -129,7 +129,7 @@ struct SessionView: View {
                             Color.black
                             Image(systemName: "pause.fill").foregroundStyle(.secondary)
                         } else if !showingCamera {
-                            CameraPreview(session: scanner.camera.session)
+                            CameraPreview(session: scanner.camera.session, showsScanArea: scanner.usesCenteredScanArea)
                         }
                         Image(systemName: "arrow.up.left.and.arrow.down.right")
                             .font(.caption).padding(6)

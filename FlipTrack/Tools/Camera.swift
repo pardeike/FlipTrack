@@ -102,7 +102,9 @@ final class Camera: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unc
         guard now - lastFrame >= 0.5, let buffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
         lastFrame = now
         autoreleasepool {
-            let raw = CIImage(cvPixelBuffer: buffer)
+            let frame = CIImage(cvPixelBuffer: buffer)
+            let raw = configuration.useCenteredScanArea
+                ? frame.cropped(to: DisplayReader.centeredScanRect(in: frame.extent)) : frame
             let image = configuration.filterImage ? raw.preprocessImage(
                 strength: configuration.filterStrength, contrast: configuration.contrast,
                 sharpness: configuration.sharpness) : raw

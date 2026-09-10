@@ -8,6 +8,7 @@ final class Scanner: ObservableObject {
     @Published private(set) var status = "Aim at the whole score display."
     @Published private(set) var error: String?
     @Published private(set) var gameState = AutomaticGameState()
+    @Published private(set) var usesCenteredScanArea = false
     let camera = Camera()
     private var detector = EndGameDetector()
     private var turnDetector = TurnEndDetector()
@@ -26,6 +27,7 @@ final class Scanner: ObservableObject {
             detector = EndGameDetector(lastScores: lastScores, requiredReadings: configuration.requiredScanCount, historyLimit: configuration.historyLimit)
         }
         isPaused = false
+        usesCenteredScanArea = configuration.useCenteredScanArea
         playerDetector = PlayerPromptDetector()
         status = "Starting camera…"
         isMonitoring = true

@@ -179,3 +179,50 @@ func bonusPhoto() throws {
         }
     }
 }
+
+@Test func centeredScanFitsUprightFrameAndPreservesItsCenter() {
+    for frame in [
+        CGRect(x: 0, y: 0, width: 1080, height: 1920),
+        CGRect(x: 0, y: 0, width: 1920, height: 1080),
+        CGRect(x: 80, y: 120, width: 720, height: 1280)
+    ] {
+        let crop = DisplayReader.centeredScanRect(in: frame)
+        #expect(frame.contains(crop))
+        #expect(crop.midX == frame.midX)
+        #expect(crop.midY == frame.midY)
+        #expect(crop.width / crop.height == 4.0 / 3)
+        #expect(crop.width == frame.width || crop.height == frame.height)
+    }
+}
+
+@Test func olderSettingsKeepFullFrameScanning() throws {
+    let json = """
+    {"requiredScanCount":4,"historyLimit":10,"fstopsDown":-1,"qualityMode":true,
+    "filterImage":false,"filterStrength":0.5,"contrast":1.5,"sharpness":0.5}
+    """
+    var config = try JSONDecoder().decode(Configuration.self, from: Data(json.utf8))
+    #expect(!config.useCenteredScanArea)
+    config.useCenteredScanArea = true
+    let restored = try JSONDecoder().decode(Configuration.self, from: JSONEncoder().encode(config))
+    #expect(restored.useCenteredScanArea)
+    #expect(restored.qualityMode)
+}
+
+@Test(.enabled(if: ProcessInfo.processInfo.environment["FLIPTRACK_TRIPOD_PHOTOS"] != nil))
+func centeredTripodPhotos() throws {
+    struct Fixture: Decodable { let path: String; let scores: [Int]?; let bonus: Bool }
+    let manifest = try #require(ProcessInfo.processInfo.environment["FLIPTRACK_TRIPOD_PHOTOS"])
+    let fixtures = try JSONDecoder().decode([Fixture].self, from: Data(contentsOf: URL(fileURLWithPath: manifest)))
+    for fixture in fixtures {
+        let image = try #require(CIImage(contentsOf: URL(fileURLWithPath: fixture.path), options: [.applyOrientationProperty: true]))
+        for height in [1920.0, 1280.0] {
+            let resized = image.transformed(by: CGAffineTransform(scaleX: height / image.extent.height, y: height / image.extent.height))
+            let width = height * 9 / 16
+            let video = CGRect(x: resized.extent.midX - width / 2, y: resized.extent.minY, width: width, height: height)
+            let cropped = resized.cropped(to: DisplayReader.centeredScanRect(in: video))
+            let text = try DisplayReader.read(cropped)
+            #expect(EndGameLayout.result(in: text)?.scores == fixture.scores, "\(height): \(text.map(\.text))")
+            #expect(GameDisplayLayout.isTurnEnd(in: text) == fixture.bonus, "\(height): \(text.map(\.text))")
+        }
+    }
+}
