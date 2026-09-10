@@ -13,6 +13,7 @@ struct DisplayResult: Equatable, Sendable {
     let left: Int
     let right: Int
     var scores: [Int] { [left, right] }
+    var signature: String { "\(left),\(right)" }
     var isZero: Bool { left == 0 && right == 0 }
 }
 
@@ -115,6 +116,13 @@ struct EndGameDetector {
         startSince = nil
         startCount = 0
         detectedStart = false
+    }
+
+    /// Explicit start/resume can join an already finished game. Retain the last
+    /// saved pair as duplicate protection, but do not require a missed start screen.
+    mutating func resumeCurrentGame() {
+        discardPendingReadings()
+        armed = true
     }
 
     mutating func observe(_ result: DisplayResult?, at time: TimeInterval, readable: Bool, newGame: Bool = false) -> DisplayResult? {

@@ -47,13 +47,19 @@ struct ManualGameView: View {
             .alert("Scores were not saved", isPresented: Binding(get: { saveError != nil }, set: { if !$0 { saveError = nil } })) {
                 Button("OK", role: .cancel) { saveError = nil }
             } message: { Text(saveError ?? "") }
-            .onAppear { focusedPlayer = 0 }
+            .onAppear {
+                if session.pendingCaptureScores.count == 2 {
+                    firstScore = String(session.pendingCaptureScores[0])
+                    secondScore = String(session.pendingCaptureScores[1])
+                }
+                focusedPlayer = 0
+            }
         }
     }
 
     private func scoreField(_ name: String, position: Int, text: Binding<String>) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label(name, systemImage: "\(position + 1).square.fill")
+            Label("\(position == 0 ? "Left" : "Right") · \(name)", systemImage: "\(position + 1).square.fill")
                 .foregroundStyle([Color.color1, Color.color2][position == 0 ? session.firstPlayerIndex : 1 - session.firstPlayerIndex])
                 .font(.headline)
             TextField("Score", text: text)
@@ -72,7 +78,8 @@ struct ManualGameView: View {
     private func save() {
         guard let scores else { return }
         do {
-            try session.record(scores, in: context)
+            try session.prepareCurrentGame(in: context)
+            try session.record(scores, for: session.currentGameID, in: context)
             dismiss()
         } catch { saveError = error.localizedDescription }
     }

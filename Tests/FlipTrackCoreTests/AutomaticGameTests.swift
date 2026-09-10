@@ -133,3 +133,21 @@ private let zero = DisplayResult(left: 0, right: 0)
     #expect(!GameDisplayLayout.isBonusScreen(in: [header("TOTAL BONUS", y: 0.1)]))
     #expect(!GameDisplayLayout.isBonusScreen(in: [header("TOTAL BONUS", x: 0)]))
 }
+
+@Test func explicitResumeCanJoinFinalScoresWithoutSeeingStartScreen() {
+    var detector = EndGameDetector(lastScores: finalScore.scores)
+    detector.resumeCurrentGame()
+    for tick in 0...8 {
+        #expect(detector.observe(finalScore, at: Double(tick) * 0.5, readable: true) == nil)
+    }
+    let later = DisplayResult(left: 123_450, right: 678_900)
+    var captured: [DisplayResult] = []
+    for tick in 9...24 {
+        if let result = detector.observe(later, at: Double(tick) * 0.5, readable: true) { captured.append(result) }
+    }
+    #expect(captured == [later])
+    detector.resumeCurrentGame()
+    for tick in 25...40 {
+        #expect(detector.observe(later, at: Double(tick) * 0.5, readable: true) == nil)
+    }
+}

@@ -4,6 +4,7 @@ import SwiftData
 struct SessionsView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \Session.date, order: .reverse) private var sessions: [Session]
+    @AppStorage("lastSessionID") private var lastSessionID = ""
     @State private var path: [Session] = []
     @State private var saveError: String?
     @State private var deletingSession: Session?
@@ -16,18 +17,6 @@ struct SessionsView: View {
     var body: some View {
         NavigationStack(path: $path) {
             VStack(spacing: 0) {
-                Image("Logo")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(maxHeight: 100)
-                    .mask {
-                        LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.12),
-                                               .init(color: .black, location: 0.88), .init(color: .clear, location: 1)],
-                                       startPoint: .leading, endPoint: .trailing)
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 8)
-                    .accessibilityHidden(true)
                 if sortedSessions.isEmpty {
                     ContentUnavailableView {
                         Label("Ready to play?", systemImage: "pin.circle")
@@ -39,6 +28,27 @@ struct SessionsView: View {
                     }
                 } else {
                     List {
+                        if let recent = sortedSessions.first(where: { $0.id.uuidString == lastSessionID }) {
+                            Section {
+                                Button {
+                                    path.append(recent)
+                                } label: {
+                                    HStack(spacing: 12) {
+                                        Image(systemName: "play.circle.fill").font(.title)
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("Continue session").font(.headline)
+                                            Text("\(recent.player1) & \(recent.player2) · Game \(recent.upcomingGameNumber)")
+                                                .font(.subheadline).foregroundStyle(.secondary)
+                                        }
+                                        Spacer(minLength: 0)
+                                        Image(systemName: "chevron.right").font(.caption.weight(.semibold))
+                                    }
+                                    .padding(.vertical, 8)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        Section("Session history") {
                         ForEach(sortedSessions) { session in
                             NavigationLink(value: session) {
                                 VStack(alignment: .leading, spacing: 12) {
@@ -64,17 +74,24 @@ struct SessionsView: View {
                                 Button("Delete", systemImage: "trash", role: .destructive) { deletingSession = session }
                             }
                         }
+                        }
                     }
                     .listStyle(.insetGrouped)
                     .scrollContentBackground(.hidden)
                 }
             }
-            .navigationTitle("Sessions")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationTitle("FlipTrack")
+            .navigationBarTitleDisplayMode(.large)
             .navigationDestination(for: Session.self) { SessionView(session: $0) }
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+            .safeAreaInset(edge: .bottom) {
+                if !sortedSessions.isEmpty {
                     Button("New session", systemImage: "plus", action: addSession)
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .buttonStyle(.borderedProminent)
+                        .padding()
+                        .background(.bar)
                 }
             }
         }

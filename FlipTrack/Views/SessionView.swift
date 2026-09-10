@@ -6,9 +6,19 @@ struct SessionView: View {
     @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var configStore: ConfigStore
     @StateObject private var scanner = Scanner()
-    @State private var showingPrefs = false
-    @State private var showingManualEntry = false
+    @AppStorage("lastSessionID") private var lastSessionID = ""
+    private enum Editor: String, Identifiable {
+        case settings, scores, details
+        var id: String { rawValue }
+    }
+    @State private var editor: Editor?
+    @State private var editorAfterCamera: Editor?
     @State private var showingCamera = false
+    @State private var showingStatistics = false
+    @State private var recordingError: String?
+    @State private var confirmingUndo = false
+    @State private var confirmingRecapture = false
+    @State private var reviewingGame: Game?
     let session: Session
 
     func formattedNumber(_ number: Int) -> String {
@@ -24,15 +34,84 @@ struct SessionView: View {
                                 secondPlayer: session.secondPlayer,
                                 firstPlayerIndex: session.firstPlayerIndex,
                                 colorFor: color(for:), gameNumber: session.upcomingGameNumber)
-                TotalsView(playerTotals: session.playerTotals,
-                           playerWins: session.playerWins,
-                           highScores: session.highScores,
-                           averageScores: session.averageScores,
-                           colorFor: color(for:), formattedNumber: formattedNumber,
-                           players: [session.player1, session.player2])
+                    .contentShape(Rectangle())
+                    .onTapGesture { openEditor(.details) }
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityHint("Edit player names and game order")
+                HStack(spacing: 12) {
+                    ForEach(0..<2) { index in
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text([session.player1, session.player2][index])
+                                .font(.headline)
+                                .foregroundStyle(color(for: index))
+                            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                                Text("\(session.playerWins[index])")
+                                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                                    .monospacedDigit()
+                                Text(session.playerWins[index] == 1 ? "win" : "wins")
+                                    .font(.subheadline).foregroundStyle(.secondary)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(16)
+                        .background(color(for: index).opacity(0.12), in: RoundedRectangle(cornerRadius: 18))
+                    }
+                }
+                if let saved = session.lastRecordedGame, session.pendingCaptureScores.isEmpty {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Label("Last saved · Game \(saved.nr)", systemImage: "checkmark.circle.fill")
+                            .font(.subheadline.weight(.semibold)).foregroundStyle(.green)
+                        HStack {
+                            ForEach(0..<2) { index in
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text([session.player1, session.player2][index])
+                                        .font(.caption).foregroundStyle(color(for: index))
+                                    Text(formattedNumber(saved.scores[index]))
+                                        .font(.headline.monospacedDigit()).lineLimit(1).minimumScaleFactor(0.7)
+                                }.frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                        }
+                        HStack(spacing: 20) {
+                            Button("Edit", systemImage: "pencil") {
+                                scanner.pause(.editing)
+                                reviewingGame = saved
+                            }
+                            Button("Undo", systemImage: "arrow.uturn.backward") {
+                                scanner.pause(.editing)
+                                confirmingUndo = true
+                            }
+                        }
+                        .font(.subheadline.weight(.medium))
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(14)
+                    .background(Color.green.opacity(0.07), in: RoundedRectangle(cornerRadius: 16))
+                }
+                if session.pendingCaptureScores.count == 2 {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Label("Unsaved scores · Game \(session.upcomingGameNumber)", systemImage: "square.and.pencil")
+                            .font(.headline)
+                        Text("\(formattedNumber(session.pendingCaptureScores[0])) / \(formattedNumber(session.pendingCaptureScores[1]))")
+                            .font(.title3.monospacedDigit())
+                        Text("Left: \(session.firstPlayer) · Right: \(session.secondPlayer)")
+                            .font(.caption).foregroundStyle(.secondary)
+                        HStack {
+                            Button("Review & save") { openEditor(.scores) }
+                                .buttonStyle(.borderedProminent)
+                            Button("Discard", role: .destructive) {
+                                scanner.pause(.editing)
+                                do { try session.discardPendingCapture(in: context) }
+                                catch { recordingError = error.localizedDescription }
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(16)
+                    .background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 16))
+                }
                 if session.games?.isEmpty == false {
                     GamesPlayedView(games: session.games ?? [], formattedNumber: formattedNumber,
-                                    colorFor: color(for:), allowsEditing: !scanner.isMonitoring)
+                                    colorFor: color(for:), onBeginEditing: { scanner.pause(.editing) })
                 } else {
                     VStack(spacing: 8) {
                         Image(systemName: "flag.checkered")
@@ -44,6 +123,20 @@ struct SessionView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 22)
                 }
+                if session.games?.isEmpty == false {
+                    DisclosureGroup("Session statistics", isExpanded: $showingStatistics) {
+                        TotalsView(playerTotals: session.playerTotals,
+                                   playerWins: session.playerWins,
+                                   highScores: session.highScores,
+                                   averageScores: session.averageScores,
+                                   colorFor: color(for:), formattedNumber: formattedNumber,
+                                   players: [session.player1, session.player2])
+                            .padding(.top, 12)
+                    }
+                    .font(.subheadline.weight(.medium))
+                    .padding(.horizontal, 4)
+                    .padding(.top, 4)
+                }
             }
             .padding(.horizontal)
             .padding(.vertical, 12)
@@ -53,34 +146,75 @@ struct SessionView: View {
         .navigationTitle(session.date.formatted(date: .abbreviated, time: .omitted))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            if scanner.isMonitoring {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(scanner.isPaused ? "Resume monitoring" : "Pause monitoring",
-                           systemImage: scanner.isPaused ? "play.fill" : "pause.fill") {
-                        if scanner.isPaused { startMonitoring() } else { scanner.pause() }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Add scores", systemImage: "plus") { openEditor(.scores) }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Button("Players & game order", systemImage: "person.2") {
+                        openEditor(.details)
                     }
-                    .labelStyle(.iconOnly)
-                    .accessibilityIdentifier("pauseMonitoring")
-                }
+                    Button("Undo last saved game", systemImage: "arrow.uturn.backward") {
+                        scanner.pause(.editing)
+                        confirmingUndo = true
+                    }
+                    .disabled(session.games?.isEmpty != false || !session.pendingCaptureScores.isEmpty)
+                    Button("Capture same scores again", systemImage: "arrow.clockwise") {
+                        scanner.pause(.editing)
+                        confirmingRecapture = true
+                    }
+                    .disabled(!session.pendingCaptureScores.isEmpty)
+                    Button("Scanner settings", systemImage: "viewfinder") {
+                        openEditor(.settings)
+                    }
+                } label: { Image(systemName: "ellipsis.circle") }
+                .accessibilityLabel("Session options")
             }
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Add scores", systemImage: "plus") { showingManualEntry = true }
-                    .disabled(scanner.isMonitoring)
+
+        }
+        .sheet(item: $reviewingGame) { GameEditView(game: $0) }
+        .confirmationDialog("Allow the previous score pair again?", isPresented: $confirmingRecapture, titleVisibility: .visible) {
+            Button("Allow and start scanning") {
+                session.allowRepeatedCapture = true
+                session.rejectedCaptureSignatures = []
+                do { try context.save(); startMonitoring() }
+                catch { context.rollback(); recordingError = error.localizedDescription }
             }
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Settings", systemImage: "gear") {
-                    scanner.stop()
-                    showingPrefs = true
-                }
+        } message: {
+            Text("Use this for another game with identical scores. The display can be saved again as a new game.")
+        }
+        .confirmationDialog("Reopen the last saved game?", isPresented: $confirmingUndo, titleVisibility: .visible) {
+            Button("Undo save") {
+                do { try session.undoLastGame(in: context) }
+                catch { recordingError = error.localizedDescription }
             }
+        } message: {
+            Text("Its scores will become an editable draft. Its game number and player order will be restored.")
+        }
+        .alert("Changes could not be completed", isPresented: Binding(get: { recordingError != nil }, set: { if !$0 { recordingError = nil } })) {
+            Button("OK", role: .cancel) { }
+        } message: { Text(recordingError ?? "") }
+        .onAppear {
+            lastSessionID = session.id.uuidString
+            if session.scanningRequested { scanner.restorePausedSession() }
         }
         .onDisappear { if !showingCamera { scanner.stop() } }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .background { scanner.pause() }
+            if phase == .background { scanner.pause(.background) }
         }
-        .sheet(isPresented: $showingPrefs) { PreferencesView() }
-        .sheet(isPresented: $showingManualEntry) { ManualGameView(session: session) }
-        .fullScreenCover(isPresented: $showingCamera) {
+        .sheet(item: $editor) { item in
+            switch item {
+            case .settings: PreferencesView()
+            case .scores: ManualGameView(session: session)
+            case .details: SessionDetailsView(session: session)
+            }
+        }
+        .fullScreenCover(isPresented: $showingCamera, onDismiss: {
+            if let pending = editorAfterCamera {
+                editorAfterCamera = nil
+                editor = pending
+            }
+        }) {
             NavigationStack {
                 VStack(spacing: 16) {
                     if scanner.isMonitoring && !scanner.isPaused {
@@ -95,6 +229,7 @@ struct SessionView: View {
                 }
                 .padding()
                 .background(.black)
+                .safeAreaInset(edge: .bottom) { monitorControls }
                 .navigationTitle("Camera view")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
@@ -104,19 +239,49 @@ struct SessionView: View {
         }
     }
 
-    private func startMonitoring() {
-        scanner.start(configuration: configStore.config, lastScores: session.lastCapturedScores) { result in
-            try session.record(result, in: context)
+    private func openEditor(_ destination: Editor) {
+        scanner.pause(.editing)
+        if showingCamera {
+            editorAfterCamera = destination
+            showingCamera = false
+        } else {
+            editor = destination
         }
+    }
+
+    private func startMonitoring() {
+        guard session.pendingCaptureScores.isEmpty else {
+            openEditor(.scores)
+            return
+        }
+        do {
+            try session.prepareCurrentGame(in: context)
+            session.scanningRequested = true
+            try context.save()
+        } catch {
+            recordingError = error.localizedDescription
+            return
+        }
+        scanner.start(configuration: configStore.config, lastScores: session.lastCapturedScores, allowRepeatedScores: session.allowRepeatedCapture, rejectedSignatures: session.rejectedCaptureSignatures) { result in
+            try session.stageCapture(result, in: context)
+            try session.record(result, for: session.currentGameID, in: context)
+        }
+    }
+
+    private func stopMonitoring() {
+        scanner.stop()
+        session.scanningRequested = false
+        do { try context.save() }
+        catch { context.rollback(); recordingError = error.localizedDescription }
     }
 
     private var monitorControls: some View {
         HStack(spacing: 12) {
             CameraButton(monitoring: scanner.isMonitoring, paused: scanner.isPaused) {
-                if scanner.isMonitoring { scanner.stop() } else { startMonitoring() }
+                if scanner.isMonitoring { stopMonitoring() } else { startMonitoring() }
             }
             VStack(alignment: .leading, spacing: 3) {
-                Text(scanner.isMonitoring ? (scanner.isPaused ? "Scan paused" : "Scanning") : "Scan off")
+                Text(scanner.state.title)
                     .font(.subheadline.weight(.semibold))
                 Text(scanner.error ?? scanner.status)
                     .font(.caption)
@@ -124,11 +289,20 @@ struct SessionView: View {
                     .accessibilityAddTraits(.updatesFrequently)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            Button("Camera preview", systemImage: "camera") { showingCamera = true }
+            if scanner.isMonitoring {
+                Button(scanner.isPaused ? "Resume scanning" : "Pause scanning",
+                       systemImage: scanner.isPaused ? "play.fill" : "pause.fill") {
+                    if scanner.isPaused { startMonitoring() } else { scanner.pause() }
+                }
+                .labelStyle(.iconOnly)
+                .frame(width: 44, height: 44)
+                .accessibilityIdentifier("pauseMonitoring")
+            }
+            Button(showingCamera ? "Score table" : "Camera preview", systemImage: showingCamera ? "tablecells" : "camera") { showingCamera.toggle() }
                 .labelStyle(.iconOnly)
                 .font(.title2)
                 .frame(width: 44, height: 44)
-                .disabled(!scanner.isMonitoring)
+                .disabled(!scanner.isMonitoring && !showingCamera)
                 .accessibilityIdentifier("showCameraPreview")
         }
         .padding(.horizontal)

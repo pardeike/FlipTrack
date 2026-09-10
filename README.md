@@ -5,45 +5,48 @@ The continuous scanner targets the Indiana Jones two-player final-score display.
 
 ## Use
 
-Create or open a session, mount the iPhone in portrait with the entire display
-visible, and tap the red record-style button to start scanning. The main page
-keeps the starter/order card, totals, and individual score pairs visible.
-The small scan control shows whether scanning is active, paused, or off.
-Tap the camera button for a full-screen alignment preview, then **Scores** to
-return to the table. The score page creates no camera preview; capture and OCR
-continue while scanning.
+Create a session or use **Continue session** to return to the last one. The
+score table keeps each player's column fixed, shows wins prominently, and keeps
+detailed statistics in an expandable section.
 
-FlipTrack keeps the iPhone awake throughout the app while it is active,
-including the score table, settings, and camera view. Normal idle-timer behavior
-is restored when the app becomes inactive or enters the background.
-Automatic turn switching and “Up next” prompts have been removed. The existing
-starter/order card follows the session's game numbering. Confirmed score pairs
-continue to be saved as individual games.
+Tap the current-game strip or **Players & game order** to set the game number,
+player names, date, and machine order. Set the actual left/right assignment even
+when joining a game already in progress. This does not change historical scores.
 
-Stop monitoring to correct or delete an entry. Tap a score to edit it, or the game number for score swapping and deletion.
+Tap the red record-style button to scan. Confirmed score pairs save automatically.
+The **Last saved** card shows the pair with direct **Edit** and **Undo** actions.
+There are no inferred active-player or “Up next” prompts. Each successful save
+advances the current game and alternates its proposed starting order.
 
-Use **Add scores** to enter a game manually in the display's left/right order.
-The session list shows games played and wins for each player. New sessions open
-immediately, and the game card shows who starts next.
+**Edit** changes both scores, the game number, or the recorded starter. Game
+numbers must be unique. **Undo** reopens the last saved game as an unsaved draft,
+restoring its number/order. Review and save the draft, or discard it before
+scanning again. Undone/discarded readings are remembered so the same bad reading
+does not immediately reappear. **Capture same scores again** explicitly resets
+this protection when a later game legitimately has the same score pair.
 
-Fredrik starts the first game, matching the existing app. The second player from
-one game starts the next. Scores are stored under the players' names, regardless
-of their left/right positions on the display. Deleting an old entry does not
-change the next starter or reuse a game number.
+Scores are always editable: opening an editor pauses capture. Manual entry
+uses the same current-game save operation. Deleting a historical entry removes
+its scores without changing the current order; Undo is the action for reopening
+a mistaken latest save.
 
-For a tripod, enable **Centered scan area** in Settings and center the entire
-display inside the yellow guide in the camera preview. OCR then uses only the
-largest centered landscape 4:3 rectangle that fits in the upright video frame.
-The shaded area is excluded. This option starts off, preserving full-frame
-scanning until you enable it.
+The bottom controls group scanning status, record/stop, pause/resume, and camera.
+Use Pause before picking up the phone. Backgrounding pauses capture automatically.
+Returning or reopening the session offers Resume; it never starts the camera
+automatically. The current game, player order, and any unsaved captured pair
+survive relaunch. The full-screen camera is only for alignment; **Scores**
+returns to the preview-free score table.
 
-Settings apply the next time monitoring starts. High Quality captures at 1080p;
-the lower setting uses 720p. The exposure setting controls camera brightness.
-The optional image filter remains available. Tap the small pause button in the
-top corner before picking up the phone. The camera stops and the current game
-state stays on screen. Put the phone back and tap play to resume. Going to the
-background also pauses monitoring; returning does not resume it automatically.
-Recovering from a camera interruption requires tapping the scan button again.
+FlipTrack keeps the iPhone awake throughout the foreground app, even when
+scanning is paused. Normal idle-timer behavior returns when the app is inactive.
+The camera stops on pause/background. OCR is bounded to two readings per second,
+and supported cameras capture at 15 fps rather than full video rate.
+
+For a tripod, enable **Centered scan area** in scanner settings and keep the
+whole display inside the yellow guide. OCR uses the centered landscape 4:3
+rectangle. Full-frame scanning remains available. Exposure and quality are
+primary settings; recognition/filter tuning is under Advanced. Settings apply
+on the next start or resume.
 
 ## Recognition
 
@@ -64,9 +67,10 @@ Recognition runs on the device using Apple Vision and Core Image:
    score edits, so a cycling result display cannot immediately duplicate a game.
 
 There are no fixed screen coordinates or a required mounting distance. The
-complete display and legible digits are still necessary. Two consecutive games
-with exactly the same left/right scores are suppressed as duplicates. The end
-layout is assumed to appear only after a game, as confirmed for this machine.
+complete display and legible digits are still necessary. Repeated score pairs
+are suppressed until explicitly allowed through **Capture same scores again**. The result
+layout is a recognition heuristic, not a reliable end-of-game signal. Automatically
+saved pairs remain visible and editable so a mistaken reading can be corrected.
 
 A recognized **TOTAL BONUS** layout is excluded from final-score capture; it
 does not change players. Start-screen detection is checked against six zero–zero
@@ -127,7 +131,7 @@ confirmation, duplicate suppression, player assignment, SwiftData persistence,
 and migration from the original schema. The supplied photo set includes six
 final-score screens, one GAME OVER screen, and six zero–zero start screens, with handheld angles and glare.
 
-Still photos and Simulator UI checks do not establish live iPhone camera
+Still-photo and core tests do not establish live iPhone camera
 performance, autofocus, thermal behaviour, or the timing of the real machine's
 screen cycle. Validate a complete pair of games with the mounted phone before
 relying on unattended recording. CloudKit account synchronization has not been

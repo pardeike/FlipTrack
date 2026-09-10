@@ -8,40 +8,24 @@ struct CurrentGameView: View {
     var gameNumber = 1
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text("GAME \(gameNumber)")
-                    .font(.caption.weight(.semibold))
-                    .tracking(1)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Text("\(firstPlayer) starts")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            HStack(spacing: 8) {
-                player(firstPlayer, position: 1, color: colorFor(firstPlayerIndex))
-                player(secondPlayer, position: 2, color: colorFor(1 - firstPlayerIndex))
-            }
+        HStack(spacing: 10) {
+            Text("GAME \(gameNumber)")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(.secondary)
+            Spacer(minLength: 4)
+            Text("\(firstPlayer) starts")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(colorFor(firstPlayerIndex))
+            Image(systemName: "arrow.right")
+                .font(.caption).foregroundStyle(.secondary)
+            Text(secondPlayer)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
         }
-        .padding(14)
-        .background(Color(white: 0.08), in: RoundedRectangle(cornerRadius: 16))
-    }
-
-    private func player(_ name: String, position: Int, color: Color) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: "\(position).square.fill")
-                .foregroundStyle(color)
-                .accessibilityHidden(true)
-            Text(name)
-                .font(.headline)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(10)
-        .background(color.opacity(0.16), in: RoundedRectangle(cornerRadius: 10))
+        .lineLimit(1)
+        .minimumScaleFactor(0.75)
+        .padding(.vertical, 6)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Player \(position), \(name)")
+        .accessibilityLabel("Game \(gameNumber). Player 1: \(firstPlayer). Player 2: \(secondPlayer).")
     }
 }

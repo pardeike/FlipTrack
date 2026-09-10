@@ -3,22 +3,15 @@ import SwiftUI
 struct PreferencesView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var configStore: ConfigStore
+    @State private var showingAdvanced = false
 
     var body: some View {
         NavigationStack {
             Form {
-                Section(header: Text("Scan Settings")) {
+                Section(header: Text("Camera & framing")) {
                     Toggle("Centered scan area", isOn: $configStore.config.useCenteredScanArea)
                     Text("Scan only the centered 4:3 guide. Keep the entire display inside it. Changes apply when monitoring starts.")
                         .font(.caption).foregroundStyle(.secondary)
-                    Stepper("Required Scan Count: \(configStore.config.requiredScanCount)",
-                            value: $configStore.config.requiredScanCount,
-                            in: 4...10)
-
-                    Stepper("History Limit: \(configStore.config.historyLimit)",
-                            value: $configStore.config.historyLimit,
-                            in: configStore.config.requiredScanCount...20)
-
                     HStack {
                         Text("Exposure: \(String(format: "%+.1f", configStore.config.fstopsDown))")
                         Slider(value: $configStore.config.fstopsDown,
@@ -29,6 +22,15 @@ struct PreferencesView: View {
 
                 Section(header: Text("Quality Settings")) {
                     Toggle("High Quality", isOn: $configStore.config.qualityMode)
+                    DisclosureGroup("Advanced recognition", isExpanded: $showingAdvanced) {
+                    Stepper("Required Scan Count: \(configStore.config.requiredScanCount)",
+                            value: $configStore.config.requiredScanCount,
+                            in: 4...10)
+
+                    Stepper("History Limit: \(configStore.config.historyLimit)",
+                            value: $configStore.config.historyLimit,
+                            in: configStore.config.requiredScanCount...20)
+
                     Toggle("Apply Filter", isOn: $configStore.config.filterImage)
                     if configStore.config.filterImage {
                         HStack {
@@ -43,6 +45,7 @@ struct PreferencesView: View {
                             Text("Sharpness: \(String(format: "%.1f", configStore.config.sharpness))")
                             Slider(value: $configStore.config.sharpness, in: 0...2)
                         }
+                    }
                     }
                 }
             }

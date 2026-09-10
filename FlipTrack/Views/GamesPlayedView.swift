@@ -5,18 +5,10 @@ struct GamesPlayedView: View {
     let games: [Game]
     let formattedNumber: (Int) -> String
     let colorFor: (Int) -> Color
-    var allowsEditing = true
+    var onBeginEditing: () -> Void = {}
     @State private var saveError: String?
     @State private var editGame: Game?
-    @State private var editScoreIndex = 0
     @State private var deletingGame: Game?
-
-    private let numberFormatter: NumberFormatter = {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.groupingSeparator = "."
-        return formatter
-    }()
 
     private var sortedGames: [Game] { games.sorted { $0.nr > $1.nr } }
 
@@ -25,17 +17,29 @@ struct GamesPlayedView: View {
             HStack {
                 Text("GAMES").font(.caption.weight(.semibold)).tracking(1)
                 Spacer()
-                Text(allowsEditing ? "Tap a score to edit" : "Stop scanning to edit").font(.caption)
+                Text("Tap a game to edit").font(.caption)
             }
+            .foregroundStyle(.secondary)
+            HStack(spacing: 6) {
+                Text("#").frame(width: 36)
+                ForEach(0..<2) { index in
+                    Text(index == 0 ? games.first?.session?.player1 ?? "Player 1" : games.first?.session?.player2 ?? "Player 2")
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .padding(.horizontal, 10)
+                        .foregroundStyle(colorFor(index))
+                }
+            }
+            .font(.caption.weight(.semibold))
             .foregroundStyle(.secondary)
             ForEach(sortedGames) { game in
                 HStack(spacing: 6) {
                     Menu {
                         Button("Swap scores", systemImage: "arrow.left.arrow.right") {
+                            onBeginEditing()
                             game.scores.swapAt(0, 1)
                             saveChanges(in: game.modelContext)
                         }
-                        Button("Delete game", systemImage: "trash", role: .destructive) { deletingGame = game }
+                        Button("Delete game", systemImage: "trash", role: .destructive) { onBeginEditing(); deletingGame = game }
                     } label: {
                         Text("\(game.nr)")
                             .font(.caption.weight(.semibold).monospacedDigit())
@@ -43,11 +47,10 @@ struct GamesPlayedView: View {
                             .frame(width: 36, height: 44)
                             .contentShape(Rectangle())
                     }
-                    .disabled(!allowsEditing)
                     .accessibilityLabel("Game \(game.nr) actions")
                     ForEach(0..<2) { index in
                         Button {
-                            editScoreIndex = index
+                            onBeginEditing()
                             editGame = game
                         } label: {
                             HStack(spacing: 4) {
@@ -66,8 +69,7 @@ struct GamesPlayedView: View {
                             .background(colorFor(index).opacity(game.winningIndex == index ? 0.24 : 0.08), in: RoundedRectangle(cornerRadius: 9))
                         }
                         .buttonStyle(.plain)
-                        .disabled(!allowsEditing)
-                        .accessibilityLabel("Game \(game.nr), \(index == 0 ? game.session?.player1 ?? "Player 1" : game.session?.player2 ?? "Player 2"), \(game.scores[index])\(allowsEditing ? ". Edit score" : "")")
+                            .accessibilityLabel("Game \(game.nr), \(index == 0 ? game.session?.player1 ?? "Player 1" : game.session?.player2 ?? "Player 2"), \(game.scores[index]) . Edit game")
                     }
                 }
             }
@@ -87,7 +89,7 @@ struct GamesPlayedView: View {
             Button("OK", role: .cancel) { saveError = nil }
         } message: { Text(saveError ?? "") }
         .sheet(item: $editGame) {
-            ScoreEditView(game: $0, scoreIndex: editScoreIndex, numberFormatter: numberFormatter, done: { editGame = nil })
+            GameEditView(game: $0)
         }
     }
 

@@ -77,6 +77,14 @@ final class Camera: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unc
             if device.isExposurePointOfInterestSupported { device.exposurePointOfInterest = CGPoint(x: 0.5, y: 0.5) }
             let bias = configuration.fstopsDown.isFinite ? configuration.fstopsDown : -1
             device.setExposureTargetBias(min(max(bias, device.minExposureTargetBias), device.maxExposureTargetBias))
+            // OCR consumes at most two frames per second. Avoid running the
+            // sensor at full video rate while retaining a usable alignment preview.
+            if device.activeFormat.videoSupportedFrameRateRanges.contains(where: {
+                $0.minFrameRate <= 15 && $0.maxFrameRate >= 15
+            }) {
+                device.activeVideoMinFrameDuration = CMTime(value: 1, timescale: 15)
+                device.activeVideoMaxFrameDuration = CMTime(value: 1, timescale: 15)
+            }
             if device.isFocusModeSupported(.continuousAutoFocus) { device.focusMode = .continuousAutoFocus }
             if device.isFocusPointOfInterestSupported { device.focusPointOfInterest = CGPoint(x: 0.5, y: 0.5) }
             if device.hasTorch, device.isTorchModeSupported(.off) { device.torchMode = .off }

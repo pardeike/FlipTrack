@@ -10,6 +10,14 @@ public final class Session: Identifiable, Hashable {
     // Raw display order, independent of score corrections and player assignment.
     public var lastCapturedScores: [Int] = []
     public var nextGameNumber: Int = 1
+    public var currentGameNumberOverride: Int?
+    public var startingPlayerOverride: Int?
+    public var currentGameID: UUID?
+    public var scanningRequested = false
+    public var allowRepeatedCapture = false
+    public var lastRecordedGameID: UUID?
+    public var pendingCaptureScores: [Int] = []
+    public var rejectedCaptureSignatures: [String] = []
     @Relationship(deleteRule: .cascade, inverse: \Game.session)
     public var games: [Game]?
 
@@ -48,18 +56,63 @@ public final class Session: Identifiable, Hashable {
         ]
     }
     
-    public var upcomingGameNumber: Int { max(nextGameNumber, (games?.map(\.nr).max() ?? 0) + 1) }
-    public var firstPlayerIndex: Int { upcomingGameNumber % 2 }
+    public var upcomingGameNumber: Int {
+        if let currentGameNumberOverride, currentGameNumberOverride > 0,
+           games?.contains(where: { $0.nr == currentGameNumberOverride }) != true {
+            return currentGameNumberOverride
+        }
+        return max(nextGameNumber, (games?.map(\.nr).max() ?? 0) + 1)
+    }
+    public var firstPlayerIndex: Int {
+        if let startingPlayerOverride, (0...1).contains(startingPlayerOverride) { return startingPlayerOverride }
+        return upcomingGameNumber % 2
+    }
 
     @MainActor
-    func record(_ result: DisplayResult, in context: ModelContext) throws {
+    func prepareCurrentGame(in context: ModelContext) throws {
+        guard currentGameID == nil else { return }
+        currentGameID = UUID()
+        do { try context.save() }
+        catch { context.rollback(); throw error }
+    }
+
+    @MainActor
+    func stageCapture(_ result: DisplayResult, in context: ModelContext) throws {
+        if currentGameID == nil { currentGameID = UUID() }
+        pendingCaptureScores = result.scores
+        do { try context.save() }
+        catch { context.rollback(); throw error }
+    }
+
+    @MainActor
+    func record(_ result: DisplayResult, for gameID: UUID? = nil, in context: ModelContext) throws {
+        if let gameID {
+            // A retry of a committed capture is a no-op, even after relaunch.
+            if games?.contains(where: { $0.captureGameID == gameID }) == true { return }
+            guard gameID == currentGameID else { throw RecordingError.staleGame }
+        }
         let number = upcomingGameNumber
+        let explicitNumber = currentGameNumberOverride != nil
+        let starter = firstPlayerIndex
         let ordered = firstPlayerIndex == 0 ? result.scores : result.scores.reversed().map { $0 }
         let game = Game(nr: number, scores: ordered, session: self)
         // Set the relationship once. SwiftData maintains its inverse.
+        game.startingPlayerIndex = starter
+        game.captureGameID = currentGameID ?? UUID()
+        game.previousCapturedScores = lastCapturedScores
         context.insert(game)
+        lastRecordedGameID = game.id
+        allowRepeatedCapture = false
         nextGameNumber = number + 1
+        if explicitNumber {
+            var next = number + 1
+            while games?.contains(where: { $0.nr == next }) == true { next += 1 }
+            currentGameNumberOverride = next
+        }
+        startingPlayerOverride = 1 - starter
         lastCapturedScores = result.scores
+        currentGameID = UUID()
+        pendingCaptureScores = []
         do {
             try context.save()
         } catch {
@@ -67,6 +120,57 @@ public final class Session: Identifiable, Hashable {
             throw error
         }
     }
+    public var lastRecordedGame: Game? {
+        if let lastRecordedGameID, let game = games?.first(where: { $0.id == lastRecordedGameID }) { return game }
+        return games?.max { $0.nr < $1.nr }
+    }
+
+    @MainActor
+    func undoLastGame(in context: ModelContext) throws {
+        guard pendingCaptureScores.isEmpty else { throw RecordingError.pendingCapture }
+        guard let game = lastRecordedGame else { return }
+        let starter = game.startingPlayerIndex ?? game.nr % 2
+        nextGameNumber = game.nr
+        currentGameNumberOverride = game.nr
+        startingPlayerOverride = starter
+        currentGameID = game.captureGameID ?? UUID()
+        rejectCapture(lastCapturedScores)
+        pendingCaptureScores = starter == 0 ? game.scores : Array(game.scores.reversed())
+        lastCapturedScores = game.previousCapturedScores
+        lastRecordedGameID = games?.filter { $0.id != game.id }.max { $0.nr < $1.nr }?.id
+        allowRepeatedCapture = false
+        context.delete(game)
+        do { try context.save() }
+        catch { context.rollback(); throw error }
+    }
+
+    @MainActor
+    func discardPendingCapture(in context: ModelContext) throws {
+        rejectCapture(pendingCaptureScores)
+        pendingCaptureScores = []
+        do { try context.save() }
+        catch { context.rollback(); throw error }
+    }
+
+    private func rejectCapture(_ scores: [Int]) {
+        guard scores.count == 2 else { return }
+        let signature = DisplayResult(left: scores[0], right: scores[1]).signature
+        if !rejectedCaptureSignatures.contains(signature) { rejectedCaptureSignatures.append(signature) }
+        if rejectedCaptureSignatures.count > 20 { rejectedCaptureSignatures.removeFirst(rejectedCaptureSignatures.count - 20) }
+    }
+
+    enum RecordingError: LocalizedError {
+        case staleGame, pendingCapture
+        var errorDescription: String? {
+            switch self {
+            case .staleGame:
+                "This reading belongs to a different game. Review the current game before saving."
+            case .pendingCapture:
+                "Review or discard the current captured scores before undoing another game."
+            }
+        }
+    }
+
     public var firstPlayer: String { [player1, player2][firstPlayerIndex] }
     public var secondPlayer: String { [player1, player2][1 - firstPlayerIndex] }
 }

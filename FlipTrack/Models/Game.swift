@@ -6,6 +6,9 @@ public final class Game: Identifiable, Hashable {
     public var id = UUID()
     public var nr = 0
     public var scores = [0, 0]
+    public var startingPlayerIndex: Int?
+    public var captureGameID: UUID?
+    public var previousCapturedScores: [Int] = []
     public var session: Session?
 
     public var winningIndex: Int {
