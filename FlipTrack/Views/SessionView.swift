@@ -18,44 +18,61 @@ struct SessionView: View {
     func color(for playerIndex: Int) -> Color { [Color.color1, Color.color2][playerIndex] }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 14) {
-                CurrentGameView(firstPlayer: session.firstPlayer,
-                                secondPlayer: session.secondPlayer,
-                                firstPlayerIndex: session.firstPlayerIndex,
-                                colorFor: color(for:), gameNumber: session.upcomingGameNumber)
-                TotalsView(playerTotals: session.playerTotals,
-                           playerWins: session.playerWins,
-                           highScores: session.highScores,
-                           averageScores: session.averageScores,
-                           colorFor: color(for:), formattedNumber: formattedNumber, players: [session.player1, session.player2])
-                if session.games?.isEmpty == false {
-                    GamesPlayedView(games: session.games ?? [], formattedNumber: formattedNumber,
-                                    colorFor: color(for:))
-                        .disabled(scanner.isMonitoring)
-                } else {
-                    VStack(spacing: 8) {
-                        Image(systemName: "flag.checkered")
-                            .font(.title2).foregroundStyle(.secondary)
-                        Text("Your next game goes here").font(.subheadline.weight(.medium))
-                        Text("Monitor the display, or add the scores yourself.")
-                            .font(.caption).foregroundStyle(.secondary)
-                        Button("Add scores", systemImage: "plus") { showingManualEntry = true }
-                            .font(.subheadline)
-                            .disabled(scanner.isMonitoring)
+        Group {
+            if scanner.isMonitoring {
+                AutomaticGameView(state: scanner.gameState, players: [session.player1, session.player2], gameNumber: session.upcomingGameNumber, isPaused: scanner.isPaused,
+                                  playerWins: session.playerWins, lastScores: session.games?.max(by: { $0.nr < $1.nr })?.scores)
+            } else {
+                ScrollView {
+                    VStack(spacing: 14) {
+                        CurrentGameView(firstPlayer: session.firstPlayer,
+                                        secondPlayer: session.secondPlayer,
+                                        firstPlayerIndex: session.firstPlayerIndex,
+                                        colorFor: color(for:), gameNumber: session.upcomingGameNumber)
+                        TotalsView(playerTotals: session.playerTotals,
+                                   playerWins: session.playerWins,
+                                   highScores: session.highScores,
+                                   averageScores: session.averageScores,
+                                   colorFor: color(for:), formattedNumber: formattedNumber, players: [session.player1, session.player2])
+                        if session.games?.isEmpty == false {
+                            GamesPlayedView(games: session.games ?? [], formattedNumber: formattedNumber,
+                                            colorFor: color(for:))
+                                .disabled(scanner.isMonitoring)
+                        } else {
+                            VStack(spacing: 8) {
+                                Image(systemName: "flag.checkered")
+                                    .font(.title2).foregroundStyle(.secondary)
+                                Text("Your next game goes here").font(.subheadline.weight(.medium))
+                                Text("Monitor the display, or add the scores yourself.")
+                                    .font(.caption).foregroundStyle(.secondary)
+                                Button("Add scores", systemImage: "plus") { showingManualEntry = true }
+                                    .font(.subheadline)
+                                    .disabled(scanner.isMonitoring)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 22)
+                        }
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 22)
+                    .padding(.horizontal)
+                    .padding(.vertical, 12)
                 }
             }
-            .padding(.horizontal)
-            .padding(.vertical, 12)
         }
         .safeAreaInset(edge: .bottom) { monitorControls }
         .preferredColorScheme(.dark)
         .navigationTitle(session.date.formatted(date: .abbreviated, time: .omitted))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            if scanner.isMonitoring {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(scanner.isPaused ? "Resume monitoring" : "Pause monitoring",
+                           systemImage: scanner.isPaused ? "play.fill" : "pause.fill") {
+                        if scanner.isPaused { startMonitoring() } else { scanner.pause() }
+                    }
+                    .labelStyle(.iconOnly)
+                    .accessibilityIdentifier("pauseMonitoring")
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Add scores", systemImage: "plus") { showingManualEntry = true }
                     .disabled(scanner.isMonitoring)
@@ -69,14 +86,14 @@ struct SessionView: View {
         }
         .onDisappear { scanner.stop() }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .background { scanner.stop() }
+            if phase == .background { scanner.pause() }
         }
         .sheet(isPresented: $showingPrefs) { PreferencesView() }
         .sheet(isPresented: $showingManualEntry) { ManualGameView(session: session) }
         .sheet(isPresented: $showingCamera) {
             NavigationStack {
                 VStack(spacing: 16) {
-                    if scanner.isMonitoring {
+                    if scanner.isMonitoring && !scanner.isPaused {
                         CameraPreview(session: scanner.camera.session)
                     } else {
                         ContentUnavailableView("Camera paused", systemImage: "camera", description: Text(scanner.error ?? scanner.status))
@@ -97,12 +114,23 @@ struct SessionView: View {
         }
     }
 
+    private func startMonitoring() {
+        scanner.start(configuration: configStore.config, lastScores: session.lastCapturedScores, firstPlayerIndex: session.firstPlayerIndex) { result in
+            try session.record(result, in: context)
+        }
+    }
+
     private var monitorControls: some View {
         HStack(spacing: 12) {
             if scanner.isMonitoring {
                 Button { showingCamera = true } label: {
                     ZStack(alignment: .bottomTrailing) {
-                        if !showingCamera { CameraPreview(session: scanner.camera.session) }
+                        if scanner.isPaused {
+                            Color.black
+                            Image(systemName: "pause.fill").foregroundStyle(.secondary)
+                        } else if !showingCamera {
+                            CameraPreview(session: scanner.camera.session)
+                        }
                         Image(systemName: "arrow.up.left.and.arrow.down.right")
                             .font(.caption).padding(6)
                             .background(.black.opacity(0.6), in: Circle())
@@ -125,9 +153,7 @@ struct SessionView: View {
                     if scanner.isMonitoring {
                         scanner.stop()
                     } else {
-                        scanner.start(configuration: configStore.config, lastScores: session.lastCapturedScores) { result in
-                            try session.record(result, in: context)
-                        }
+                        startMonitoring()
                     }
                 }
                 if !scanner.isMonitoring {

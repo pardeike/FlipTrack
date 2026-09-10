@@ -18,15 +18,27 @@ enum DisplayReader {
         var displayText: [DisplayText] = []
         for rectangle in rectangles.results ?? [] {
             guard let corrected = correctedDisplay(image, rectangle: rectangle) else { continue }
-            let text = try recognize(corrected)
-            if EndGameLayout.result(in: text) != nil { matches.append(text) }
+            let text = try recognize(corrected).map { observation in
+                var observation = observation
+                observation.isInsideDisplay = true
+                return observation
+            }
+            if EndGameLayout.result(in: text) != nil || GameDisplayLayout.isNewGame(in: text) ||
+                GameDisplayLayout.activePlayer(in: text) != nil { matches.append(text) }
             if EndGameLayout.hasDisplayText(in: text) { displayText = text }
         }
         if matches.count == 1 { return matches[0] }
         // Multiple matching displays are ambiguous; never pick one arbitrarily.
         if matches.count > 1 { return [] }
         let fullText = try recognize(image)
-        if EndGameLayout.result(in: fullText) != nil { return fullText }
+        if EndGameLayout.result(in: fullText) != nil || GameDisplayLayout.isNewGame(in: fullText) { return fullText }
+        // Dot-matrix strokes can fragment at one OCR scale. Retry only a
+        // potential two-zero screen; the same complete layout must still match.
+        let zeroCount = fullText.filter { $0.text.range(of: #"^0{1,2}\s*-?$"#, options: .regularExpression) != nil }.count
+        if zeroCount == 2 || (zeroCount == 1 && fullText.contains(where: { $0.text.uppercased().hasPrefix("BALL") })) {
+            let smallerText = try recognize(image.transformed(by: CGAffineTransform(scaleX: 2.0 / 3, y: 2.0 / 3)))
+            if GameDisplayLayout.isNewGame(in: smallerText) { return smallerText }
+        }
         // Glare can hide the frame. A partial FREE PLAY reading may locate a
         // crop, but only a complete, re-read layout can confirm a result.
         for anchor in fullText where anchor.text.uppercased()
@@ -44,7 +56,7 @@ enum DisplayReader {
                 .transformed(by: CGAffineTransform(rotationAngle: -anchor.rotation))
                 .transformed(by: CGAffineTransform(scaleX: scale, y: scale))
             let text = try recognize(aligned)
-            if EndGameLayout.result(in: text) != nil { return text }
+            if EndGameLayout.result(in: text) != nil || GameDisplayLayout.isNewGame(in: text) { return text }
         }
         return displayText.isEmpty ? fullText : displayText
     }

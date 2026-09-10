@@ -107,6 +107,7 @@ func handheldPhotos() throws {
             let scale = height / image.extent.height
             let resized = image.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
             let text = try DisplayReader.read(resized)
+            #expect(!GameDisplayLayout.isNewGame(in: text))
             let actual = EndGameLayout.result(in: text)?.scores
             print("Photo \(url.lastPathComponent) height \(Int(height)): \(String(describing: actual))")
             #expect(actual == fixture.scores, "\(url.lastPathComponent) at \(height): \(text.map(\.text))")
@@ -133,5 +134,28 @@ func changedMountingAngles() throws {
     for transform in transforms {
         let text = try DisplayReader.read(image.transformed(by: transform))
         #expect(EndGameLayout.result(in: text) == pair, "Changed mount \(transform): \(text.map(\.text))")
+    }
+}
+
+@Test(.enabled(if: ProcessInfo.processInfo.environment["FLIPTRACK_START_PHOTOS"] != nil))
+func startScreenPhotos() throws {
+    let manifest = try #require(ProcessInfo.processInfo.environment["FLIPTRACK_START_PHOTOS"])
+    let paths = try JSONDecoder().decode([String].self, from: Data(contentsOf: URL(fileURLWithPath: manifest)))
+    for path in paths {
+        let image = try #require(CIImage(contentsOf: URL(fileURLWithPath: path), options: [.applyOrientationProperty: true]))
+        for height in [image.extent.height, 1920, 1280] {
+            let resized = image.transformed(by: CGAffineTransform(scaleX: height / image.extent.height, y: height / image.extent.height))
+            let text = try DisplayReader.read(resized)
+            print("Start screen \(URL(fileURLWithPath: path).lastPathComponent) at \(Int(height)): \(GameDisplayLayout.isNewGame(in: text))")
+            #expect(GameDisplayLayout.isNewGame(in: text))
+            #expect(EndGameLayout.result(in: text) == nil)
+            if height == 1920 || height == 1280 {
+                let width = height * 9 / 16
+                let crop = CGRect(x: resized.extent.midX - width / 2, y: resized.extent.minY, width: width, height: height)
+                let videoText = try DisplayReader.read(resized.cropped(to: crop))
+                #expect(GameDisplayLayout.isNewGame(in: videoText), "Video crop \(path) at \(height): \(videoText.map(\.text))")
+                #expect(EndGameLayout.result(in: videoText) == nil)
+            }
+        }
     }
 }

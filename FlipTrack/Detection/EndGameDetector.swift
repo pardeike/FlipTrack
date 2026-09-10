@@ -6,12 +6,14 @@ struct DisplayText: Sendable {
     /// Vision coordinates: origin at bottom left, normalized to the image.
     let bounds: CGRect
     var rotation: CGFloat = 0
+    var isInsideDisplay = false
 }
 
 struct DisplayResult: Equatable, Sendable {
     let left: Int
     let right: Int
     var scores: [Int] { [left, right] }
+    var isZero: Bool { left == 0 && right == 0 }
 }
 
 /// The Indiana Jones two-player result layout, including the angled holder view.
@@ -43,6 +45,10 @@ enum EndGameLayout {
     }
 
     static func result(in observations: [DisplayText]) -> DisplayResult? {
+        // A live score screen also says FREE PLAY; BALL distinguishes it from results.
+        guard !observations.contains(where: {
+            $0.confidence >= 0.5 && $0.text.uppercased().range(of: #"^BALL(?:\s|$)"#, options: .regularExpression) != nil
+        }) else { return nil }
         let readable = observations.filter { $0.confidence >= 0.5 }
         let anchors = readable.filter {
             $0.text.uppercased().replacingOccurrences(of: " ", with: "")
@@ -84,6 +90,10 @@ struct EndGameDetector {
     private var readings: [Reading] = []
     private var lastTime: TimeInterval?
     private var absentSince: TimeInterval?
+    private var startSince: TimeInterval?
+    private var startCount = 0
+    private var startLatched = false
+    private(set) var detectedStart = false
     private(set) var lastRegistered: DisplayResult?
     private(set) var armed: Bool
     let requiredReadings: Int
@@ -96,13 +106,44 @@ struct EndGameDetector {
         self.historyLimit = max(self.requiredReadings, min(20, historyLimit))
     }
 
-    mutating func observe(_ result: DisplayResult?, at time: TimeInterval, readable: Bool) -> DisplayResult? {
+    /// Pausing discards incomplete evidence while retaining saved-game latches.
+    mutating func discardPendingReadings() {
+        readings.removeAll()
+        lastTime = nil
+        absentSince = nil
+        startSince = nil
+        startCount = 0
+        detectedStart = false
+    }
+
+    mutating func observe(_ result: DisplayResult?, at time: TimeInterval, readable: Bool, newGame: Bool = false) -> DisplayResult? {
+        detectedStart = false
         // A stopped camera or a long OCR stall is not evidence of a new game.
         if let lastTime, time <= lastTime || time - lastTime > 2 {
             readings.removeAll()
             absentSince = nil
+            startSince = nil
+            startCount = 0
         }
         lastTime = time
+        if newGame || result?.isZero == true {
+            readings.removeAll()
+            absentSince = nil
+            if !startLatched {
+                if startSince == nil { startSince = time }
+                startCount += 1
+                if startCount >= 3, time - (startSince ?? time) >= 1 {
+                    detectedStart = true
+                    startLatched = true
+                    armed = true
+                    startSince = nil
+                    startCount = 0
+                }
+            }
+            return nil
+        }
+        startSince = nil
+        startCount = 0
         if !armed {
             if result != nil || !readable {
                 absentSince = nil
@@ -122,6 +163,7 @@ struct EndGameDetector {
               Double(matching.count) / Double(readings.count) >= 0.8,
               let first = matching.first, time - first.time >= 1.5 else { return nil }
         lastRegistered = result
+        startLatched = false
         armed = false
         absentSince = nil
         readings.removeAll()

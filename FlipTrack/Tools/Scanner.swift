@@ -4,21 +4,29 @@ import SwiftUI
 @MainActor
 final class Scanner: ObservableObject {
     @Published private(set) var isMonitoring = false
+    @Published private(set) var isPaused = false
     @Published private(set) var status = "Aim at the whole score display."
     @Published private(set) var error: String?
+    @Published private(set) var gameState = AutomaticGameState()
     let camera = Camera()
     private var detector = EndGameDetector()
+    private var playerDetector = PlayerPromptDetector()
     private var generation = UUID()
     private var previousIdleTimerDisabled: Bool?
 
-    func start(configuration: Configuration, lastScores: [Int], save: @escaping @MainActor (DisplayResult) throws -> Void) {
-        guard !isMonitoring else { return }
+    func start(configuration: Configuration, lastScores: [Int], firstPlayerIndex: Int, save: @escaping @MainActor (DisplayResult) throws -> Void) {
+        guard !isMonitoring || isPaused else { return }
         generation = UUID()
         let token = generation
         error = nil
+        if !isPaused {
+            gameState = AutomaticGameState(firstPlayerIndex: firstPlayerIndex, lastScores: lastScores)
+            detector = EndGameDetector(lastScores: lastScores, requiredReadings: configuration.requiredScanCount, historyLimit: configuration.historyLimit)
+        }
+        isPaused = false
+        playerDetector = PlayerPromptDetector()
         status = "Starting camera…"
         isMonitoring = true
-        detector = EndGameDetector(lastScores: lastScores, requiredReadings: configuration.requiredScanCount, historyLimit: configuration.historyLimit)
         previousIdleTimerDisabled = UIApplication.shared.isIdleTimerDisabled
         UIApplication.shared.isIdleTimerDisabled = true
         Task { [self] in
@@ -44,20 +52,34 @@ final class Scanner: ObservableObject {
                 case .frame(let text, let time):
                     let result = EndGameLayout.result(in: text)
                     let readable = EndGameLayout.hasDisplayText(in: text)
-                    if let confirmed = self.detector.observe(result, at: time, readable: readable) {
+                    if let confirmed = self.detector.observe(result, at: time, readable: readable, newGame: GameDisplayLayout.isNewGame(in: text)) {
                         do {
                             try save(confirmed)
+                            self.gameState.gameFinished(confirmed)
+                            self.playerDetector = PlayerPromptDetector()
                             UINotificationFeedbackGenerator().notificationOccurred(.success)
                             self.status = "Game saved. Waiting for the next game."
                         } catch {
                             self.fail("Scores were not saved: \(error.localizedDescription)")
                         }
+                    } else if self.detector.detectedStart {
+                        self.gameState.gameStarted()
+                        self.playerDetector = PlayerPromptDetector()
+                        self.status = "New game detected"
                     } else if !self.detector.armed || (result != nil && result == self.detector.lastRegistered) {
                         self.status = "Game saved. Waiting for the next game."
+                    } else if result?.isZero == true || GameDisplayLayout.isNewGame(in: text) {
+                        self.status = "Watching the start screen"
                     } else if result != nil {
                         self.status = "Checking final scores…"
                     } else {
                         self.status = "Watching for final scores"
+                    }
+                    if let slot = self.playerDetector.observe(GameDisplayLayout.activePlayer(in: text), at: time),
+                       self.gameState.phase != .switchPlayers {
+                        if self.gameState.activeSlot != slot || self.gameState.phase != .playing {
+                            self.gameState.playerIndicated(slot)
+                        }
                     }
                 }
             }
@@ -68,15 +90,31 @@ final class Scanner: ObservableObject {
         await AVCaptureDevice.requestAccess(for: .video)
     }
 
+    func pause() {
+        guard isMonitoring, !isPaused else { return }
+        generation = UUID()
+        isPaused = true
+        camera.stop()
+        detector.discardPendingReadings()
+        playerDetector = PlayerPromptDetector()
+        restoreIdleTimer()
+        status = "Paused · Tap play to resume"
+    }
+
     func stop() {
         generation = UUID()
         isMonitoring = false
+        isPaused = false
         camera.stop()
+        restoreIdleTimer()
+        status = "Monitoring paused"
+    }
+
+    private func restoreIdleTimer() {
         if let previousIdleTimerDisabled {
             UIApplication.shared.isIdleTimerDisabled = previousIdleTimerDisabled
             self.previousIdleTimerDisabled = nil
         }
-        status = "Monitoring paused"
     }
 
     private func fail(_ message: String) {
