@@ -11,6 +11,11 @@ final class Scanner: ObservableObject {
     @Published private(set) var usesCenteredScanArea = false
     @Published private(set) var previewError: String?
     @Published private(set) var previewRunning = false
+    @Published private(set) var testingPreview = false
+    @Published private(set) var testStatus = "Waiting for a reading…"
+    @Published private(set) var testScores: DisplayResult?
+    @Published private(set) var testText = ""
+    private var testDetector = EndGameDetector()
     private var previewConfiguration: Configuration?
     let camera = Camera()
     private var detector = EndGameDetector()
@@ -18,6 +23,7 @@ final class Scanner: ObservableObject {
 
     func start(configuration: Configuration, lastScores: [Int], allowRepeatedScores: Bool = false, rejectedSignatures: [String] = [], save: @escaping @MainActor (DisplayResult) throws -> Void) {
         guard !isMonitoring || isPaused else { return }
+        resetPreviewTest()
         previewRunning = false
         previewError = nil
         generation = UUID()
@@ -112,12 +118,13 @@ final class Scanner: ObservableObject {
     }
 
     /// Preview owns camera access only while recording is stopped or paused.
-    /// It never feeds recognition or changes the recording intent.
+    /// Optional test recognition is isolated from recording and persistence.
     func setPreview(_ visible: Bool, configuration: Configuration) {
         previewConfiguration = visible ? configuration : nil
         if visible {
             startPreviewIfNeeded()
         } else {
+            resetPreviewTest()
             previewRunning = false
             previewError = nil
             if !isMonitoring || isPaused {
@@ -125,6 +132,23 @@ final class Scanner: ObservableObject {
                 camera.stop()
             }
         }
+    }
+
+    func setPreviewTest(_ enabled: Bool) {
+        guard previewConfiguration != nil, !isMonitoring else { return }
+        resetPreviewTest()
+        testingPreview = enabled
+        startPreviewIfNeeded()
+    }
+
+    private func resetPreviewTest() {
+        testingPreview = false
+        testScores = nil
+        testText = ""
+        testStatus = "Waiting for a reading…"
+        let configuration = previewConfiguration ?? Configuration()
+        testDetector = EndGameDetector(requiredReadings: configuration.requiredScanCount,
+                                      historyLimit: configuration.historyLimit)
     }
 
     private func startPreviewIfNeeded() {
@@ -142,14 +166,32 @@ final class Scanner: ObservableObject {
                 previewError = "Allow camera access for FlipTrack in Settings."
                 return
             }
-            camera.start(configuration: configuration, recognizesScores: false) { [weak self] event in
+            camera.start(configuration: configuration, recognizesScores: testingPreview) { [weak self] event in
                 guard let self, self.generation == token else { return }
                 switch event {
                 case .started: self.previewRunning = true
                 case .failed(let message):
                     self.previewRunning = false
                     self.previewError = message
-                case .frame: break
+                case .frame(let text, let time):
+                    guard self.testingPreview, !self.isMonitoring else { return }
+                    let result = EndGameLayout.result(in: text)
+                    self.testScores = result
+                    self.testText = text.map(\.text).joined(separator: " · ")
+                    let confirmed = self.testDetector.observe(result, at: time,
+                        readable: EndGameLayout.hasDisplayText(in: text),
+                        newGame: GameDisplayLayout.isNewGame(in: text))
+                    if confirmed != nil || (result != nil && result == self.testDetector.lastRegistered) {
+                        self.testStatus = "Stable score pair recognized · Nothing saved"
+                    } else if result != nil {
+                        self.testStatus = "Score pair detected · Checking stability…"
+                    } else if GameDisplayLayout.isBonusScreen(in: text) {
+                        self.testStatus = "Bonus screen · Not a final score pair"
+                    } else if GameDisplayLayout.isNewGame(in: text) {
+                        self.testStatus = "Start screen recognized"
+                    } else {
+                        self.testStatus = text.isEmpty ? "No text readable · Adjust framing or exposure" : "Text readable · No final score pair recognized"
+                    }
                 }
             }
         }

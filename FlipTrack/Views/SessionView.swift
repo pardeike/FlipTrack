@@ -232,6 +232,27 @@ struct SessionView: View {
                     }
                     Text(scanner.usesCenteredScanArea ? "Center the whole display inside the guide." : "Keep the whole display in view.")
                         .font(.subheadline).foregroundStyle(.secondary)
+                    if !scanner.isMonitoring {
+                        Toggle("Test live recognition", isOn: Binding(
+                            get: { scanner.testingPreview },
+                            set: { scanner.setPreviewTest($0) }))
+                        if scanner.testingPreview {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(scanner.testStatus).font(.subheadline.weight(.medium))
+                                if let scores = scanner.testScores {
+                                    Text("Left: \(formattedNumber(scores.left)) · Right: \(formattedNumber(scores.right))")
+                                        .font(.subheadline.monospacedDigit())
+                                }
+                                if !scanner.testText.isEmpty {
+                                    Text(scanner.testText)
+                                        .font(.caption).foregroundStyle(.secondary)
+                                        .lineLimit(3)
+                                }
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .accessibilityLabel("Live recognition test. Nothing is saved.")
+                        }
+                    }
                     Text(scanner.isMonitoring && !scanner.isPaused ? scanner.error ?? scanner.status : "Preview only · Scores are not being recorded.")
                         .font(.callout)
                 }
@@ -240,9 +261,6 @@ struct SessionView: View {
                 .safeAreaInset(edge: .bottom) { monitorControls }
                 .navigationTitle("Camera view")
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .confirmationAction) { Button("Scores", systemImage: "tablecells") { showingCamera = false } }
-                }
             }
         }
     }

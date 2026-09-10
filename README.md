@@ -35,8 +35,11 @@ Use Pause before picking up the phone. Backgrounding pauses capture automaticall
 Returning or reopening the session offers Resume; it never starts the camera
 automatically. The current game, player order, and any unsaved captured pair
 survive relaunch. The full-screen camera is available even when recording is stopped or paused.
-In preview-only mode it does not run OCR or save scores. **Scores** returns to
-the preview-free table and stops the camera unless scanning is active.
+Preview does not save scores. With recording stopped, **Test live recognition**
+shows recognized text, left/right scores, and whether the pair passes stability
+checks using the actual camera settings. Testing runs OCR only while enabled;
+starting recording or closing preview clears the test. The bottom table button
+returns to the preview-free table and stops the camera unless scanning is active.
 
 FlipTrack keeps the iPhone awake throughout the foreground app, even when
 scanning is paused. Normal idle-timer behavior returns when the app is inactive.
