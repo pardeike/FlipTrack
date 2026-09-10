@@ -225,32 +225,25 @@ struct SessionView: View {
         }) {
             NavigationStack {
                 VStack(spacing: 16) {
-                    if (scanner.isMonitoring && !scanner.isPaused) || scanner.previewRunning {
-                        CameraPreview(session: scanner.camera.session, showsScanArea: scanner.usesCenteredScanArea)
+                    if scanner.testingPreview {
+                        recognitionLog
+                        Button("Camera preview", systemImage: "camera") {
+                            scanner.setPreviewTest(false)
+                        }
+                        .buttonStyle(.bordered)
                     } else {
-                        ContentUnavailableView(scanner.previewError == nil ? "Starting camera…" : "Camera unavailable", systemImage: "camera", description: Text(scanner.previewError ?? "Preview only · Scores are not being recorded."))
-                    }
-                    Text(scanner.usesCenteredScanArea ? "Center the whole display inside the guide." : "Keep the whole display in view.")
-                        .font(.subheadline).foregroundStyle(.secondary)
-                    if !scanner.isMonitoring {
-                        Toggle("Test live recognition", isOn: Binding(
-                            get: { scanner.testingPreview },
-                            set: { scanner.setPreviewTest($0) }))
-                        if scanner.testingPreview {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text(scanner.testStatus).font(.subheadline.weight(.medium))
-                                if let scores = scanner.testScores {
-                                    Text("Left: \(formattedNumber(scores.left)) · Right: \(formattedNumber(scores.right))")
-                                        .font(.subheadline.monospacedDigit())
-                                }
-                                if !scanner.testText.isEmpty {
-                                    Text(scanner.testText)
-                                        .font(.caption).foregroundStyle(.secondary)
-                                        .lineLimit(3)
-                                }
+                        if (scanner.isMonitoring && !scanner.isPaused) || scanner.previewRunning {
+                            CameraPreview(session: scanner.camera.session, showsScanArea: scanner.usesCenteredScanArea)
+                        } else {
+                            ContentUnavailableView(scanner.previewError == nil ? "Starting camera…" : "Camera unavailable", systemImage: "camera", description: Text(scanner.previewError ?? "Preview only · Scores are not being recorded."))
+                        }
+                        Text(scanner.usesCenteredScanArea ? "Center the whole display inside the guide." : "Keep the whole display in view.")
+                            .font(.subheadline).foregroundStyle(.secondary)
+                        if !scanner.isMonitoring {
+                            Button("Test live recognition", systemImage: "text.viewfinder") {
+                                scanner.setPreviewTest(true)
                             }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .accessibilityLabel("Live recognition test. Nothing is saved.")
+                            .buttonStyle(.borderedProminent)
                         }
                     }
                     Text(scanner.isMonitoring && !scanner.isPaused ? scanner.error ?? scanner.status : "Preview only · Scores are not being recorded.")
@@ -259,8 +252,39 @@ struct SessionView: View {
                 .padding()
                 .background(.black)
                 .safeAreaInset(edge: .bottom) { monitorControls }
-                .navigationTitle("Camera view")
+                .navigationTitle(scanner.testingPreview ? "Live recognition" : "Camera view")
                 .navigationBarTitleDisplayMode(.inline)
+            }
+        }
+    }
+
+    private var recognitionLog: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 10) {
+                    if scanner.testReadings.isEmpty {
+                        Text(scanner.previewError ?? "Waiting for recognized text…")
+                            .foregroundStyle(.secondary)
+                    }
+                    ForEach(scanner.testReadings) { reading in
+                        Text(reading.text)
+                            .font(.title2.monospaced())
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .id(reading.id)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .onChange(of: scanner.testReadings.last?.id) { _, id in
+                if let id { proxy.scrollTo(id, anchor: .bottom) }
+            }
+            .overlay(alignment: .top) {
+                if let error = scanner.previewError, !scanner.testReadings.isEmpty {
+                    Text(error).font(.callout).padding().background(.regularMaterial)
+                }
             }
         }
     }

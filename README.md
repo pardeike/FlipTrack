@@ -36,8 +36,10 @@ Returning or reopening the session offers Resume; it never starts the camera
 automatically. The current game, player order, and any unsaved captured pair
 survive relaunch. The full-screen camera is available even when recording is stopped or paused.
 Preview does not save scores. With recording stopped, **Test live recognition**
-shows recognized text, left/right scores, and whether the pair passes stability
-checks using the actual camera settings. Testing runs OCR only while enabled;
+opens a text-only scrolling log using the actual camera settings. Each recognized
+text appears on one large, truncated line, newest at the bottom. Repeated text
+is suppressed until it has been absent for five seconds. The latest 300 lines
+are retained during the test. **Camera preview** returns to framing. Testing runs OCR only while enabled;
 starting recording or closing preview clears the test. The bottom table button
 returns to the preview-free table and stops the camera unless scanning is active.
 

@@ -12,10 +12,12 @@ final class Scanner: ObservableObject {
     @Published private(set) var previewError: String?
     @Published private(set) var previewRunning = false
     @Published private(set) var testingPreview = false
-    @Published private(set) var testStatus = "Waiting for a reading…"
-    @Published private(set) var testScores: DisplayResult?
-    @Published private(set) var testText = ""
-    private var testDetector = EndGameDetector()
+    struct TestReading: Identifiable {
+        let id = UUID()
+        let text: String
+    }
+    @Published private(set) var testReadings: [TestReading] = []
+    private var recentlySeenTestText: [String: TimeInterval] = [:]
     private var previewConfiguration: Configuration?
     let camera = Camera()
     private var detector = EndGameDetector()
@@ -143,12 +145,8 @@ final class Scanner: ObservableObject {
 
     private func resetPreviewTest() {
         testingPreview = false
-        testScores = nil
-        testText = ""
-        testStatus = "Waiting for a reading…"
-        let configuration = previewConfiguration ?? Configuration()
-        testDetector = EndGameDetector(requiredReadings: configuration.requiredScanCount,
-                                      historyLimit: configuration.historyLimit)
+        testReadings = []
+        recentlySeenTestText = [:]
     }
 
     private func startPreviewIfNeeded() {
@@ -175,26 +173,26 @@ final class Scanner: ObservableObject {
                     self.previewError = message
                 case .frame(let text, let time):
                     guard self.testingPreview, !self.isMonitoring else { return }
-                    let result = EndGameLayout.result(in: text)
-                    self.testScores = result
-                    self.testText = text.map(\.text).joined(separator: " · ")
-                    let confirmed = self.testDetector.observe(result, at: time,
-                        readable: EndGameLayout.hasDisplayText(in: text),
-                        newGame: GameDisplayLayout.isNewGame(in: text))
-                    if confirmed != nil || (result != nil && result == self.testDetector.lastRegistered) {
-                        self.testStatus = "Stable score pair recognized · Nothing saved"
-                    } else if result != nil {
-                        self.testStatus = "Score pair detected · Checking stability…"
-                    } else if GameDisplayLayout.isBonusScreen(in: text) {
-                        self.testStatus = "Bonus screen · Not a final score pair"
-                    } else if GameDisplayLayout.isNewGame(in: text) {
-                        self.testStatus = "Start screen recognized"
-                    } else {
-                        self.testStatus = text.isEmpty ? "No text readable · Adjust framing or exposure" : "Text readable · No final score pair recognized"
-                    }
+                    self.appendTestReadings(text, at: time)
                 }
             }
         }
+    }
+
+    private func appendTestReadings(_ observations: [DisplayText], at time: TimeInterval) {
+        recentlySeenTestText = recentlySeenTestText.filter { time - $0.value < 5 }
+        var additions: [TestReading] = []
+        for observation in observations {
+            let text = observation.text.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+            guard !text.isEmpty else { continue }
+            let key = text.uppercased().trimmingCharacters(in: .punctuationCharacters)
+            guard !key.isEmpty else { continue }
+            if recentlySeenTestText[key] == nil { additions.append(TestReading(text: text)) }
+            // Repeated visible text remains quiet until absent for five seconds.
+            recentlySeenTestText[key] = time
+        }
+        guard !additions.isEmpty else { return }
+        testReadings = Array((testReadings + additions).suffix(300))
     }
 
     func restorePausedSession() {
