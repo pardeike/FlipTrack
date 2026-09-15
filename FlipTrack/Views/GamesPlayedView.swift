@@ -37,11 +37,12 @@ struct GamesPlayedView: View {
                         Button("Delete game", systemImage: "trash", role: .destructive) { onBeginEditing(); deletingGame = game }
                     } label: {
                         Text("\(game.nr)")
-                            .font(.caption.weight(.semibold).monospacedDigit())
-                            .foregroundStyle(.secondary)
-                            .frame(width: 36, height: 44)
+                            .font(.subheadline.weight(.medium).monospacedDigit())
+                            .foregroundStyle(.primary)
+                            .frame(width: 36, height: 44, alignment: .trailing)
                             .contentShape(Rectangle())
                     }
+                    .tint(.primary)
                     .accessibilityLabel("Game \(game.nr) actions")
                     ForEach(0..<2) { index in
                         Button {
