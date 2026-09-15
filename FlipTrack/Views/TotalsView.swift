@@ -25,6 +25,7 @@ struct TotalsView: View {
             HStack(spacing: 5) {
                 Image(systemName: icon)
                     .foregroundStyle(.secondary)
+                    .frame(width: 18)
                 Text(title).font(.caption2)
             }
             .foregroundStyle(.secondary)

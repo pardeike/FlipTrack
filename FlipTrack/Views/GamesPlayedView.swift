@@ -39,6 +39,7 @@ struct GamesPlayedView: View {
                         Text("\(game.nr)")
                             .font(.subheadline.weight(.medium).monospacedDigit())
                             .foregroundStyle(.primary)
+                            .padding(.trailing, 10)
                             .frame(width: 36, height: 44, alignment: .trailing)
                             .contentShape(Rectangle())
                     }
