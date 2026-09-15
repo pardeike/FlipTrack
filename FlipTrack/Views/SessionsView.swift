@@ -43,6 +43,20 @@ struct SessionsView: View {
                                             .font(.headline)
                                             .lineLimit(1)
                                             .minimumScaleFactor(0.8)
+                                        Spacer(minLength: 8)
+                                        if let topScorer = topScorer(in: session) {
+                                            Label {
+                                                Text(topScorer)
+                                                    .foregroundStyle(.primary)
+                                            } icon: {
+                                                Image(systemName: "trophy.fill")
+                                                    .foregroundStyle(.yellow)
+                                            }
+                                            .font(.caption.weight(.semibold))
+                                            .lineLimit(1)
+                                            .minimumScaleFactor(0.7)
+                                            .accessibilityLabel("\(topScorer) has the highest score")
+                                        }
                                     }
                                     if session.games?.isEmpty == false {
                                         OverviewBalanceBar(values: session.playerWins, players: [session.player1, session.player2])
@@ -98,6 +112,12 @@ struct SessionsView: View {
         let session = Session(date: .now)
         context.insert(session)
         if saveChanges() { path.append(session) }
+    }
+
+    private func topScorer(in session: Session) -> String? {
+        let scores = session.highScores
+        guard scores[0] != scores[1] else { return nil }
+        return scores[0] > scores[1] ? session.player1 : session.player2
     }
 
     private func saveChanges() -> Bool {
