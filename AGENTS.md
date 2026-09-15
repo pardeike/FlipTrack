@@ -8,6 +8,7 @@
 - The separate AP11 benchmark must run the physical camera while replaying the complete original movie through the same recognition engine at real-time pace. Keep its bundle ID, data, and results separate from the production app. Mac replay speed, compilation, and installation are not physical-device throughput evidence.
 - Preserve the recovered research history, untracked work, input fingerprints, and baseline metrics. Do not silently replace unknown scores with zero or infer a person switch from a bonus screen alone.
 - First-release acceptance allows occasional missed turns when uncertainty is visible and a compact current-player/ball correction restores tracking without losing scores. Prioritize that recovery flow over perfect baseline agreement. Keep final-score confirmation and ownership safeguards intact; report automatic accuracy separately from assisted-session success.
+- Reuse the existing game-score correction UI. Recovery is a scan interception on the score screen: show Scanning with Cancel, suspend ordinary state changes while camera recognition continues, then either confirm final scores or re-anchor a mid-game turn. Never turn a live scoreboard into a completed game. Follow the recovery section in the plan; do not add another correction editor.
 
 ## Workflow
 

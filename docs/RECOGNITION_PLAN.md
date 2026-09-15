@@ -64,18 +64,79 @@ After initial player/setup confirmation, capture complete final scores once per 
 
 **Accepted first-release bar, 2026-09-16:** useful automatic capture with quick human recovery. Andreas considers 37/38 detected turn starts a win if the players can notice a problem and easily put tracking back on course. Perfect unattended detection and exact reproduction of every baseline event are not release gates. Keep reporting misses honestly; do not relax score validity or silently invent ownership to improve counts.
 
-When tracking loses confidence, make that visible in the existing camera/session flow. Let the user confirm the current player and ball in the current game through one compact correction flow, using reliable machine-slot evidence where available and asking for it only if necessary. Resume from that explicit identity anchor without restarting the session or losing accepted scores. A correction must also work when an apparently confident assignment is wrong. Keep unresolved older observations separate unless their ownership can actually be established, and prevent delayed pre-correction frames from undoing the correction. Measure correction frequency and ease of recovery during live acceptance, alongside automatic accuracy.
+When tracking loses confidence, make that visible in the existing camera/session flow. Reuse the existing game-score editor and session/player-order correction UI. Add the scanner recovery interception below rather than a new correction screen. Resume from fresh, confirmed screen evidence without restarting the session or losing accepted scores. Keep unresolved older observations separate unless their ownership can actually be established, and prevent delayed pre-correction frames from undoing the correction. Measure correction frequency and ease of recovery during live acceptance, alongside automatic accuracy.
 
 Turn changes must be confirmed from the next player's scoreboard context. Bonus screens, ball launches, locks, and the end of multiball are not sufficient by themselves. Turn detection establishes the first visible evidence of the next turn; it does not promise the exact physical drain timestamp.
 
 Only completed games affect wins. When a player reaches ten confirmed wins, latch the race winner. If another game is already physically underway when confirmation arrives, finish and record that game before closing; do not start another. An automatically prepared next-game UUID is not start evidence. The first-to-ten winner remains the winner even if the trailing game changes displayed totals.
+
+## Recovery interception on the existing score screen
+
+User refinement, 2026-09-16: the game list already has score correction and
+scanning controls. Reuse them. Add one recovery action, potentially a `→|`
+symbol, near the existing scanning controls. Working accessible name: **Resync**.
+The proposed name “Forced end of game” is misleading for a missed mid-game
+switch; activation requests a fresh scan, not an unconditional completion.
+
+1. Capture the current game ID, person-to-machine-slot mapping, and last known
+   turn. Clear incomplete recognition votes and reject older queued callbacks.
+   Suspend ordinary detection-driven state changes while the same camera,
+   alignment and recognition path keeps running. This is not the existing
+   `Scanner.pause`, which stops camera recognition.
+2. Show a compact blocking **Scanning…** indicator with **Cancel** on the same
+   screen. Keep the existing score list underneath; add no second correction
+   editor or recovery dashboard. Do not require opening the camera preview.
+3. If the last known turn was machine player 2, ball 3, expect final results.
+   Ignore bonus, end animations, high-score entry and unrelated attract text.
+   Wait for repeated agreement on the actual two-player last-game-score layout,
+   then save both final scores once to the frozen game ID and apply normal
+   game/session completion rules. There is no short fixed animation timeout.
+4. For a missed switch within the game, the players wait before launching the
+   next ball. Confirm the live scoreboard's active machine slot and ball number
+   and read the outgoing player's post-bonus cumulative score. Update the
+   current game's in-progress score evidence and re-anchor tracking to the
+   visible turn. This does not save a completed game, add a win or advance the
+   game number. Any unreadable score stays unknown.
+5. Dismiss the blocker and resume ordinary detection only after the score and
+   tracker update succeeds. Cancel commits no recovery result, clears pending
+   votes and returns to the prior monitoring mode without pretending uncertainty
+   has been resolved. Camera/persistence failures must remain actionable.
+
+The expected branch is guidance, not proof: player 2 / ball 3 can have an extra
+ball, and the stored turn may itself be stale. A live BALL screen must never be
+saved as final results just because that branch was expected. Use fresh screen
+classification and valid turn context; if the evidence cannot establish the
+mapping, remain in recovery or let the user cancel and use existing corrections.
+Final-score completion still requires a complete confirmed pair. Equal scores
+in different games are valid; suppress duplicate saves by game identity.
+
+### Existing implementation and remaining work
+
+- `SessionView`, `GameEditView`, `ManualGameView` and `SessionDetailsView` already
+  provide the score list, scanning controls, score editing and player/game-order
+  corrections. Preserve that interaction model.
+- `EndGameLayout` already parses final-result pairs and deliberately rejects
+  BALL screens; `EndGameDetector` supplies repeated-reading confirmation.
+- `GameDisplayLayout` recognizes bonus and zero-score new-game screens. It is
+  not a general live-scoreboard reader. The recovered native engine supplies
+  active-slot/ball observations, but still needs to be connected to score
+  parsing and the app's current-game state.
+- `Scanner` needs recovery routing within its existing camera callback, plus a
+  generation boundary to prevent stale callbacks or ordinary saves racing the
+  recovery result. The live scoreboard must not be passed through the existing
+  final-result save callback.
+
+Focused checks must cover both branches, long end animations, continued camera
+delivery, cancel/no-write behavior, stale callbacks, one completion per game,
+extra-ball/stale-context rejection and recovery after the observed AP11 loss.
+Then prove the interception on AP11 using the existing score screen.
 
 ## Proposed implementation checkpoints
 
 1. **Recover a reproducible baseline.** Preserve the research Git history, untracked script, reference pack, movie fingerprint, and recorded outputs. Import only needed Swift modules/fixtures with provenance. Keep the research datasets and ROM/firmware material outside the production app bundle. Resolve the research package's iOS 26 floor against FlipTrack's current iOS 18.2 floor rather than silently raising it.
 2. **Run alignment and turn detection live on AP11.** Feed timestamped, correctly oriented camera images through one serial processing path. Begin around the already evaluated 2 Hz and measure before increasing it. Keep a visible preview independently of analysis. Acquire/confirm setup from the actual placement, follow nudges, and invalidate stale geometry. Retain useful reference-based refinement even though mode events are disabled. Port bounded color adaptation where color gates are used, with frozen last-good state and rejection tests.
 3. **Join final-score recognition to game context.** Use the existing app's strict score parsing and temporal agreement on a reliable rectified display. Add game-ending evidence that distinguishes a live scoreboard from final results even when BALL text is missed. Combine readings across frames, retain post-bonus scores, and associate delayed finals with their originating game. Never substitute zero for unreadable data or save a partial pair as a confirmed win. Fix recovery/amendment handling for incomplete results.
-4. **Persist a small, coherent session state.** One authority for person-to-slot mapping and game boundaries. Stable game IDs, atomic accepted-score updates, restart-safe duplicate suppression, calibrated setup state, explicit observed-start state, pending final results, and finishing/completed session state. Deduplicate by game identity, not score values: separate games can have identical scores. Corrections recompute wins. Explicit current-player/ball correction and visible uncertainty are part of the first usable version, not later polish. No new mode dashboard.
+4. **Persist a small, coherent session state.** One authority for person-to-slot mapping and game boundaries. Stable game IDs, atomic accepted-score updates, restart-safe duplicate suppression, calibrated setup state, explicit observed-start state, pending final results, and finishing/completed session state. Deduplicate by game identity, not score values: separate games can have identical scores. Corrections recompute wins. Existing score correction plus the scan-recovery interception and visible uncertainty are part of the first usable version. No new correction screen or mode dashboard.
 5. **Prove the narrow contract.** Replay the original movie with the integrated engine, report exact score pairs, 38 turn starts, duplicates, unknowns, timing, and motion recovery. Leave the truly occluded score unknown. Then test a separate recording and live AP11 play including nudges, glare, saves/extra balls, missing bonus, obscured scores, restart, same-person new-game boundaries, and the ten-win/in-progress-game closing rule. Run a sustained plugged-in session and measure processed-frame time, queue backlog, confirmation delay, and thermal behavior.
 
 ## Recommendation
@@ -99,7 +160,7 @@ The prototype has its own bundle ID and output directory, no production CloudKit
 - [x] Import a reproducible native engine package and focused tests without changing production behavior.
 - [x] Build/install separate AP11 benchmark and verify a short smoke check with camera active.
 - [x] Complete the full paced video run with camera active and verify sustained device performance.
-- [ ] Provide visible uncertainty and quick current-player/ball correction that restores tracking and preserves scores; validate it on the AP11 recovery failure.
+- [ ] Add the scan-recovery interception to existing score-screen controls; reuse existing corrections and validate recovery on the AP11 failure.
 - [ ] Live AP11 setup acquisition, motion tracking, and bounded color handling.
 - [ ] Final-score and turn integration with persistence/recovery and race-to-ten completion.
 - [ ] Independent footage and sustained real-machine acceptance.
