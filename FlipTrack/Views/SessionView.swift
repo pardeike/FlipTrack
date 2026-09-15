@@ -309,7 +309,7 @@ struct SessionView: View {
                 .frame(width: 44, height: 44)
                 .accessibilityIdentifier("pauseMonitoring")
             }
-            Button(showingCamera ? "Score table" : "Camera preview", systemImage: showingCamera ? "tablecells" : "camera") { showingCamera.toggle() }
+            Button(showingCamera ? "Close" : "Camera preview", systemImage: showingCamera ? "xmark" : "camera") { showingCamera.toggle() }
                 .labelStyle(.iconOnly)
                 .font(.title2)
                 .frame(width: 44, height: 44)

@@ -40,7 +40,7 @@ camera toolbar opens a text-only scrolling log using the actual camera settings.
 text appears on one large, truncated line, newest at the bottom. Repeated text
 is suppressed until it has been absent for five seconds. The latest 300 lines
 are retained during the test. The toolbar's camera icon returns to framing. Testing runs OCR only while enabled;
-starting recording or closing preview clears the test. The bottom table button
+starting recording or closing preview clears the test. The bottom Close button
 returns to the preview-free table and stops the camera unless scanning is active.
 
 FlipTrack keeps the iPhone awake throughout the foreground app, even when
