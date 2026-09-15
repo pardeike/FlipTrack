@@ -31,7 +31,10 @@ struct SessionView: View {
                 CurrentGameView(firstPlayer: session.firstPlayer,
                                 secondPlayer: session.secondPlayer,
                                 firstPlayerIndex: session.firstPlayerIndex,
-                                colorFor: color(for:), gameNumber: session.upcomingGameNumber)
+                                colorFor: color(for:), gameNumber: session.upcomingGameNumber,
+                                currentPlayerIndex: session.currentPlayerIndex,
+                                uncertain: session.progress.needsResync,
+                                winner: session.sessionFinished ? session.raceWinnerIndex : nil)
                     .contentShape(Rectangle())
                     .onTapGesture { openEditor(.details) }
                     .accessibilityAddTraits(.isButton)
@@ -102,13 +105,16 @@ struct SessionView: View {
             .padding(.horizontal)
             .padding(.vertical, 12)
         }
+        .disabled(scanner.isResyncing)
+        .overlay { recoveryOverlay }
         .safeAreaInset(edge: .bottom) { monitorControls }
+        .navigationBarBackButtonHidden(scanner.isResyncing)
         .preferredColorScheme(.dark)
         .navigationTitle(session.date.formatted(date: .abbreviated, time: .omitted))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Add scores", systemImage: "plus") { openEditor(.scores) }
+                Button("Add scores", systemImage: "plus") { openEditor(.scores) }.disabled(scanner.isResyncing)
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
@@ -130,6 +136,7 @@ struct SessionView: View {
                     }
                 } label: { Image(systemName: "ellipsis.circle") }
                 .accessibilityLabel("Session options")
+                .disabled(scanner.isResyncing)
             }
 
         }
@@ -198,6 +205,7 @@ struct SessionView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(.black)
+                .overlay { recoveryOverlay }
                 .safeAreaInset(edge: .bottom) { monitorControls }
                 .navigationTitle(scanner.testingPreview ? "Recognition test" : "Camera")
                 .navigationBarTitleDisplayMode(.inline)
@@ -259,6 +267,7 @@ struct SessionView: View {
     }
 
     private func startMonitoring() {
+        guard !session.sessionFinished else { return }
         guard session.pendingCaptureScores.isEmpty else {
             openEditor(.scores)
             return
@@ -271,9 +280,33 @@ struct SessionView: View {
             recordingError = error.localizedDescription
             return
         }
-        scanner.start(configuration: configStore.config, lastScores: session.lastCapturedScores, allowRepeatedScores: session.allowRepeatedCapture, rejectedSignatures: session.rejectedCaptureSignatures) { result in
+        guard let gameID = session.currentGameID else { return }
+        scanner.start(configuration: configStore.config, gameID: gameID, progress: session.progress,
+                      lastScores: session.lastCapturedScores, allowRepeatedScores: session.allowRepeatedCapture,
+                      rejectedSignatures: session.rejectedCaptureSignatures, update: { progress, id in
+            try session.updateProgress(progress, for: id, in: context)
+        }, save: { result, id in
+            guard id == session.currentGameID else { throw Session.RecordingError.staleGame }
             try session.stageCapture(result, in: context)
-            try session.record(result, for: session.currentGameID, in: context)
+            try session.record(result, for: id, in: context)
+            guard let nextID = session.currentGameID else { throw Session.RecordingError.staleGame }
+            return ScanGameContext(id: nextID, progress: session.progress, finished: session.sessionFinished)
+        })
+    }
+
+    @ViewBuilder private var recoveryOverlay: some View {
+        if scanner.isResyncing {
+            ZStack {
+                Color.black.opacity(0.5).ignoresSafeArea()
+                VStack(spacing: 20) {
+                    ProgressView("Scanning…")
+                    Button("Cancel") { scanner.cancelResync() }
+                        .accessibilityIdentifier("cancelResync")
+                }
+                .padding(28)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+                .accessibilityIdentifier("resyncOverlay")
+            }
         }
     }
 
@@ -289,8 +322,9 @@ struct SessionView: View {
             CameraButton(monitoring: scanner.isMonitoring, paused: scanner.isPaused) {
                 if scanner.isMonitoring { stopMonitoring() } else { startMonitoring() }
             }
+            .disabled(scanner.isResyncing || session.sessionFinished)
             VStack(alignment: .leading, spacing: 3) {
-                Text(scanner.testingPreview ? "Testing recognition" : showingCamera && !scanner.isMonitoring && scanner.error == nil ? "Preview only" : scanner.state.title)
+                Text(session.sessionFinished ? "Session complete" : scanner.testingPreview ? "Testing recognition" : showingCamera && !scanner.isMonitoring && scanner.error == nil ? "Preview only" : scanner.state.title)
                     .font(.subheadline.weight(.semibold))
                 Text(scanner.testingPreview ? "Scores are not saved." : scanner.error ?? scanner.status)
                     .font(.caption)
@@ -308,12 +342,20 @@ struct SessionView: View {
                 .labelStyle(.iconOnly)
                 .frame(width: 44, height: 44)
                 .accessibilityIdentifier("pauseMonitoring")
+                .disabled(scanner.isResyncing)
+                Button("Resync", systemImage: "arrow.right.to.line") { scanner.resync() }
+                    .labelStyle(.iconOnly)
+                    .frame(width: 44, height: 44)
+                    .disabled(scanner.isPaused || scanner.isResyncing)
+                    .accessibilityIdentifier("resyncTracking")
+                    .accessibilityHint("Read the display again to recover a missed turn or final score")
             }
             Button(showingCamera ? "Close" : "Camera preview", systemImage: showingCamera ? "xmark" : "camera") { showingCamera.toggle() }
                 .labelStyle(.iconOnly)
                 .font(.title2)
                 .frame(width: 44, height: 44)
                 .accessibilityIdentifier("showCameraPreview")
+                .disabled(scanner.isResyncing)
         }
         .padding(.horizontal)
         .padding(.vertical, 8)

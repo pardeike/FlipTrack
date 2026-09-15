@@ -18,6 +18,9 @@ public final class Session: Identifiable, Hashable {
     public var lastRecordedGameID: UUID?
     public var pendingCaptureScores: [Int] = []
     public var rejectedCaptureSignatures: [String] = []
+    public var progressData: Data?
+    public var raceWinnerIndex: Int?
+    public var sessionFinished = false
     @Relationship(deleteRule: .cascade, inverse: \Game.session)
     public var games: [Game]?
 
@@ -68,6 +71,34 @@ public final class Session: Identifiable, Hashable {
         return upcomingGameNumber % 2
     }
 
+    var progress: GameProgress {
+        guard let progressData else { return GameProgress() }
+        return (try? JSONDecoder().decode(GameProgress.self, from: progressData)) ?? GameProgress(needsResync: true)
+    }
+
+    var currentPlayerIndex: Int {
+        progress.turn?.slot == 2 ? 1-firstPlayerIndex : firstPlayerIndex
+    }
+
+    func recalculateRace() {
+        var wins = [0, 0]
+        raceWinnerIndex = nil
+        for game in (games ?? []).sorted(by: { $0.nr < $1.nr }) where game.winningIndex >= 0 {
+            wins[game.winningIndex] += 1
+            if wins[game.winningIndex] == 10 { raceWinnerIndex = game.winningIndex; break }
+        }
+        sessionFinished = raceWinnerIndex != nil && !progress.observedStart
+        if sessionFinished { scanningRequested = false }
+    }
+
+    @MainActor
+    func updateProgress(_ progress: GameProgress, for gameID: UUID?, in context: ModelContext) throws {
+        guard gameID == currentGameID, !sessionFinished else { throw RecordingError.staleGame }
+        progressData = try JSONEncoder().encode(progress)
+        do { try context.save() }
+        catch { context.rollback(); throw error }
+    }
+
     @MainActor
     func prepareCurrentGame(in context: ModelContext) throws {
         guard currentGameID == nil else { return }
@@ -92,6 +123,7 @@ public final class Session: Identifiable, Hashable {
             guard gameID == currentGameID else { throw RecordingError.staleGame }
         }
         let number = upcomingGameNumber
+        let nextObservedTurn = progress.nextGameTurn
         let explicitNumber = currentGameNumberOverride != nil
         let starter = firstPlayerIndex
         let ordered = firstPlayerIndex == 0 ? result.scores : result.scores.reversed().map { $0 }
@@ -113,6 +145,19 @@ public final class Session: Identifiable, Hashable {
         lastCapturedScores = result.scores
         currentGameID = UUID()
         pendingCaptureScores = []
+        progressData = try JSONEncoder().encode(GameProgress(turn: nextObservedTurn, observedStart: nextObservedTurn != nil))
+        // Latch the first player to reach ten confirmed wins. An observed next
+        // game is allowed to finish; merely allocating an ID never extends play.
+        if raceWinnerIndex == nil {
+            var wins = [0, 0]
+            for saved in games ?? [] where saved.id != game.id && saved.winningIndex >= 0 { wins[saved.winningIndex] += 1 }
+            if game.winningIndex >= 0 { wins[game.winningIndex] += 1 }
+            raceWinnerIndex = wins.firstIndex(where: { $0 >= 10 })
+        }
+        if raceWinnerIndex != nil, nextObservedTurn == nil {
+            sessionFinished = true
+            scanningRequested = false
+        }
         do {
             try context.save()
         } catch {
@@ -139,6 +184,9 @@ public final class Session: Identifiable, Hashable {
         lastCapturedScores = game.previousCapturedScores
         lastRecordedGameID = games?.filter { $0.id != game.id }.max { $0.nr < $1.nr }?.id
         allowRepeatedCapture = false
+        progressData = nil
+        raceWinnerIndex = nil
+        sessionFinished = false
         context.delete(game)
         do { try context.save() }
         catch { context.rollback(); throw error }

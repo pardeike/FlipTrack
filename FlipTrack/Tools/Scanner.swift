@@ -22,16 +22,52 @@ final class Scanner: ObservableObject {
     let camera = Camera()
     private var detector = EndGameDetector()
     private var generation = UUID()
+    @Published private(set) var isResyncing = false
+    @Published private(set) var progress = GameProgress()
+    private var tracker = GameTracker()
+    private var acceptFramesAfter = -Double.infinity
 
-    func start(configuration: Configuration, lastScores: [Int], allowRepeatedScores: Bool = false, rejectedSignatures: [String] = [], save: @escaping @MainActor (DisplayResult) throws -> Void) {
+    func resync() {
+        guard isMonitoring, !isPaused, !isResyncing else { return }
+        acceptFramesAfter = ProcessInfo.processInfo.systemUptime
+        tracker.beginRecovery(at: acceptFramesAfter)
+        #if FLIPTRACK_DEVICE_TESTING
+        camera.setFixtureRecovery(true)
+        #endif
+        detector.discardPendingReadings()
+        isResyncing = true
+        status = "Scanning…"
+    }
+
+    func cancelResync() {
+        acceptFramesAfter = ProcessInfo.processInfo.systemUptime
+        tracker.cancelRecovery(at: acceptFramesAfter)
+        #if FLIPTRACK_DEVICE_TESTING
+        camera.setFixtureRecovery(false)
+        #endif
+        detector.discardPendingReadings()
+        isResyncing = false
+        status = progress.needsResync ? "Tracking uncertain · Resync" : "Watching the display"
+    }
+
+
+    func start(configuration: Configuration, gameID: UUID, progress initialProgress: GameProgress,
+               lastScores: [Int], allowRepeatedScores: Bool = false, rejectedSignatures: [String] = [],
+               update: @escaping @MainActor (GameProgress, UUID) throws -> Void,
+               save: @escaping @MainActor (DisplayResult, UUID) throws -> ScanGameContext) {
         guard !isMonitoring || isPaused else { return }
         resetPreviewTest()
         previewRunning = false
         previewError = nil
         generation = UUID()
         let token = generation
+        var activeGameID = gameID
         let rejected = Set(rejectedSignatures)
-        detector = EndGameDetector(lastScores: allowRepeatedScores ? [] : lastScores,
+        progress = initialProgress
+        tracker = GameTracker(progress: initialProgress)
+        isResyncing = false
+        acceptFramesAfter = ProcessInfo.processInfo.systemUptime
+        detector = EndGameDetector(lastScores: allowRepeatedScores || initialProgress.observedStart ? [] : lastScores,
                                    requiredReadings: configuration.requiredScanCount,
                                    historyLimit: configuration.historyLimit)
         detector.resumeCurrentGame()
@@ -40,54 +76,78 @@ final class Scanner: ObservableObject {
         state = .starting
         Task { [self] in
             let permission = AVCaptureDevice.authorizationStatus(for: .video)
-            let granted: Bool
-            if permission == .notDetermined {
-                granted = await requestPermission()
-            } else {
-                granted = permission == .authorized
-            }
+            let granted = permission == .notDetermined ? await requestPermission() : permission == .authorized
             guard generation == token, isMonitoring else { return }
-            guard granted else {
-                fail("Allow camera access for FlipTrack in Settings.")
-                return
-            }
+            guard granted else { fail("Allow camera access for FlipTrack in Settings."); return }
             camera.start(configuration: configuration) { [weak self] event in
-                guard let self, self.generation == token, self.isMonitoring else { return }
+                guard let self, self.generation == token, self.isMonitoring, !self.isPaused else { return }
                 switch event {
                 case .started:
                     self.state = .scanning
-                    self.setStatus("Aim at the score display.")
-                case .failed(let message):
-                    self.fail(message)
-                case .frame(let text, let time):
-                    let observed = EndGameLayout.result(in: text)
-                    let ignored = observed.map { rejected.contains($0.signature) } ?? false
-                    let result = ignored ? nil : observed
-                    let readable = EndGameLayout.hasDisplayText(in: text)
-                    if let confirmed = self.detector.observe(result, at: time, readable: readable, newGame: GameDisplayLayout.isNewGame(in: text)) {
-                        do {
-                            try save(confirmed)
-                            UINotificationFeedbackGenerator().notificationOccurred(.success)
-                            self.setStatus("Game saved. Waiting for the next game.")
-                        } catch {
-                            self.fail("Scores were not saved: \(error.localizedDescription)")
+                    self.setStatus("Watching the display")
+                case .failed(let message): self.fail(message)
+                case .frame(let observation, let time):
+                    guard time > self.acceptFramesAfter else { return }
+                    let text = observation.text
+                    do {
+                        let wasRecovering = self.isResyncing
+                        if let updated = self.tracker.observe(observation.live, at: time) {
+                            try update(updated, activeGameID)
+                            if !self.progress.observedStart && updated.observedStart {
+                                self.detector = EndGameDetector(requiredReadings: configuration.requiredScanCount, historyLimit: configuration.historyLimit)
+                            }
+                            self.progress = updated
                         }
-                    } else if ignored {
-                        self.setStatus("Discarded reading ignored · Waiting for different scores.")
-                    } else if self.detector.detectedStart {
-                        self.setStatus("New game detected")
-                    } else if !readable {
-                        self.setStatus("Adjust camera alignment.")
-                    } else if !self.detector.armed || (result != nil && result == self.detector.lastRegistered) {
-                        self.setStatus("Game saved. Waiting for the next game.")
-                    } else if result?.isZero == true || GameDisplayLayout.isNewGame(in: text) {
-                        self.setStatus("Watching the start screen")
-                    } else if result != nil {
-                        self.setStatus("Checking final scores…")
-                    } else {
-                        self.setStatus("Watching for final scores")
-                    }
-
+                        self.isResyncing = self.tracker.recovering
+                        if wasRecovering && !self.isResyncing {
+                            self.detector.discardPendingReadings()
+                            self.acceptFramesAfter = ProcessInfo.processInfo.systemUptime
+                            UINotificationFeedbackGenerator().notificationOccurred(.success)
+                            self.setStatus("Tracking restored")
+                            return
+                        }
+                        // BALL screens can update the turn, never finish the game.
+                        let observed = observation.final
+                        let ignored = observed.map { rejected.contains($0.signature) } ?? false
+                        let result = ignored ? nil : observed
+                        let readable = EndGameLayout.hasDisplayText(in: text)
+                        // Non-terminal turn context is not sufficient for an automatic
+                        // final. Explicit Resync can recover a missed terminal turn.
+                        let canFinish = self.isResyncing || self.progress.turn == nil || self.progress.turn?.isLast == true
+                        if let confirmed = self.detector.observe(canFinish ? result : nil, at: time, readable: readable,
+                            newGame: GameDisplayLayout.isNewGame(in: text)) {
+                            if let nextTurn = self.tracker.recoveryNextTurn {
+                                var pending = self.progress
+                                pending.nextGameTurn = nextTurn
+                                try update(pending, activeGameID)
+                            }
+                            let next = try save(confirmed, activeGameID)
+                            activeGameID = next.id
+                            self.progress = next.progress
+                            self.tracker = GameTracker(progress: next.progress)
+                            self.isResyncing = false
+                            self.acceptFramesAfter = ProcessInfo.processInfo.systemUptime
+                            self.detector = EndGameDetector(lastScores: next.progress.observedStart ? [] : confirmed.scores,
+                                requiredReadings: configuration.requiredScanCount, historyLimit: configuration.historyLimit)
+                            UINotificationFeedbackGenerator().notificationOccurred(.success)
+                            if next.finished { self.stop(); self.setStatus("Session complete"); return }
+                            self.setStatus("Game saved")
+                        } else if self.isResyncing {
+                            self.setStatus("Scanning…")
+                        } else if self.progress.nextGameTurn != nil {
+                            self.setStatus("Final scores missing · Add scores or Resync")
+                        } else if self.progress.needsResync {
+                            self.setStatus("Tracking uncertain · Resync")
+                        } else if ignored {
+                            self.setStatus("Discarded reading ignored")
+                        } else if !readable {
+                            self.setStatus("Display not ready · Check alignment")
+                        } else if let turn = self.progress.turn {
+                            self.setStatus("Ball \(turn.ball)")
+                        } else {
+                            self.setStatus("Watching the display")
+                        }
+                    } catch { self.fail("Could not save: \(error.localizedDescription)") }
                 }
             }
         }
@@ -103,6 +163,7 @@ final class Scanner: ObservableObject {
 
     func pause(_ reason: ScanState.PauseReason = .user) {
         guard isMonitoring, !isPaused else { return }
+        cancelResync()
         generation = UUID()
         state = .paused(reason)
         camera.stop()
@@ -112,6 +173,7 @@ final class Scanner: ObservableObject {
     }
 
     func stop() {
+        cancelResync()
         generation = UUID()
         state = .off
         camera.stop()
@@ -173,7 +235,7 @@ final class Scanner: ObservableObject {
                     self.previewError = message
                 case .frame(let text, let time):
                     guard self.testingPreview, !self.isMonitoring else { return }
-                    self.appendTestReadings(text, at: time)
+                    self.appendTestReadings(text.text, at: time)
                 }
             }
         }
@@ -205,4 +267,10 @@ final class Scanner: ObservableObject {
         stop()
         state = .failed(message)
     }
+}
+
+struct ScanGameContext {
+    let id: UUID
+    let progress: GameProgress
+    let finished: Bool
 }

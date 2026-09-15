@@ -32,6 +32,7 @@ struct GamesPlayedView: View {
                         Button("Swap scores", systemImage: "arrow.left.arrow.right") {
                             onBeginEditing()
                             game.scores.swapAt(0, 1)
+                            game.session?.recalculateRace()
                             saveChanges(in: game.modelContext)
                         }
                         Button("Delete game", systemImage: "trash", role: .destructive) { onBeginEditing(); deletingGame = game }
@@ -77,7 +78,10 @@ struct GamesPlayedView: View {
         .confirmationDialog("Delete game \(deletingGame?.nr ?? 0)?", isPresented: Binding(get: { deletingGame != nil }, set: { if !$0 { deletingGame = nil } }), titleVisibility: .visible) {
             Button("Delete game", role: .destructive) {
                 if let game = deletingGame, let context = game.modelContext {
+                    let session = game.session
+                    session?.games?.removeAll { $0.id == game.id }
                     context.delete(game)
+                    session?.recalculateRace()
                     saveChanges(in: context)
                 }
                 deletingGame = nil

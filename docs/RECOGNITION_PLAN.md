@@ -199,3 +199,11 @@ Current checkpoint: build the live capture slice with explicit human recovery an
 - `ReviewApp/Sources/PinballVision/FrameImages.swift`
 - `ReviewApp/Sources/PinballTracking/SessionTracker.swift`
 - `ReviewApp/Analysis/generalization/adaptive_colour.py`
+
+### 2026-09-16: first production integration, local checkpoint
+
+- Added a narrow live BALL/active-score reader, repeated turn confirmation, durable in-progress evidence, and current-player display. Production keeps iOS 18.2 compatibility. It reacquires rectangles or the FREE PLAY lettering on each analyzed frame, including after movement; it does not import the recording's two fixed calibration poses. Relative color gates support the active-digit geometry, with OCR-size corroboration. The adaptive-palette research and reference registration remain follow-ups, not claimed as integrated.
+- Added Resync alongside scanning controls. Recognition and the camera continue while Scanning/Cancel blocks other edits. Recovery requires fresh, repeated outgoing-score evidence for a live turn or the actual complete final pair. Live screens cannot complete a game. Queued pre-intervention callbacks are fenced by capture time, and Cancel discards recovery candidates.
+- Persisted game progress and the first-to-ten winner. Only recorded final pairs affect wins. An observed subsequent game can finish; allocating its UUID cannot extend the session. Existing score edits/swaps/deletes recompute the race. The existing manual editor remains the path for an unreadable final pair.
+- Local Swift checks cover turn continuity, unexpected transitions, missing frames, stale recovery frames, cancel, extra balls, pending next-game evidence, storage, and first-to-ten completion. Six recorded images at 1080p/720p and an eight-frame player-switch sequence additionally check the production reader. The active-zero blink frame stays unknown. The sequence confirms P2 ball 1 and outgoing score 5,539,000 in both ordinary tracking and Resync. This is sampled recorded-video evidence, not a full-video accuracy result.
+- `Scripts/check.sh` is the local Swift-test + signed iOS-build gate. Optional recording fixtures are supplied by `FLIPTRACK_LIVE_FIXTURES` and `FLIPTRACK_TURN_SEQUENCE`. AP11 recovery checks and deployment are pending at this checkpoint.

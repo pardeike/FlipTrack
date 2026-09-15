@@ -7,6 +7,8 @@ struct DisplayText: Sendable {
     let bounds: CGRect
     var rotation: CGFloat = 0
     var isInsideDisplay = false
+    var characterHeight: CGFloat? = nil
+    var corners: [CGPoint] = []
 }
 
 struct DisplayResult: Equatable, Sendable {
@@ -48,7 +50,7 @@ enum EndGameLayout {
     static func result(in observations: [DisplayText]) -> DisplayResult? {
         // A live score screen also says FREE PLAY; BALL distinguishes it from results.
         guard !observations.contains(where: {
-            $0.confidence >= 0.5 && $0.text.uppercased().range(of: #"^BALL(?:\s|$)"#, options: .regularExpression) != nil
+            $0.confidence >= 0.5 && $0.text.uppercased().range(of: #"^BALL(?:\s|[123]|$)"#, options: .regularExpression) != nil
         }) else { return nil }
         guard !GameDisplayLayout.isBonusScreen(in: observations) else { return nil }
         let readable = observations.filter { $0.confidence >= 0.5 }
@@ -62,7 +64,8 @@ enum EndGameLayout {
             guard a.width > 0, a.height > 0 else { continue }
             let scores = readable.compactMap { observation -> (Int, CGRect)? in
                 let r = observation.bounds
-                guard let score = score(from: observation.text),
+                guard !observation.isInsideDisplay || (r.minX > 0.015 && r.maxX < 0.985),
+                      let score = score(from: observation.text),
                       r.midY > a.maxY,
                       r.midY - a.midY < a.height * 12,
                       abs(r.midX - a.midX) < a.width * 2.4,

@@ -6,21 +6,29 @@ struct CurrentGameView: View {
     let firstPlayerIndex: Int
     let colorFor: (Int) -> Color
     var gameNumber = 1
+    var currentPlayerIndex: Int?
+    var uncertain = false
+    var winner: Int?
+
+    private var playerIndex: Int { winner ?? currentPlayerIndex ?? firstPlayerIndex }
+    private var name: String { playerIndex == firstPlayerIndex ? firstPlayer : secondPlayer }
+
 
     var body: some View {
         HStack(spacing: 10) {
-            Text("GAME \(gameNumber)")
+            Text(winner == nil ? "GAME \(gameNumber)" : "SESSION")
                 .font(.caption.weight(.bold))
                 .foregroundStyle(.primary)
             Spacer(minLength: 4)
-            Text("\(firstPlayer) starts")
+            Text(winner != nil ? "\(name) won" : uncertain ? "\(name) turn?" : "\(name) turn")
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(colorFor(firstPlayerIndex))
+                .foregroundStyle(colorFor(playerIndex))
         }
         .lineLimit(1)
         .minimumScaleFactor(0.75)
         .padding(.vertical, 6)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Game \(gameNumber). Player 1: \(firstPlayer). Player 2: \(secondPlayer).")
+        .accessibilityLabel(winner != nil ? "\(name) won the session" : "Game \(gameNumber). \(name) turn.\(uncertain ? " Tracking uncertain. Use Resync." : "")")
+        .accessibilityIdentifier("currentTurn")
     }
 }

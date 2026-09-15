@@ -7,7 +7,7 @@ import Foundation
 final class Camera: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unchecked Sendable {
     enum Event: Sendable {
         case started
-        case frame([DisplayText], TimeInterval)
+        case frame(DisplayObservation, TimeInterval)
         case failed(String)
     }
 
@@ -17,6 +17,12 @@ final class Camera: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unc
     private var onEvent: (@MainActor @Sendable (Event) -> Void)?
     private var lastFrame = -Double.infinity
     private var recognizesScores = true
+    #if FLIPTRACK_DEVICE_TESTING
+    private let fixture = CameraFixture()
+    func setFixtureRecovery(_ active: Bool) {
+        queue.async { self.fixture.recoveryStarted = active ? ProcessInfo.processInfo.systemUptime : nil }
+    }
+    #endif
 
     override init() {
         super.init()
@@ -108,9 +114,17 @@ final class Camera: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unc
 
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         guard onEvent != nil, recognizesScores else { return }
+        #if FLIPTRACK_DEVICE_TESTING
+        fixture.cameraFrames += 1
+        #endif
         let now = ProcessInfo.processInfo.systemUptime
         guard now - lastFrame >= 0.5, let buffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
         lastFrame = now
+        #if FLIPTRACK_DEVICE_TESTING
+        do { emit(.frame(try fixture.observation(at:now),now)) }
+        catch { fail("Test fixture: \(error.localizedDescription)") }
+        return
+        #else
         autoreleasepool {
             let frame = CIImage(cvPixelBuffer: buffer)
             let raw = configuration.useCenteredScanArea
@@ -119,11 +133,12 @@ final class Camera: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unc
                 strength: configuration.filterStrength, contrast: configuration.contrast,
                 sharpness: configuration.sharpness) : raw
             do {
-                emit(.frame(try DisplayReader.read(image), now))
+                emit(.frame(try DisplayReader.analyze(image), now))
             } catch {
                 fail("The display could not be read: \(error.localizedDescription)")
             }
         }
+        #endif
     }
 
     private func emit(_ event: Event) {

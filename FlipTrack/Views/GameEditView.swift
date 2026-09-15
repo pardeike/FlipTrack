@@ -49,6 +49,7 @@ struct GameEditView: View {
                         game.scores = [first, second]
                         game.nr = nr
                         game.startingPlayerIndex = starter
+                        game.session?.recalculateRace()
                         do { try context.save(); dismiss() }
                         catch { context.rollback(); saveError = error.localizedDescription }
                     }.disabled(values == nil)

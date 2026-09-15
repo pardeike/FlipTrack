@@ -12,6 +12,8 @@
 
 ## Workflow
 
+- Use `Scripts/check.sh` for production-core tests and a signed iOS build. Optional recorded-pixel regressions use `FLIPTRACK_LIVE_FIXTURES` and `FLIPTRACK_TURN_SEQUENCE` manifests.
+
 - Use `Scripts/test-recognition.sh` for the recovered engine's focused tests. Use `Scripts/benchmark-ios.sh build|install|smoke|full|results|verify [AP11]` for the separate device experiment. Launch success is not benchmark completion; inspect the retrieved results. See `Benchmark/README.md`.
 - Use `Scripts/release-ios.sh AP11` for completed production versions. It tests, archives, signs, installs/launches, publishes, and verifies the signed web package. Development experiments must not replace the production web build.
 - Keep full routine logs under ignored local paths and print `ok` only after every requested step succeeds. On failure, report the failed step, concise diagnostics, and log path; stop dependent steps.
