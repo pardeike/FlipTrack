@@ -23,7 +23,7 @@ struct OverviewBalanceBar: View {
                         }
                         .clipShape(Capsule())
                 }
-                .frame(height: 4)
+                .frame(height: 6)
                 .accessibilityHidden(true)
             }
         }
