@@ -61,7 +61,7 @@ struct SessionsView: View {
                                     if session.games?.isEmpty == false {
                                         OverviewBalanceBar(values: session.playerWins, players: [session.player1, session.player2])
                                     } else {
-                                        Text("\(session.firstPlayer) starts game \(session.upcomingGameNumber)")
+                                        Text("\(session.firstPlayer) starts")
                                             .font(.subheadline).foregroundStyle(.secondary)
                                     }
                                 }
