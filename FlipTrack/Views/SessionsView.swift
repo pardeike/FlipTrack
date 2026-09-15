@@ -23,7 +23,7 @@ struct SessionsView: View {
                     } description: {
                         Text("Start a session to keep scores, track wins, and see who comes out ahead.")
                     } actions: {
-                        Button("New session", systemImage: "plus", action: addSession)
+                        Button("New Session", systemImage: "plus", action: addSession)
                             .buttonStyle(.borderedProminent)
                     }
                 } else {
@@ -81,15 +81,15 @@ struct SessionsView: View {
             .navigationTitle("FlipTrack")
             .navigationBarTitleDisplayMode(.large)
             .navigationDestination(for: Session.self) { SessionView(session: $0) }
-            .safeAreaInset(edge: .bottom) {
+            .safeAreaInset(edge: .bottom, spacing: 12) {
                 if !sortedSessions.isEmpty {
-                    Button("New session", systemImage: "plus", action: addSession)
+                    Button("New Session", systemImage: "plus", action: addSession)
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
                         .buttonStyle(.borderedProminent)
-                        .padding()
-                        .background(.bar)
+                        .padding(.horizontal)
+                        .padding(.bottom, 8)
                 }
             }
         }
