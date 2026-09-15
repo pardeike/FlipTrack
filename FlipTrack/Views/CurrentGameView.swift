@@ -11,7 +11,7 @@ struct CurrentGameView: View {
         HStack(spacing: 10) {
             Text("GAME \(gameNumber)")
                 .font(.caption.weight(.bold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.primary)
             Spacer(minLength: 4)
             Text("\(firstPlayer) starts")
                 .font(.subheadline.weight(.semibold))
