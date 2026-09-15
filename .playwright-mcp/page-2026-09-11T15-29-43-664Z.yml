@@ -1,0 +1,41 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - heading "Indiana Jones · ROM reference review" [level=1] [ref=e3]
+    - paragraph [ref=e4]: Twelve controlled L7 English captures. Original 128 × 32 shades; these are structural references, not ColorDMD camera footage.
+    - paragraph [ref=e5]: ↑ / ↓ mode · ← / → 1 second · Shift + ← / → 5 seconds · [ / ] previous / next changed frame · Space play / pause · S start · E later evidence · Enter release keyboard focus
+  - main [ref=e6]:
+    - navigation "Modes" [ref=e7]:
+      - button "1. Steal the Stones" [ref=e8] [cursor=pointer]
+      - button "2. Escape in the Mine Cart" [ref=e9] [cursor=pointer]
+      - button "3. Rope Bridge" [ref=e10] [cursor=pointer]
+      - button "4. Castle Grunewald" [ref=e11] [cursor=pointer]
+      - button "5. Tank Chase" [ref=e12] [cursor=pointer]
+      - button "6. Three Challenges" [ref=e13] [cursor=pointer]
+      - button "7. Choose Wisely" [ref=e14] [cursor=pointer]
+      - button "8. Get the Idol" [ref=e15] [cursor=pointer]
+      - button "9. Streets of Cairo" [ref=e16] [cursor=pointer]
+      - button "10. Well of Souls" [ref=e17] [cursor=pointer]
+      - button "11. Raven Bar" [ref=e18] [cursor=pointer]
+      - button "12. Monkey Brains" [ref=e19] [cursor=pointer]
+    - generic [ref=e20]:
+      - heading "Steal the Stones" [level=2] [ref=e21]
+      - generic "Emulated pinball display" [ref=e22]
+      - status [ref=e23]: 81.506 s / 150.008 s · changed frame 589 / 1479
+      - slider "Emulator time" [ref=e24]: "81.506"
+      - generic [ref=e25]:
+        - button "Play (Space)" [ref=e26] [cursor=pointer]
+        - button "Mode start (S)" [ref=e27] [cursor=pointer]
+        - button "Later evidence (E)" [ref=e28] [cursor=pointer]
+        - button "Save current PNG" [ref=e29] [cursor=pointer]
+      - paragraph [ref=e30]: Named timeout total
+      - paragraph [ref=e31]: Times are seconds from emulator cold boot, with mode entry at about 81 seconds. They have no corresponding timestamp in your original movie. No-input scenarios do not cover every success or failure branch. Player changes are not validated by these captures.
+      - paragraph [ref=e32]:
+        - link "Contact sheet" [ref=e33] [cursor=pointer]:
+          - /url: mode-contact.png
+        - text: ·
+        - link "Coverage & bookmarks" [ref=e34] [cursor=pointer]:
+          - /url: coverage.json
+        - text: ·
+        - link "Frame integrity results" [ref=e35] [cursor=pointer]:
+          - /url: validation.json
+      - alert

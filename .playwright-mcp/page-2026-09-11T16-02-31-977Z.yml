@@ -1,0 +1,36 @@
+- generic [active] [ref=f2e1]:
+  - heading "ColorDMD · recovered firmware evidence" [level=1] [ref=f2e2]
+  - paragraph [ref=f2e3]: Official Indiana Jones legacy 3.4 colour maps, with twelve original-ROM start frames matched through the recovered recognition table.
+  - generic [ref=f2e4]:
+    - generic [ref=f2e5]:
+      - text: View
+      - combobox "View" [ref=f2e6]:
+        - option "Matched mode starts" [selected]
+        - option "All 1,599 colour maps"
+    - button "← Previous" [ref=f2e7] [cursor=pointer]
+    - button "Next →" [ref=f2e8] [cursor=pointer]
+    - generic [ref=f2e9]:
+      - text: Index
+      - spinbutton "Index" [ref=f2e10]: "1"
+    - generic [ref=f2e11]:
+      - text: Preview palette
+      - combobox "Preview palette" [ref=f2e12]:
+        - option "0" [selected]
+        - option "1"
+        - option "2"
+        - option "3"
+  - heading "Steal the Stones" [level=2] [ref=f2e13]
+  - generic [ref=f2e14]:
+    - paragraph [ref=f2e16]: "Synthetic composite: game shades × recovered colour map"
+    - paragraph [ref=f2e19]: Recovered colour overlay without the game’s dots
+  - paragraph [ref=f2e21]: 1 / 12 · map 271 · file offset 0xf9730 · 419 compressed bytes
+  - paragraph [ref=f2e22]: "Recognition tags: 1a7d6064, 47d125fb"
+  - generic [ref=f2e23]:
+    - button "Save left PNG" [ref=f2e24] [cursor=pointer]
+    - link "All twelve matched starts" [ref=f2e25] [cursor=pointer]:
+      - /url: matched-mode-starts.png
+    - link "Validation details" [ref=f2e26] [cursor=pointer]:
+      - /url: summary.json
+  - paragraph [ref=f2e27]: These are reconstructed research images, not captured ColorDMD output. Palette selection is manual and brightness is normalized for inspection. Hardware gamma, dot rendering and temporal compositing are not reproduced. Colour overlays do not contain the original title or score text; the incoming game frame supplies those dots.
+  - paragraph [ref=f2e28]: ← / → or ↑ / ↓ browse · Home / End first / last · Page Up / Down move ten · M switch views · Enter applies the index and releases focus. Indices start at 1; firmware offsets are shown in hexadecimal. No original-movie timestamps apply.
+  - alert
