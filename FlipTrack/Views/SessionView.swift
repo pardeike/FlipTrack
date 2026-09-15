@@ -14,11 +14,9 @@ struct SessionView: View {
     @State private var editor: Editor?
     @State private var editorAfterCamera: Editor?
     @State private var showingCamera = false
-    @State private var showingStatistics = false
     @State private var recordingError: String?
     @State private var confirmingUndo = false
     @State private var confirmingRecapture = false
-    @State private var reviewingGame: Game?
     let session: Session
 
     func formattedNumber(_ number: Int) -> String {
@@ -57,36 +55,6 @@ struct SessionView: View {
                         .background(color(for: index).opacity(0.12), in: RoundedRectangle(cornerRadius: 18))
                     }
                 }
-                if let saved = session.lastRecordedGame, session.pendingCaptureScores.isEmpty {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Label("Last saved · Game \(saved.nr)", systemImage: "checkmark.circle.fill")
-                            .font(.subheadline.weight(.semibold)).foregroundStyle(.green)
-                        HStack {
-                            ForEach(0..<2) { index in
-                                VStack(alignment: .leading, spacing: 3) {
-                                    Text([session.player1, session.player2][index])
-                                        .font(.caption).foregroundStyle(color(for: index))
-                                    Text(formattedNumber(saved.scores[index]))
-                                        .font(.headline.monospacedDigit()).lineLimit(1).minimumScaleFactor(0.7)
-                                }.frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                        }
-                        HStack(spacing: 20) {
-                            Button("Edit", systemImage: "pencil") {
-                                scanner.pause(.editing)
-                                reviewingGame = saved
-                            }
-                            Button("Undo", systemImage: "arrow.uturn.backward") {
-                                scanner.pause(.editing)
-                                confirmingUndo = true
-                            }
-                        }
-                        .font(.subheadline.weight(.medium))
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(14)
-                    .background(Color.green.opacity(0.07), in: RoundedRectangle(cornerRadius: 16))
-                }
                 if session.pendingCaptureScores.count == 2 {
                     VStack(alignment: .leading, spacing: 10) {
                         Label("Unsaved scores · Game \(session.upcomingGameNumber)", systemImage: "square.and.pencil")
@@ -124,18 +92,12 @@ struct SessionView: View {
                     .padding(.vertical, 22)
                 }
                 if session.games?.isEmpty == false {
-                    DisclosureGroup("Session statistics", isExpanded: $showingStatistics) {
-                        TotalsView(playerTotals: session.playerTotals,
-                                   playerWins: session.playerWins,
-                                   highScores: session.highScores,
-                                   averageScores: session.averageScores,
-                                   colorFor: color(for:), formattedNumber: formattedNumber,
-                                   players: [session.player1, session.player2])
-                            .padding(.top, 12)
-                    }
-                    .font(.subheadline.weight(.medium))
-                    .padding(.horizontal, 4)
-                    .padding(.top, 4)
+                    TotalsView(playerTotals: session.playerTotals,
+                               playerWins: session.playerWins,
+                               highScores: session.highScores,
+                               averageScores: session.averageScores,
+                               colorFor: color(for:), formattedNumber: formattedNumber,
+                               players: [session.player1, session.player2])
                 }
             }
             .padding(.horizontal)
@@ -172,7 +134,6 @@ struct SessionView: View {
             }
 
         }
-        .sheet(item: $reviewingGame) { GameEditView(game: $0) }
         .confirmationDialog("Allow the previous score pair again?", isPresented: $confirmingRecapture, titleVisibility: .visible) {
             Button("Allow and start scanning") {
                 session.allowRepeatedCapture = true

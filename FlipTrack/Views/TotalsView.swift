@@ -11,21 +11,6 @@ struct TotalsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
-                Text("STATS")
-                    .font(.caption.weight(.semibold))
-                    .tracking(1)
-                    .foregroundStyle(.secondary)
-                    .frame(width: 64, alignment: .leading)
-                ForEach(0..<2) { index in
-                    Text(players[index])
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(colorFor(index))
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                        .lineLimit(1)
-                }
-            }
-            .padding(.bottom, 10)
             stat("Wins", icon: "trophy.fill", values: playerWins, emphasis: true)
             Divider().padding(.vertical, 8)
             stat("Best", icon: "star.fill", values: highScores)
