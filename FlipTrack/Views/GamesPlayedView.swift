@@ -11,6 +11,7 @@ struct GamesPlayedView: View {
     @State private var deletingGame: Game?
 
     private var sortedGames: [Game] { games.sorted { $0.nr > $1.nr } }
+    private var highestScore: Int? { games.flatMap(\.scores).max() }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -60,6 +61,7 @@ struct GamesPlayedView: View {
                                 Spacer(minLength: 0)
                                 Text(formattedNumber(game.scores[index]))
                                     .font(.subheadline.weight(.medium).monospacedDigit())
+                                    .foregroundStyle(game.scores[index] == highestScore ? Color.yellow : Color.primary)
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.6)
                             }
