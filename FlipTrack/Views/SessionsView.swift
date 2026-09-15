@@ -45,16 +45,17 @@ struct SessionsView: View {
                                             .minimumScaleFactor(0.8)
                                         Spacer(minLength: 8)
                                         if let topScorer = topScorer(in: session) {
-                                            Label {
-                                                Text(topScorer)
-                                                    .foregroundStyle(.primary)
-                                            } icon: {
+                                            HStack(spacing: 3) {
                                                 Image(systemName: "trophy.fill")
+                                                    .font(.caption2)
                                                     .foregroundStyle(.yellow)
+                                                Text(topScorer)
+                                                    .font(.caption.weight(.semibold))
+                                                    .foregroundStyle(.primary)
                                             }
-                                            .font(.caption.weight(.semibold))
                                             .lineLimit(1)
                                             .minimumScaleFactor(0.7)
+                                            .accessibilityElement(children: .ignore)
                                             .accessibilityLabel("\(topScorer) has the highest score")
                                         }
                                     }
