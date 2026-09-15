@@ -7,7 +7,7 @@ final class Scanner: ObservableObject {
     var isMonitoring: Bool { state.isMonitoring }
     var isPaused: Bool { state.isPaused }
     var error: String? { state.error }
-    @Published private(set) var status = "Aim at the whole score display."
+    @Published private(set) var status = "Tap record to scan."
     @Published private(set) var usesCenteredScanArea = false
     @Published private(set) var previewError: String?
     @Published private(set) var previewRunning = false
@@ -56,7 +56,7 @@ final class Scanner: ObservableObject {
                 switch event {
                 case .started:
                     self.state = .scanning
-                    self.setStatus("Watching for final scores")
+                    self.setStatus("Aim at the score display.")
                 case .failed(let message):
                     self.fail(message)
                 case .frame(let text, let time):
@@ -77,7 +77,7 @@ final class Scanner: ObservableObject {
                     } else if self.detector.detectedStart {
                         self.setStatus("New game detected")
                     } else if !readable {
-                        self.setStatus("Display not readable · Check alignment.")
+                        self.setStatus("Adjust camera alignment.")
                     } else if !self.detector.armed || (result != nil && result == self.detector.lastRegistered) {
                         self.setStatus("Game saved. Waiting for the next game.")
                     } else if result?.isZero == true || GameDisplayLayout.isNewGame(in: text) {
@@ -115,7 +115,7 @@ final class Scanner: ObservableObject {
         generation = UUID()
         state = .off
         camera.stop()
-        status = "Tap record to scan the current game."
+        status = "Tap record to scan."
         startPreviewIfNeeded()
     }
 

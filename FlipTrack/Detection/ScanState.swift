@@ -39,7 +39,7 @@ enum ScanState: Equatable, Sendable {
 
     var title: String {
         switch self {
-        case .off: "Scan off"
+        case .off: "Scanner off"
         case .starting: "Starting camera"
         case .scanning: "Scanning"
         case .paused: "Scan paused"

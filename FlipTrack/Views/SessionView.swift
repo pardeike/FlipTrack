@@ -296,6 +296,8 @@ struct SessionView: View {
                 Text(scanner.error ?? scanner.status)
                     .font(.caption)
                     .foregroundStyle(scanner.error == nil ? Color.secondary : .red)
+                    .lineLimit(scanner.error == nil ? 1 : 2)
+                    .minimumScaleFactor(0.7)
                     .accessibilityAddTraits(.updatesFrequently)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
