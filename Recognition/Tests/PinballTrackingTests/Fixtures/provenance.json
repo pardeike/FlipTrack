@@ -1,0 +1,9 @@
+{
+  "purpose": "Interpretation regression only; annotated input, not independent frame recognition",
+  "source": "baseline/v3/baseline.json",
+  "sourceSHA256": "782047de9936ffe083f0070bcbdbfb609dc6ab74b44dd97616999db6e63d12d0",
+  "sourceVersion": "v3-proposed",
+  "observations": 56,
+  "players": "Synthetic stable person-a/person-b; actual initial identity in the recording is unknown",
+  "reviewStatus": "Baseline proposals, with audited turns; no promotion of pending events to accepted"
+}

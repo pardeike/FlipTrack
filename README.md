@@ -5,6 +5,8 @@ The continuous scanner targets the Indiana Jones two-player final-score display.
 
 ## Use
 
+Engine development and the AP11 benchmark follow [the approved recognition plan](docs/RECOGNITION_PLAN.md).
+
 Create a session or select one from the history. The last session you opened is
 marked with a play icon in its existing row. The score table keeps each player's
 column fixed, shows wins prominently, and places detailed statistics directly

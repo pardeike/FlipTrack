@@ -1,0 +1,62 @@
+{
+  "passed": true,
+  "failures": [],
+  "summary": {
+    "analyzedFrames": 120,
+    "cameraFrames": 903,
+    "cameraLoad": true,
+    "cameraMaxGapMS": 81.1612083343789,
+    "completed": true,
+    "decodedFrames": 1800,
+    "lastSourceTime": 59.501666666666665,
+    "outputDirectory": "run-9FFEEC61-537D-4393-ADE8-70D460B75EFF",
+    "processingMaxMS": 911.9036250049248,
+    "processingP50MS": 217.05758332973346,
+    "processingP95MS": 296.1442499945406,
+    "samplingHz": 2,
+    "schedulingLagMaxMS": 617.5196666736156,
+    "schedulingLagP95MS": 5.551333332164177,
+    "sourceBytes": 4055356684,
+    "sourceSHA256": "a0374737c6a44fb5c18ee03456e2eca5c4e57595e3f1cf5ab5a603574f006d12",
+    "systemVersion": "Version 27.0 (Build 24A437)",
+    "targetSeconds": 60,
+    "thermalStates": [
+      "nominal"
+    ],
+    "wallSeconds": 59.650766541672056
+  },
+  "eventsCompared": 2,
+  "events": [
+    {
+      "confidence": 0.9820683589814038,
+      "confirmedAt": 1,
+      "evidencePath": "turn-0.png",
+      "id": "turn-0",
+      "kind": "player_turn",
+      "parameters": {
+        "ball": "1",
+        "game": "1",
+        "machine_slot": "1",
+        "new_game": "false",
+        "person": "person-a"
+      },
+      "sourceTime": 0
+    },
+    {
+      "confidence": 0.9650224313639503,
+      "confirmedAt": 56.001666666666665,
+      "evidencePath": "turn-33001.png",
+      "id": "turn-33001",
+      "kind": "player_turn",
+      "parameters": {
+        "ball": "1",
+        "game": "1",
+        "machine_slot": "2",
+        "new_game": "false",
+        "person": "person-b"
+      },
+      "sourceTime": 55.001666666666665
+    }
+  ],
+  "lastLagMS": 5.113125004186259
+}

@@ -1,0 +1,56 @@
+{"ball": 1, "id": "game_start-000000", "kind": "turn", "newGame": false, "observedTime": 0.0, "occurrenceID": "game_start-000000", "slot": 1, "sourceTime": 0.0}
+{"ball": 1, "id": "player_turn-001650", "kind": "turn", "newGame": false, "observedTime": 55.001666666666665, "occurrenceID": "player_turn-001650", "slot": 2, "sourceTime": 55.001666666666665}
+{"ball": 2, "id": "player_turn-003945", "kind": "turn", "newGame": false, "observedTime": 131.50333333333333, "occurrenceID": "player_turn-003945", "slot": 1, "sourceTime": 131.50333333333333}
+{"ball": 2, "id": "player_turn-004530", "kind": "turn", "newGame": false, "observedTime": 151.00333333333333, "occurrenceID": "player_turn-004530", "slot": 2, "sourceTime": 151.00333333333333}
+{"ball": 3, "id": "player_turn-012360", "kind": "turn", "newGame": false, "observedTime": 412.01, "occurrenceID": "player_turn-012360", "slot": 1, "sourceTime": 412.01}
+{"id": "mode_started-013935", "kind": "modeStart", "mode": "Three Challenges", "newGame": false, "observedTime": 464.51166666666666, "occurrenceID": "mode_started-013935", "sourceTime": 464.51166666666666}
+{"ball": 3, "id": "player_turn-014670", "kind": "turn", "newGame": false, "observedTime": 489.0133333333333, "occurrenceID": "player_turn-014670", "slot": 2, "sourceTime": 489.0133333333333}
+{"id": "game_result-015855", "kind": "gameResult", "newGame": false, "observedTime": 528.5133333333333, "occurrenceID": "game_result-015855", "scores": {"1": 33970770, "2": 215172210}, "sourceTime": 528.5133333333333}
+{"ball": 1, "id": "game_start-016260", "kind": "turn", "newGame": true, "observedTime": 542.015, "occurrenceID": "game_start-016260", "slot": 1, "sourceTime": 542.015}
+{"ball": 1, "id": "player_turn-021990", "kind": "turn", "newGame": false, "observedTime": 733.02, "occurrenceID": "player_turn-021990", "slot": 2, "sourceTime": 733.02}
+{"id": "mode_started-022575", "kind": "modeStart", "mode": "Streets Of Cairo", "newGame": false, "observedTime": 752.52, "occurrenceID": "mode_started-022575", "sourceTime": 752.52}
+{"ball": 2, "id": "player_turn-023025", "kind": "turn", "newGame": false, "observedTime": 767.52, "occurrenceID": "player_turn-023025", "slot": 1, "sourceTime": 767.52}
+{"ball": 2, "id": "player_turn-024045", "kind": "turn", "newGame": false, "observedTime": 801.5216666666666, "occurrenceID": "player_turn-024045", "slot": 2, "sourceTime": 801.5216666666666}
+{"ball": 3, "id": "player_turn-024675", "kind": "turn", "newGame": false, "observedTime": 822.5216666666666, "occurrenceID": "player_turn-024675", "slot": 1, "sourceTime": 822.5216666666666}
+{"ball": 3, "id": "player_turn-027270", "kind": "turn", "newGame": false, "observedTime": 909.0233333333333, "occurrenceID": "player_turn-027270", "slot": 2, "sourceTime": 909.0233333333333}
+{"id": "game_result-028740", "kind": "gameResult", "newGame": false, "observedTime": 958.025, "occurrenceID": "game_result-028740", "scores": {"1": 103500860}, "sourceTime": 958.025}
+{"ball": 1, "id": "game_start-028950", "kind": "turn", "newGame": true, "observedTime": 965.025, "occurrenceID": "game_start-028950", "slot": 1, "sourceTime": 965.025}
+{"id": "mode_started-029925", "kind": "modeStart", "mode": "Steal The Stones", "newGame": false, "observedTime": 997.5266666666666, "occurrenceID": "mode_started-029925", "sourceTime": 997.5266666666666}
+{"ball": 1, "id": "player_turn-031365", "kind": "turn", "newGame": false, "observedTime": 1045.5266666666666, "occurrenceID": "player_turn-031365", "slot": 2, "sourceTime": 1045.5266666666666}
+{"ball": 2, "id": "player_turn-032430", "kind": "turn", "newGame": false, "observedTime": 1081.0283333333334, "occurrenceID": "player_turn-032430", "slot": 1, "sourceTime": 1081.0283333333334}
+{"ball": 2, "id": "player_turn-032985", "kind": "turn", "newGame": false, "observedTime": 1099.5283333333334, "occurrenceID": "player_turn-032985", "slot": 2, "sourceTime": 1099.5283333333334}
+{"ball": 3, "id": "player_turn-036105", "kind": "turn", "newGame": false, "observedTime": 1203.5316666666668, "occurrenceID": "player_turn-036105", "slot": 1, "sourceTime": 1203.5316666666668}
+{"id": "mode_started-036540", "kind": "modeStart", "mode": "Escape In The Mine Cart", "newGame": false, "observedTime": 1218.0316666666668, "occurrenceID": "mode_started-036540", "sourceTime": 1218.0316666666668}
+{"id": "mode_started-038055", "kind": "modeStart", "mode": "Castle Grunewald", "newGame": false, "observedTime": 1268.5333333333333, "occurrenceID": "mode_started-038055", "sourceTime": 1268.5333333333333}
+{"ball": 3, "id": "player_turn-038970", "kind": "turn", "newGame": false, "observedTime": 1299.0333333333333, "occurrenceID": "player_turn-038970", "slot": 2, "sourceTime": 1299.0333333333333}
+{"id": "game_result-039795", "kind": "gameResult", "newGame": false, "observedTime": 1326.535, "occurrenceID": "game_result-039795", "scores": {"1": 61546660, "2": 35046220}, "sourceTime": 1326.535}
+{"ball": 1, "id": "game_start-040020", "kind": "turn", "newGame": true, "observedTime": 1334.035, "occurrenceID": "game_start-040020", "slot": 1, "sourceTime": 1334.035}
+{"ball": 1, "id": "player_turn-041715", "kind": "turn", "newGame": false, "observedTime": 1390.5366666666666, "occurrenceID": "player_turn-041715", "slot": 2, "sourceTime": 1390.5366666666666}
+{"ball": 2, "id": "player_turn-042930", "kind": "turn", "newGame": false, "observedTime": 1431.0366666666666, "occurrenceID": "player_turn-042930", "slot": 1, "sourceTime": 1431.0366666666666}
+{"ball": 2, "id": "player_turn-047280", "kind": "turn", "newGame": false, "observedTime": 1576.0416666666667, "occurrenceID": "player_turn-047280", "slot": 2, "sourceTime": 1576.0416666666667}
+{"ball": 3, "id": "player_turn-049305", "kind": "turn", "newGame": false, "observedTime": 1643.5433333333333, "occurrenceID": "player_turn-049305", "slot": 1, "sourceTime": 1643.5433333333333}
+{"ball": 3, "id": "player_turn-051195", "kind": "turn", "newGame": false, "observedTime": 1706.545, "occurrenceID": "player_turn-051195", "slot": 2, "sourceTime": 1706.545}
+{"id": "game_result-052170", "kind": "gameResult", "newGame": false, "observedTime": 1739.045, "occurrenceID": "game_result-052170", "scores": {"1": 84319210, "2": 19937440}, "sourceTime": 1739.045}
+{"ball": 1, "id": "game_start-052575", "kind": "turn", "newGame": true, "observedTime": 1752.5466666666666, "occurrenceID": "game_start-052575", "slot": 1, "sourceTime": 1752.5466666666666}
+{"ball": 1, "id": "player_turn-055290", "kind": "turn", "newGame": false, "observedTime": 1843.0483333333334, "occurrenceID": "player_turn-055290", "slot": 2, "sourceTime": 1843.0483333333334}
+{"ball": 2, "id": "player_turn-056400", "kind": "turn", "newGame": false, "observedTime": 1880.05, "occurrenceID": "player_turn-056400", "slot": 1, "sourceTime": 1880.05}
+{"id": "mode_started-057120", "kind": "modeStart", "mode": "Rope Bridge", "newGame": false, "observedTime": 1904.05, "occurrenceID": "mode_started-057120", "sourceTime": 1904.05}
+{"ball": 2, "id": "player_turn-057885", "kind": "turn", "newGame": false, "observedTime": 1929.55, "occurrenceID": "player_turn-057885", "slot": 2, "sourceTime": 1929.55}
+{"id": "mode_started-061440", "kind": "modeStart", "mode": "Castle Grunewald", "newGame": false, "observedTime": 2048.0533333333333, "occurrenceID": "mode_started-061440", "sourceTime": 2048.0533333333333}
+{"id": "mode_started-063795", "kind": "modeStart", "mode": "Tank Chase", "newGame": false, "observedTime": 2126.555, "occurrenceID": "mode_started-063795", "sourceTime": 2126.555}
+{"id": "mode_started-068055", "kind": "modeStart", "mode": "Three Challenges", "newGame": false, "observedTime": 2268.56, "occurrenceID": "mode_started-068055", "sourceTime": 2268.56}
+{"ball": 3, "id": "player_turn-070110", "kind": "turn", "newGame": false, "observedTime": 2337.0616666666665, "occurrenceID": "player_turn-070110", "slot": 1, "sourceTime": 2337.0616666666665}
+{"id": "mode_started-071265", "kind": "modeStart", "mode": "Tank Chase", "newGame": false, "observedTime": 2375.5616666666665, "occurrenceID": "mode_started-071265", "sourceTime": 2375.5616666666665}
+{"ball": 3, "id": "player_turn-072660", "kind": "turn", "newGame": false, "observedTime": 2422.0633333333335, "occurrenceID": "player_turn-072660", "slot": 2, "sourceTime": 2422.0633333333335}
+{"id": "mode_started-076560", "kind": "modeStart", "mode": "Streets Of Cairo", "newGame": false, "observedTime": 2552.0666666666666, "occurrenceID": "mode_started-076560", "sourceTime": 2552.0666666666666}
+{"id": "game_result-078705", "kind": "gameResult", "newGame": false, "observedTime": 2623.568333333333, "occurrenceID": "game_result-078705", "scores": {"1": 56771550, "2": 271736210}, "sourceTime": 2623.568333333333}
+{"ball": 1, "id": "game_start-079260", "kind": "turn", "newGame": true, "observedTime": 2642.07, "occurrenceID": "game_start-079260", "slot": 1, "sourceTime": 2642.07}
+{"ball": 1, "id": "player_turn-080835", "kind": "turn", "newGame": false, "observedTime": 2694.57, "occurrenceID": "player_turn-080835", "slot": 2, "sourceTime": 2694.57}
+{"ball": 2, "id": "player_turn-081720", "kind": "turn", "newGame": false, "observedTime": 2724.0716666666667, "occurrenceID": "player_turn-081720", "slot": 1, "sourceTime": 2724.0716666666667}
+{"ball": 2, "id": "player_turn-082260", "kind": "turn", "newGame": false, "observedTime": 2742.0716666666667, "occurrenceID": "player_turn-082260", "slot": 2, "sourceTime": 2742.0716666666667}
+{"ball": 3, "id": "player_turn-083940", "kind": "turn", "newGame": false, "observedTime": 2798.0733333333333, "occurrenceID": "player_turn-083940", "slot": 1, "sourceTime": 2798.0733333333333}
+{"ball": 3, "id": "player_turn-090270", "kind": "turn", "newGame": false, "observedTime": 3009.0783333333334, "occurrenceID": "player_turn-090270", "slot": 2, "sourceTime": 3009.0783333333334}
+{"id": "mode_started-090840", "kind": "modeStart", "mode": "Steal The Stones", "newGame": false, "observedTime": 3028.08, "occurrenceID": "mode_started-090840", "sourceTime": 3028.08}
+{"id": "game_result-091575", "kind": "gameResult", "newGame": false, "observedTime": 3052.58, "occurrenceID": "game_result-091575", "scores": {"1": 140156970, "2": 16629550}, "sourceTime": 3052.58}
+{"ball": 1, "id": "game_start-092190", "kind": "turn", "newGame": true, "observedTime": 3073.08, "occurrenceID": "game_start-092190", "slot": 1, "sourceTime": 3073.08}
+{"ball": 1, "id": "player_turn-092685", "kind": "turn", "newGame": false, "observedTime": 3089.5816666666665, "occurrenceID": "player_turn-092685", "slot": 2, "sourceTime": 3089.5816666666665}

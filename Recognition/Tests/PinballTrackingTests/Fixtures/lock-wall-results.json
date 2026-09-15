@@ -1,0 +1,285 @@
+{
+  "schemaVersion": 1,
+  "scope": "Selected positive stills, relative wall registration only",
+  "staticWallConfirmedByUser": true,
+  "results": [
+    {
+      "accepted": false,
+      "reason": "gate_rejected",
+      "fitCorrelation": 1.000000022639219,
+      "heldOutBefore": 1.0000000000000002,
+      "heldOutAfter": 1.0000000000000002,
+      "maxCornerShiftDisplayDots": 0.0,
+      "referenceToCurrentAffine": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ]
+      ],
+      "id": "ball_locked-073530",
+      "time": 2451.065,
+      "lock": "1",
+      "evidencePath": "baseline/v1/native-stills/073530/display-sdr.png",
+      "anchorID": "ball_locked-073530"
+    },
+    {
+      "accepted": false,
+      "reason": "gate_rejected",
+      "fitCorrelation": 0.975067536382583,
+      "heldOutBefore": 0.9575607906130944,
+      "heldOutAfter": 0.942599626599718,
+      "maxCornerShiftDisplayDots": 0.8425997495651245,
+      "referenceToCurrentAffine": [
+        [
+          0.996116042137146,
+          0.015634004026651382,
+          -0.995766818523407
+        ],
+        [
+          -0.0002564133610576391,
+          1.0328755378723145,
+          -1.4426295757293701
+        ]
+      ],
+      "id": "ball_locked-074595",
+      "time": 2486.565,
+      "lock": "2",
+      "evidencePath": "baseline/v1/native-stills/074595/display-sdr.png",
+      "anchorID": "ball_locked-073530"
+    },
+    {
+      "accepted": false,
+      "reason": "gate_rejected",
+      "fitCorrelation": 0.9856438831113349,
+      "heldOutBefore": 0.9866839489189484,
+      "heldOutAfter": 0.9751216213904292,
+      "maxCornerShiftDisplayDots": 0.5822744369506836,
+      "referenceToCurrentAffine": [
+        [
+          1.0020520687103271,
+          0.017650146037340164,
+          -1.521460771560669
+        ],
+        [
+          -0.0017522540874779224,
+          1.0212430953979492,
+          -0.48289260268211365
+        ]
+      ],
+      "id": "ball_locked-076035",
+      "time": 2534.5666666666666,
+      "lock": "1",
+      "evidencePath": "baseline/v1/native-stills/076035/display-sdr.png",
+      "anchorID": "ball_locked-073530"
+    },
+    {
+      "accepted": true,
+      "reason": "held_out_improvement",
+      "fitCorrelation": 0.981769452249976,
+      "heldOutBefore": 0.965582130059412,
+      "heldOutAfter": 0.9801868274844958,
+      "maxCornerShiftDisplayDots": 0.5205186009407043,
+      "referenceToCurrentAffine": [
+        [
+          0.9968803524971008,
+          0.012071497738361359,
+          -0.48154839873313904
+        ],
+        [
+          -0.0013488847762346268,
+          0.9969249963760376,
+          0.8522884845733643
+        ]
+      ],
+      "id": "ball_locked-077265",
+      "time": 2575.5666666666666,
+      "lock": "2",
+      "evidencePath": "baseline/v1/native-stills/077265/display-sdr.png",
+      "anchorID": "ball_locked-073530"
+    },
+    {
+      "accepted": true,
+      "reason": "held_out_improvement",
+      "fitCorrelation": 0.9813238056841305,
+      "heldOutBefore": 0.9541734082360686,
+      "heldOutAfter": 0.9793501331835833,
+      "maxCornerShiftDisplayDots": 0.9917734265327454,
+      "referenceToCurrentAffine": [
+        [
+          1.0074307918548584,
+          0.008195770904421806,
+          -0.902042806148529
+        ],
+        [
+          -0.0012291325256228447,
+          1.0123722553253174,
+          -0.4467845559120178
+        ]
+      ],
+      "id": "ball_locked-077985",
+      "time": 2600.068333333333,
+      "lock": "3",
+      "evidencePath": "baseline/v1/native-stills/078000/display-sdr.png",
+      "anchorID": "ball_locked-073530"
+    },
+    {
+      "accepted": false,
+      "reason": "gate_rejected",
+      "fitCorrelation": 0.9789786422336869,
+      "heldOutBefore": 0.9814788633637287,
+      "heldOutAfter": 0.9783237246915256,
+      "maxCornerShiftDisplayDots": 0.415303111076355,
+      "referenceToCurrentAffine": [
+        [
+          1.0015205144882202,
+          0.0017677154392004013,
+          -0.9465001225471497
+        ],
+        [
+          -0.0011338687036186457,
+          1.0177117586135864,
+          -0.7532751560211182
+        ]
+      ],
+      "id": "ball_locked-080115",
+      "time": 2671.07,
+      "lock": "1",
+      "evidencePath": "baseline/v1/native-stills/080130/display-sdr.png",
+      "anchorID": "ball_locked-073530"
+    },
+    {
+      "accepted": true,
+      "reason": "held_out_improvement",
+      "fitCorrelation": 0.9755621149940754,
+      "heldOutBefore": 0.9660248061892737,
+      "heldOutAfter": 0.9701711321531599,
+      "maxCornerShiftDisplayDots": 0.6178072690963745,
+      "referenceToCurrentAffine": [
+        [
+          0.9984756112098694,
+          0.016588877886533737,
+          -1.4562759399414062
+        ],
+        [
+          0.0006537216831929982,
+          1.0108517408370972,
+          -1.3879597187042236
+        ]
+      ],
+      "id": "ball_locked-084600",
+      "time": 2820.5733333333333,
+      "lock": "2",
+      "evidencePath": "baseline/v1/native-stills/084615/display-sdr.png",
+      "anchorID": "ball_locked-073530"
+    },
+    {
+      "accepted": false,
+      "reason": "gate_rejected",
+      "fitCorrelation": 0.9852862950654093,
+      "heldOutBefore": 0.9774847367308315,
+      "heldOutAfter": 0.9761217997934944,
+      "maxCornerShiftDisplayDots": 0.38874807953834534,
+      "referenceToCurrentAffine": [
+        [
+          1.0005452632904053,
+          0.014065943658351898,
+          -1.4426499605178833
+        ],
+        [
+          -0.000633465126156807,
+          0.9939448237419128,
+          0.5803120136260986
+        ]
+      ],
+      "id": "ball_locked-085740",
+      "time": 2858.075,
+      "lock": "3",
+      "evidencePath": "baseline/v1/native-stills/085740/display-sdr.png",
+      "anchorID": "ball_locked-073530"
+    },
+    {
+      "accepted": false,
+      "reason": "gate_rejected",
+      "fitCorrelation": 0.9759292632522796,
+      "heldOutBefore": 0.9782341207427265,
+      "heldOutAfter": 0.9772812132460604,
+      "maxCornerShiftDisplayDots": 0.4818084239959717,
+      "referenceToCurrentAffine": [
+        [
+          1.0007858276367188,
+          0.015494252555072308,
+          -1.8684173822402954
+        ],
+        [
+          -0.001778759527951479,
+          1.0073277950286865,
+          0.47248944640159607
+        ]
+      ],
+      "id": "ball_locked-089565",
+      "time": 2986.0783333333334,
+      "lock": "1",
+      "evidencePath": "baseline/v1/native-stills/089580/display-sdr.png",
+      "anchorID": "ball_locked-073530"
+    }
+  ],
+  "syntheticMovement": {
+    "accepted": true,
+    "reason": "held_out_improvement",
+    "fitCorrelation": 0.9971950340588916,
+    "heldOutBefore": 0.6596016048802634,
+    "heldOutAfter": 0.9849170042804749,
+    "maxCornerShiftDisplayDots": 2.154413938522339,
+    "referenceToCurrentAffine": [
+      [
+        1.0060125589370728,
+        0.0015203077346086502,
+        4.580970764160156
+      ],
+      [
+        -0.001015988178551197,
+        0.985602617263794,
+        -1.2157046794891357
+      ]
+    ],
+    "knownTransform": [
+      [
+        1.0080000162124634,
+        0.00800000037997961,
+        4.0
+      ],
+      [
+        -0.0020000000949949026,
+        0.996999979019165,
+        -2.0
+      ]
+    ],
+    "maxRecoveryErrorDisplayDots": 0.2981034161886404
+  },
+  "wrongFamily": {
+    "accepted": false,
+    "reason": "gate_rejected",
+    "fitCorrelation": 0.29093491179159275,
+    "heldOutBefore": 0.09578577994671526,
+    "heldOutAfter": 0.06202889292138721,
+    "maxCornerShiftDisplayDots": 40.86037063598633,
+    "referenceToCurrentAffine": [
+      [
+        0.8309005498886108,
+        -1.2802648544311523,
+        87.19635772705078
+      ],
+      [
+        0.007461688946932554,
+        1.2741559743881226,
+        -15.574677467346191
+      ]
+    ]
+  }
+}

@@ -1,0 +1,392 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		15FCA0E5E2883AB86EAC531F /* source-original.mov in Resources */ = {isa = PBXBuildFile; fileRef = 005DD4C2E2CBFA926D5662E2 /* source-original.mov */; };
+		3477C3CA511042A529E40A78 /* References in Resources */ = {isa = PBXBuildFile; fileRef = 99752FA8D8B250831311CBC3 /* References */; };
+		4E90D85E64D0FEBE5573B60C /* provenance.json in Resources */ = {isa = PBXBuildFile; fileRef = 5D89844B4DB47831A90D9293 /* provenance.json */; };
+		5E9A1310B71097379F2A82F4 /* PinballVision in Frameworks */ = {isa = PBXBuildFile; productRef = 2ACA8244F044C1CC32D42C3C /* PinballVision */; };
+		664E401B1015C47976F1B641 /* BenchmarkApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A64C8FAFF898B0092B8CAA40 /* BenchmarkApp.swift */; };
+		66D355554F821FB749125AAC /* BenchmarkRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8B22C3F14C05F3BFA8E5EE5 /* BenchmarkRunner.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		005DD4C2E2CBFA926D5662E2 /* source-original.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = "source-original.mov"; sourceTree = "<group>"; };
+		121470E056462A0A0E2DA818 /* Recognition */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Recognition; path = ../Recognition; sourceTree = SOURCE_ROOT; };
+		5D89844B4DB47831A90D9293 /* provenance.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = provenance.json; sourceTree = "<group>"; };
+		99752FA8D8B250831311CBC3 /* References */ = {isa = PBXFileReference; lastKnownFileType = folder; name = References; path = ../Research/Local/References; sourceTree = SOURCE_ROOT; };
+		A64C8FAFF898B0092B8CAA40 /* BenchmarkApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BenchmarkApp.swift; sourceTree = "<group>"; };
+		B545024B68B3E5ABF96A7516 /* FlipTrackBenchmark.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FlipTrackBenchmark.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D8B22C3F14C05F3BFA8E5EE5 /* BenchmarkRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BenchmarkRunner.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		1702751D7964B4C66D9475D7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5E9A1310B71097379F2A82F4 /* PinballVision in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		11DB46266490CF4982C37410 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B545024B68B3E5ABF96A7516 /* FlipTrackBenchmark.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		2DF7AFC5B5F62AA315E19FA9 /* Local */ = {
+			isa = PBXGroup;
+			children = (
+				005DD4C2E2CBFA926D5662E2 /* source-original.mov */,
+			);
+			name = Local;
+			path = ../Research/Local;
+			sourceTree = "<group>";
+		};
+		34D924D0D289D0C116D43416 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				121470E056462A0A0E2DA818 /* Recognition */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		4D93D3D2E7EDAD0A52181C08 = {
+			isa = PBXGroup;
+			children = (
+				99752FA8D8B250831311CBC3 /* References */,
+				2DF7AFC5B5F62AA315E19FA9 /* Local */,
+				34D924D0D289D0C116D43416 /* Packages */,
+				E62F74C432EE04F7475E49B7 /* Research */,
+				FFA2B4C5D5D3EF45A31B2B6F /* Sources */,
+				11DB46266490CF4982C37410 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E62F74C432EE04F7475E49B7 /* Research */ = {
+			isa = PBXGroup;
+			children = (
+				5D89844B4DB47831A90D9293 /* provenance.json */,
+			);
+			name = Research;
+			path = ../Research;
+			sourceTree = "<group>";
+		};
+		FFA2B4C5D5D3EF45A31B2B6F /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				A64C8FAFF898B0092B8CAA40 /* BenchmarkApp.swift */,
+				D8B22C3F14C05F3BFA8E5EE5 /* BenchmarkRunner.swift */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		C387D75E86744DE3F0157142 /* FlipTrackBenchmark */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AD904EC12C6D9EA87EE616A0 /* Build configuration list for PBXNativeTarget "FlipTrackBenchmark" */;
+			buildPhases = (
+				F60FB60FFFC20A35D3BA5467 /* Sources */,
+				FA7F865D2D5E0B9DFF991558 /* Resources */,
+				1702751D7964B4C66D9475D7 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FlipTrackBenchmark;
+			packageProductDependencies = (
+				2ACA8244F044C1CC32D42C3C /* PinballVision */,
+			);
+			productName = FlipTrackBenchmark;
+			productReference = B545024B68B3E5ABF96A7516 /* FlipTrackBenchmark.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		33B8B69CF351ADEBB782198D /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					C387D75E86744DE3F0157142 = {
+						DevelopmentTeam = W65292CD8T;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = D29DF5A459B43D8EEDABE98C /* Build configuration list for PBXProject "FlipTrackBenchmark" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 4D93D3D2E7EDAD0A52181C08;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				7290DF9C3AEB2ABC161B8868 /* XCLocalSwiftPackageReference "../Recognition" */,
+			);
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				C387D75E86744DE3F0157142 /* FlipTrackBenchmark */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		FA7F865D2D5E0B9DFF991558 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3477C3CA511042A529E40A78 /* References in Resources */,
+				4E90D85E64D0FEBE5573B60C /* provenance.json in Resources */,
+				15FCA0E5E2883AB86EAC531F /* source-original.mov in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F60FB60FFFC20A35D3BA5467 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				664E401B1015C47976F1B641 /* BenchmarkApp.swift in Sources */,
+				66D355554F821FB749125AAC /* BenchmarkRunner.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		606E7C8D89A7E3B01528F57E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = W65292CD8T;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "FlipTrack Bench";
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Runs the camera during recorded-video recognition benchmarks.";
+				INFOPLIST_KEY_UIFileSharingEnabled = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = net.pardeike.FlipTrackBenchmark;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		8317B44A519CD55A6E716361 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		CF9463039955A12BA85152B9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = W65292CD8T;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "FlipTrack Bench";
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Runs the camera during recorded-video recognition benchmarks.";
+				INFOPLIST_KEY_UIFileSharingEnabled = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = net.pardeike.FlipTrackBenchmark;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		FA218096290B5BC03C4D5ECB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AD904EC12C6D9EA87EE616A0 /* Build configuration list for PBXNativeTarget "FlipTrackBenchmark" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				606E7C8D89A7E3B01528F57E /* Debug */,
+				CF9463039955A12BA85152B9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D29DF5A459B43D8EEDABE98C /* Build configuration list for PBXProject "FlipTrackBenchmark" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8317B44A519CD55A6E716361 /* Debug */,
+				FA218096290B5BC03C4D5ECB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		7290DF9C3AEB2ABC161B8868 /* XCLocalSwiftPackageReference "../Recognition" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../Recognition;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2ACA8244F044C1CC32D42C3C /* PinballVision */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PinballVision;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 33B8B69CF351ADEBB782198D /* Project object */;
+}

@@ -1,0 +1,39 @@
+name: FlipTrackBenchmark
+options:
+  deploymentTarget:
+    iOS: '27.0'
+packages:
+  Recognition:
+    path: ../Recognition
+targets:
+  FlipTrackBenchmark:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+      - path: ../Research/Local/source-original.mov
+        buildPhase: resources
+      - path: ../Research/Local/References
+        type: folder
+        buildPhase: resources
+      - path: ../Research/provenance.json
+        buildPhase: resources
+    dependencies:
+      - package: Recognition
+        product: PinballVision
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: net.pardeike.FlipTrackBenchmark
+        DEVELOPMENT_TEAM: W65292CD8T
+        CODE_SIGN_STYLE: Automatic
+        SWIFT_VERSION: '5.0'
+        TARGETED_DEVICE_FAMILY: '1'
+        MARKETING_VERSION: '1.0'
+        CURRENT_PROJECT_VERSION: '1'
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: FlipTrack Bench
+        INFOPLIST_KEY_NSCameraUsageDescription: Runs the camera during recorded-video recognition benchmarks.
+        INFOPLIST_KEY_UIFileSharingEnabled: YES
+        INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait

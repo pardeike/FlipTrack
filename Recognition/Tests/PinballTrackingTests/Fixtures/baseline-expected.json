@@ -1,0 +1,394 @@
+[
+  {
+    "observationID": "game_start-000000",
+    "game": 1,
+    "slot": 1,
+    "player": "person-a",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "player_turn-001650",
+    "game": 1,
+    "slot": 2,
+    "player": "person-b",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "player_turn-003945",
+    "game": 1,
+    "slot": 1,
+    "player": "person-a",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "player_turn-004530",
+    "game": 1,
+    "slot": 2,
+    "player": "person-b",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "player_turn-012360",
+    "game": 1,
+    "slot": 1,
+    "player": "person-a",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "mode_started-013935",
+    "game": 1,
+    "slot": 1,
+    "player": "person-a",
+    "kind": "modeStarted"
+  },
+  {
+    "observationID": "player_turn-014670",
+    "game": 1,
+    "slot": 2,
+    "player": "person-b",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "game_result-015855",
+    "game": 1,
+    "slot": 2,
+    "player": "person-b",
+    "kind": "gameFinished"
+  },
+  {
+    "observationID": "game_start-016260",
+    "game": 2,
+    "slot": 1,
+    "player": "person-b",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "player_turn-021990",
+    "game": 2,
+    "slot": 2,
+    "player": "person-a",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "mode_started-022575",
+    "game": 2,
+    "slot": 2,
+    "player": "person-a",
+    "kind": "modeStarted"
+  },
+  {
+    "observationID": "player_turn-023025",
+    "game": 2,
+    "slot": 1,
+    "player": "person-b",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "player_turn-024045",
+    "game": 2,
+    "slot": 2,
+    "player": "person-a",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "player_turn-024675",
+    "game": 2,
+    "slot": 1,
+    "player": "person-b",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "player_turn-027270",
+    "game": 2,
+    "slot": 2,
+    "player": "person-a",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "game_result-028740",
+    "game": 2,
+    "slot": 2,
+    "player": "person-a",
+    "kind": "gameFinished"
+  },
+  {
+    "observationID": "game_start-028950",
+    "game": 3,
+    "slot": 1,
+    "player": "person-a",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "mode_started-029925",
+    "game": 3,
+    "slot": 1,
+    "player": "person-a",
+    "kind": "modeStarted"
+  },
+  {
+    "observationID": "player_turn-031365",
+    "game": 3,
+    "slot": 2,
+    "player": "person-b",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "player_turn-032430",
+    "game": 3,
+    "slot": 1,
+    "player": "person-a",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "player_turn-032985",
+    "game": 3,
+    "slot": 2,
+    "player": "person-b",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "player_turn-036105",
+    "game": 3,
+    "slot": 1,
+    "player": "person-a",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "mode_started-036540",
+    "game": 3,
+    "slot": 1,
+    "player": "person-a",
+    "kind": "modeStarted"
+  },
+  {
+    "observationID": "mode_started-038055",
+    "game": 3,
+    "slot": 1,
+    "player": "person-a",
+    "kind": "modeStarted"
+  },
+  {
+    "observationID": "player_turn-038970",
+    "game": 3,
+    "slot": 2,
+    "player": "person-b",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "game_result-039795",
+    "game": 3,
+    "slot": 2,
+    "player": "person-b",
+    "kind": "gameFinished"
+  },
+  {
+    "observationID": "game_start-040020",
+    "game": 4,
+    "slot": 1,
+    "player": "person-b",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "player_turn-041715",
+    "game": 4,
+    "slot": 2,
+    "player": "person-a",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "player_turn-042930",
+    "game": 4,
+    "slot": 1,
+    "player": "person-b",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "player_turn-047280",
+    "game": 4,
+    "slot": 2,
+    "player": "person-a",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "player_turn-049305",
+    "game": 4,
+    "slot": 1,
+    "player": "person-b",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "player_turn-051195",
+    "game": 4,
+    "slot": 2,
+    "player": "person-a",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "game_result-052170",
+    "game": 4,
+    "slot": 2,
+    "player": "person-a",
+    "kind": "gameFinished"
+  },
+  {
+    "observationID": "game_start-052575",
+    "game": 5,
+    "slot": 1,
+    "player": "person-a",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "player_turn-055290",
+    "game": 5,
+    "slot": 2,
+    "player": "person-b",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "player_turn-056400",
+    "game": 5,
+    "slot": 1,
+    "player": "person-a",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "mode_started-057120",
+    "game": 5,
+    "slot": 1,
+    "player": "person-a",
+    "kind": "modeStarted"
+  },
+  {
+    "observationID": "player_turn-057885",
+    "game": 5,
+    "slot": 2,
+    "player": "person-b",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "mode_started-061440",
+    "game": 5,
+    "slot": 2,
+    "player": "person-b",
+    "kind": "modeStarted"
+  },
+  {
+    "observationID": "mode_started-063795",
+    "game": 5,
+    "slot": 2,
+    "player": "person-b",
+    "kind": "modeStarted"
+  },
+  {
+    "observationID": "mode_started-068055",
+    "game": 5,
+    "slot": 2,
+    "player": "person-b",
+    "kind": "modeStarted"
+  },
+  {
+    "observationID": "player_turn-070110",
+    "game": 5,
+    "slot": 1,
+    "player": "person-a",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "mode_started-071265",
+    "game": 5,
+    "slot": 1,
+    "player": "person-a",
+    "kind": "modeStarted"
+  },
+  {
+    "observationID": "player_turn-072660",
+    "game": 5,
+    "slot": 2,
+    "player": "person-b",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "mode_started-076560",
+    "game": 5,
+    "slot": 2,
+    "player": "person-b",
+    "kind": "modeStarted"
+  },
+  {
+    "observationID": "game_result-078705",
+    "game": 5,
+    "slot": 2,
+    "player": "person-b",
+    "kind": "gameFinished"
+  },
+  {
+    "observationID": "game_start-079260",
+    "game": 6,
+    "slot": 1,
+    "player": "person-b",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "player_turn-080835",
+    "game": 6,
+    "slot": 2,
+    "player": "person-a",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "player_turn-081720",
+    "game": 6,
+    "slot": 1,
+    "player": "person-b",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "player_turn-082260",
+    "game": 6,
+    "slot": 2,
+    "player": "person-a",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "player_turn-083940",
+    "game": 6,
+    "slot": 1,
+    "player": "person-b",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "player_turn-090270",
+    "game": 6,
+    "slot": 2,
+    "player": "person-a",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "mode_started-090840",
+    "game": 6,
+    "slot": 2,
+    "player": "person-a",
+    "kind": "modeStarted"
+  },
+  {
+    "observationID": "game_result-091575",
+    "game": 6,
+    "slot": 2,
+    "player": "person-a",
+    "kind": "gameFinished"
+  },
+  {
+    "observationID": "game_start-092190",
+    "game": 7,
+    "slot": 1,
+    "player": "person-a",
+    "kind": "turnStarted"
+  },
+  {
+    "observationID": "player_turn-092685",
+    "game": 7,
+    "slot": 2,
+    "player": "person-b",
+    "kind": "turnStarted"
+  }
+]

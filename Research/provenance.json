@@ -1,0 +1,28 @@
+{
+  "source_host": "mba.home.arpa",
+  "source_root": "/Users/ap/Archive/Backlog/2026-09-13/Desktop - air/IndianaJones-ScreenCatalogue",
+  "research_commit": "88b0d43",
+  "video": {
+    "path": "Research/Local/source-original.mov",
+    "bytes": 4055356684,
+    "sha256": "a0374737c6a44fb5c18ee03456e2eca5c4e57595e3f1cf5ab5a603574f006d12"
+  },
+  "references": {
+    "mode-0.png": "b0fa6a59d95e0ed273c42ce904cebee49797b2ef82c9dc44a1ec443e6372ef01",
+    "mode-1.png": "f5b9bc15a7ad32425f6f5605148fc809a0fe4f12df857111da3e6eae1d1e2157",
+    "mode-10.png": "d79d2d1bdf60c8dcf19716b16b08d9f7fa3c8e0650b569646c0645a73e75cda6",
+    "mode-11.png": "08953f671d336239cd61d0482bb667f5d5819f36dc2f2cb299241ab352a31e8b",
+    "mode-2.png": "7f1370d3bb86188e0ca8ffdeb13258b02bdf7668f3d026119332159bd4000b81",
+    "mode-3.png": "3aeadac9ec659126fa8c5ceb9418bad5c35d0b7cd7da3f7765cd387b4ab4c33b",
+    "mode-4.png": "64696ebbff18252debb44804000a0655a2fabff8eaf61d73a529de578af14c03",
+    "mode-5.png": "72b70e1f97dfee380197867b3000cf0ea8149380c4cbb482fa76e1443e5df012",
+    "mode-6.png": "6a244b67c9d1e36f27236f91f758561c83c282b7770990cfd3fcc700d2786d5f",
+    "mode-7.png": "d9a7ee13462e3e2a8d56d3c29601398f6a935a7883cb6eefb6491b47a40a97ea",
+    "mode-8.png": "92b4baef397f723395aeff8babd37bd36a7ea7bddea544d47ded0ebb09f8038e",
+    "mode-9.png": "52a4e3f89aa3e1901c40647916d9673b541571242e511140f00f0c3d59c8ba35",
+    "pose-0.png": "3c7617ffb8c7349b1a5dd471310eb82f33c94085345eb3ca49c9094e6e880a09",
+    "pose-1.png": "5ef2d32fef72ca1d1c84124518ddee34b132f4c4e25e6fd28a376bb60be00d2c",
+    "references.json": "e48127737656cf08a29f601d0712272499ec473d8ab092961db1c6d390350457",
+    "sha256.json": "1a611a10a97e6fdbc53ae5d98a9a84f5045178c573ebcca2a2394c0137597470"
+  }
+}
