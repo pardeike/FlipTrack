@@ -22,13 +22,13 @@ struct TotalsView: View {
 
     private func stat(_ title: String, icon: String, values: [Int]) -> some View {
         HStack(spacing: 8) {
-            VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 5) {
                 Image(systemName: icon)
                     .foregroundStyle(.secondary)
                 Text(title).font(.caption2)
             }
             .foregroundStyle(.secondary)
-            .frame(width: 64, alignment: .leading)
+            .frame(width: 72, alignment: .leading)
             ForEach(0..<2) { index in
                 Text(formattedNumber(values[index]))
                     .font(.subheadline.weight(.medium))

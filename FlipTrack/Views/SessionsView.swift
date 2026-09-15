@@ -28,7 +28,7 @@ struct SessionsView: View {
                     }
                 } else {
                     List {
-                        Section("Session history") {
+                        Section("Sessions") {
                         ForEach(sortedSessions) { session in
                             NavigationLink(value: session) {
                                 VStack(alignment: .leading, spacing: 12) {
