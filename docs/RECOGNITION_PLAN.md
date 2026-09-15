@@ -160,12 +160,13 @@ The prototype has its own bundle ID and output directory, no production CloudKit
 - [x] Import a reproducible native engine package and focused tests without changing production behavior.
 - [x] Build/install separate AP11 benchmark and verify a short smoke check with camera active.
 - [x] Complete the full paced video run with camera active and verify sustained device performance.
-- [ ] Add the scan-recovery interception to existing score-screen controls; reuse existing corrections and validate recovery on the AP11 failure.
+- [x] Add the scan-recovery interception to existing score-screen controls and reuse existing corrections; validate camera-driven recovery on AP11.
+- [ ] Validate assisted recovery with complete outgoing-score evidence at the earlier AP11 motion/ownership-loss placement.
 - [ ] Live AP11 setup acquisition, motion tracking, and bounded color handling.
 - [x] Basic final-score and turn integration with persistence/recovery and race-to-ten completion.
 - [ ] Independent footage and sustained real-machine acceptance.
 
-Current checkpoint: the basic live capture and Resync slice passes local, recorded-pixel and isolated AP11 camera checks; signed production delivery is next. The frame after the earlier AP11 movement supplies a turn and one valid score, but its outgoing score remains unknown in this reader. Full assisted recovery at that placement and sustained live-machine acceptance remain open. Retain the measured 2 Hz cap; do not claim the previous engine's full-video accuracy for this integration.
+Current checkpoint: the basic live capture and Resync slice passes local, recorded-pixel and isolated AP11 camera checks and is released as 1.0 build 13. The frame after the earlier AP11 movement supplies a turn and one valid score, but its outgoing score remains unknown in this reader. Full assisted recovery at that placement and sustained live-machine acceptance remain open. Retain the measured 2 Hz cap; do not claim the previous engine's full-video accuracy for this integration.
 
 ### 2026-09-15: baseline recovered, device harness implemented
 
@@ -217,3 +218,11 @@ Current checkpoint: the basic live capture and Resync slice passes local, record
 - Three XCUITest button flows passed on the iPhone 11 Pro simulator: Cancel and live recovery, animation wait/final save/duplicate suppression, and recorded-pixel turn switching. Screenshots verified compact controls and no row wrapping at 375 points. AP11 screenshots also verified the actual layout and visible Scanning/Cancel blocker. AP11 XCTest itself stopped before assertions because iOS requested the passcode for Enable UI Automation; camera-driven assertions ran without that automation service.
 - Evidence: `docs/research/ap11-integration-20260916.json`; physical reports/screenshots under `.build/camera-checks/9d9204be-5177-4b2b-b199-6f2493772d3e/`; simulator result `.build/device-tests-20260916-012032.xcresult`. The test host uses an in-memory store and no CloudKit. Fixture hooks compile only with `FLIPTRACK_DEVICE_TESTING`, never into production.
 - Remaining acceptance: a separate recording, fresh live placement with nudges and lighting changes, and sustained evening play. The recovered adaptive-palette learner and reference registration are not shipped. Basic turn/final capture and assisted recovery are the current release scope.
+
+
+### 2026-09-16: build 13 delivered
+
+- `Scripts/release-ios.sh AP11` completed core tests, signed Release archive, direct AP11 installation/launch, signed web export/publication and verification. Published **FlipTrack 1.0 (13)** at https://brrai.nz/apps/fliptrack/. Catalog and installed-app read-back both report build 13; published IPA SHA-256 is `87c1c5fed6dd9cdb348d4aa12a2a6511c2a83c5668c123832e94c24ec3795923`.
+- Production AP11 screenshot shows the existing session after launch. Read-only before/after store copies agree on every pre-existing session/game value, excluding Core Data's update counter: one session and five games preserved. Local backup is under `.build/production-before-release/`; comparison result is `.build/production-data-verification.json`.
+- The original separate FlipTrack Bench app was restored after camera checks. Test fixtures and hooks are absent from the production build. Physical XCTest button automation still requires the device's passcode confirmation; the camera checks and simulator UI checks described above are the actual evidence.
+- Implementation checkpoints: `90c22a4` and `aea9d26`. Next acceptance is play on the actual machine, with Resync available for missed turns and existing score editing for unreadable finals. No perfect unattended-evening claim is made.
