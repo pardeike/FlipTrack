@@ -93,7 +93,6 @@ struct SessionView: View {
                 }
                 if session.games?.isEmpty == false {
                     TotalsView(playerTotals: session.playerTotals,
-                               playerWins: session.playerWins,
                                highScores: session.highScores,
                                averageScores: session.averageScores,
                                colorFor: color(for:), formattedNumber: formattedNumber,

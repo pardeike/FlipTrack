@@ -16,11 +16,6 @@ struct CurrentGameView: View {
             Text("\(firstPlayer) starts")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(colorFor(firstPlayerIndex))
-            Image(systemName: "arrow.right")
-                .font(.caption).foregroundStyle(.secondary)
-            Text(secondPlayer)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
         }
         .lineLimit(1)
         .minimumScaleFactor(0.75)

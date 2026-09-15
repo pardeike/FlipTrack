@@ -15,12 +15,6 @@ struct GamesPlayedView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text("GAMES").font(.caption.weight(.semibold)).tracking(1)
-                Spacer()
-                Text("Tap a game to edit").font(.caption)
-            }
-            .foregroundStyle(.secondary)
             HStack(spacing: 6) {
                 Text("#").frame(width: 36)
                 ForEach(0..<2) { index in

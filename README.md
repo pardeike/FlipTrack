@@ -6,7 +6,7 @@ The continuous scanner targets the Indiana Jones two-player final-score display.
 ## Use
 
 Create a session or select one from the history. The last session you opened is
-marked **Continue** in its existing row. The score table keeps each player's
+marked with a play icon in its existing row. The score table keeps each player's
 column fixed, shows wins prominently, and places detailed statistics directly
 below the game list.
 

@@ -32,18 +32,23 @@ struct SessionsView: View {
                         ForEach(sortedSessions) { session in
                             NavigationLink(value: session) {
                                 VStack(alignment: .leading, spacing: 12) {
-                                    HStack(alignment: .firstTextBaseline) {
+                                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                        if session.id.uuidString == lastSessionID {
+                                            Image(systemName: "play.fill")
+                                                .font(.caption)
+                                                .foregroundStyle(.tint)
+                                                .accessibilityLabel("Continue session")
+                                        }
                                         Text(session.date.formatted(date: .abbreviated, time: .omitted))
                                             .font(.headline)
-                                        if session.id.uuidString == lastSessionID {
-                                            Label("Continue", systemImage: "play.fill")
-                                                .font(.caption.weight(.semibold))
-                                                .foregroundStyle(.tint)
-                                        }
+                                            .lineLimit(1)
+                                            .minimumScaleFactor(0.8)
                                         Spacer()
                                         let count = session.games?.count ?? 0
                                         Text("\(session.date.formatted(date: .omitted, time: .shortened)) · \(count == 1 ? "1 game" : "\(count) games")")
                                             .font(.caption).foregroundStyle(.secondary)
+                                            .lineLimit(1)
+                                            .fixedSize(horizontal: true, vertical: false)
                                     }
                                     if session.games?.isEmpty == false {
                                         OverviewBalanceBar(values: session.playerWins, players: [session.player1, session.player2])
