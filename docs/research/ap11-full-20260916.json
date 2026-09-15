@@ -1,0 +1,417 @@
+{
+  "evaluatedOn": "2026-09-16",
+  "benchmarkCommit": "1fc8850",
+  "performancePassed": true,
+  "strictBaselineVerificationPassed": false,
+  "summary": {
+    "analyzedFrames": 6191,
+    "cameraFrames": 46438,
+    "cameraLoad": true,
+    "cameraMaxGapMS": 84.50429167714901,
+    "completed": true,
+    "decodedFrames": 92863,
+    "lastSourceTime": 3095.115,
+    "outputDirectory": "run-8AA706CC-4242-47DC-9D35-69B9ABAF8853",
+    "processingMaxMS": 477.5628749921452,
+    "processingP50MS": 161.20449999289121,
+    "processingP95MS": 243.8526666664984,
+    "samplingHz": 2,
+    "schedulingLagMaxMS": 20.516333330306225,
+    "schedulingLagP95MS": 5.269124992082652,
+    "sourceBytes": 4055356684,
+    "sourceSHA256": "a0374737c6a44fb5c18ee03456e2eca5c4e57595e3f1cf5ab5a603574f006d12",
+    "systemVersion": "Version 27.0 (Build 24A437)",
+    "targetSeconds": 3095.5133333333333,
+    "thermalStates": [
+      "NSProcessInfoThermalState(rawValue: 0)"
+    ],
+    "wallSeconds": 3095.2948590416636
+  },
+  "eventCounts": {
+    "player_turn": 37,
+    "mode_started": 12
+  },
+  "eventPairs": [
+    {
+      "expectedID": "turn-0",
+      "actualID": "turn-0",
+      "sourceDeltaSeconds": 0,
+      "confirmationDeltaSeconds": 0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-33001",
+      "actualID": "turn-33001",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-78902",
+      "actualID": "turn-78902",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-89402",
+      "actualID": "turn-89402",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-247206",
+      "actualID": "turn-247206",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "mode-278707",
+      "actualID": "mode-278707",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-293408",
+      "actualID": "turn-293408",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-325209",
+      "actualID": "turn-325209",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-439812",
+      "actualID": "turn-439812",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "mode-451512",
+      "actualID": "mode-451512",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-460512",
+      "actualID": "turn-460512",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": -2.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-480913",
+      "actualID": "turn-480913",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-493513",
+      "actualID": "turn-493513",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-545414",
+      "actualID": "turn-545414",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-579315",
+      "actualID": "turn-579315",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "mode-598516",
+      "actualID": "mode-598516",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-627316",
+      "actualID": "turn-627316",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-648917",
+      "actualID": "turn-648617",
+      "sourceDeltaSeconds": -0.5,
+      "confirmationDeltaSeconds": -1.5,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-659717",
+      "actualID": "turn-659717",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-722119",
+      "actualID": "turn-722119",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "mode-730819",
+      "actualID": "mode-730819",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "mode-761120",
+      "actualID": "mode-761120",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-779420",
+      "actualID": "turn-779420",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-800421",
+      "actualID": "turn-800421",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-834322",
+      "actualID": "turn-834322",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-858922",
+      "actualID": "turn-858622",
+      "sourceDeltaSeconds": -0.5,
+      "confirmationDeltaSeconds": -2.001666666666779,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-945625",
+      "actualID": "turn-945625",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-986126",
+      "actualID": "turn-986126",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-1023927",
+      "actualID": "turn-1023927",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-1051528",
+      "actualID": "turn-1051528",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-1100429",
+      "actualID": "turn-1100429",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-1128030",
+      "actualID": "turn-1128030",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "mode-1142430",
+      "actualID": "mode-1142430",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-1157730",
+      "actualID": "turn-1157730",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "mode-1228832",
+      "actualID": "mode-1228832",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "mode-1276233",
+      "actualID": "mode-1275933",
+      "sourceDeltaSeconds": -0.5,
+      "confirmationDeltaSeconds": -0.5,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "mode-1361156",
+      "actualID": "mode-1361156",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": true
+    },
+    {
+      "expectedID": "turn-1402257",
+      "actualID": "turn-1402257",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": false
+    },
+    {
+      "expectedID": "mode-1425357",
+      "actualID": "mode-1425357",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": false
+    },
+    {
+      "expectedID": "turn-1453258",
+      "actualID": "turn-1453258",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": false
+    },
+    {
+      "expectedID": "mode-1531260",
+      "actualID": "mode-1531260",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": false
+    },
+    {
+      "expectedID": "turn-1585862",
+      "actualID": "turn-1585862",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": -1.0,
+      "ownershipMatches": false
+    },
+    {
+      "expectedID": "turn-1616762",
+      "actualID": "turn-1616762",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": false
+    },
+    {
+      "expectedID": "turn-1634163",
+      "actualID": "turn-1634163",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": false
+    },
+    {
+      "expectedID": "turn-1644963",
+      "actualID": "turn-1644963",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": false
+    },
+    {
+      "expectedID": "turn-1679464",
+      "actualID": "turn-1679464",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": false
+    },
+    {
+      "expectedID": "turn-1805467",
+      "actualID": "turn-1805467",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": false
+    },
+    {
+      "expectedID": "mode-1816868",
+      "actualID": "mode-1816868",
+      "sourceDeltaSeconds": 0.0,
+      "confirmationDeltaSeconds": 0.0,
+      "ownershipMatches": false
+    },
+    {
+      "expectedID": "turn-1844168",
+      "actualID": "turn-1843868",
+      "sourceDeltaSeconds": -0.5,
+      "confirmationDeltaSeconds": -0.5,
+      "ownershipMatches": false
+    }
+  ],
+  "missingEvents": [
+    {
+      "confidence": 0.9375511596220988,
+      "confirmedAt": 3092.115,
+      "evidencePath": "turn-1854669.png",
+      "id": "turn-1854669",
+      "kind": "player_turn",
+      "parameters": {
+        "ball": "1",
+        "game": "7",
+        "machine_slot": "2",
+        "new_game": "false",
+        "person": "person-b"
+      },
+      "sourceTime": 3091.115
+    }
+  ],
+  "extraEvents": [],
+  "unknownOwnershipCounts": {
+    "player_turn": 9,
+    "mode_started": 3
+  },
+  "processingOver500MS": 0,
+  "schedulingLagOver500MS": 0,
+  "lastLagMS": 5.0922083373734495,
+  "eventConfirmationDelaySeconds": {
+    "minimum": 0.5,
+    "median": 1.0,
+    "maximum": 2.501666666666665
+  },
+  "artifactSHA256": {
+    "benchmark.json": "907f598e40399503e111329bf58558b825e11a5bea0f3a3489de285d2c78a80f",
+    "run.json": "7a729198451eb9b0292cddfcec9a8bc626f12f9f2b604ddf4fa2428c87511e35",
+    "frames.jsonl": "370ce13d89d821d450e530d7d870ad0995c6916e9913f72db0f51cbd5edb9657",
+    "timing.jsonl": "58f03d380e1decedc17c4f8adc8267db1d5779b814c458c12a1f9a4bdbe8daa4",
+    "verification.json": "29969e84ba1e7b293811e3ef6f9a975aa2179bdb0bf7ec9b23390b83d6ca8075"
+  },
+  "comparisonMethod": "Diagnostic one-to-one matching by kind, machine slot/ball or mode name and nearest source time within 3 seconds. This explains the strict verifier failure without relaxing its gate."
+}
