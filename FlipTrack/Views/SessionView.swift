@@ -184,36 +184,35 @@ struct SessionView: View {
             }
         }) {
             NavigationStack {
-                VStack(spacing: 16) {
+                Group {
                     if scanner.testingPreview {
                         recognitionLog
-                        Button("Camera preview", systemImage: "camera") {
-                            scanner.setPreviewTest(false)
-                        }
-                        .buttonStyle(.bordered)
+                            .padding(.horizontal)
+                    } else if (scanner.isMonitoring && !scanner.isPaused) || scanner.previewRunning {
+                        CameraPreview(session: scanner.camera.session, showsScanArea: scanner.usesCenteredScanArea)
+                    } else if let error = scanner.previewError {
+                        ContentUnavailableView("Camera unavailable", systemImage: "camera", description: Text(error))
                     } else {
-                        if (scanner.isMonitoring && !scanner.isPaused) || scanner.previewRunning {
-                            CameraPreview(session: scanner.camera.session, showsScanArea: scanner.usesCenteredScanArea)
-                        } else {
-                            ContentUnavailableView(scanner.previewError == nil ? "Starting camera…" : "Camera unavailable", systemImage: "camera", description: Text(scanner.previewError ?? "Preview only · Scores are not being recorded."))
-                        }
-                        Text(scanner.usesCenteredScanArea ? "Center the whole display inside the guide." : "Keep the whole display in view.")
-                            .font(.subheadline).foregroundStyle(.secondary)
-                        if !scanner.isMonitoring {
-                            Button("Test live recognition", systemImage: "text.viewfinder") {
-                                scanner.setPreviewTest(true)
-                            }
-                            .buttonStyle(.borderedProminent)
-                        }
+                        ProgressView("Starting camera…")
                     }
-                    Text(scanner.isMonitoring && !scanner.isPaused ? scanner.error ?? scanner.status : "Preview only · Scores are not being recorded.")
-                        .font(.callout)
                 }
-                .padding()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(.black)
                 .safeAreaInset(edge: .bottom) { monitorControls }
-                .navigationTitle(scanner.testingPreview ? "Live recognition" : "Camera view")
+                .navigationTitle(scanner.testingPreview ? "Recognition test" : "Camera")
                 .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    if !scanner.isMonitoring {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button(scanner.testingPreview ? "Camera preview" : "Test recognition",
+                                   systemImage: scanner.testingPreview ? "camera" : "text.viewfinder") {
+                                scanner.setPreviewTest(!scanner.testingPreview)
+                            }
+                            .labelStyle(.iconOnly)
+                            .accessibilityIdentifier("toggleRecognitionTest")
+                        }
+                    }
+                }
             }
         }
     }
@@ -291,9 +290,9 @@ struct SessionView: View {
                 if scanner.isMonitoring { stopMonitoring() } else { startMonitoring() }
             }
             VStack(alignment: .leading, spacing: 3) {
-                Text(scanner.state.title)
+                Text(scanner.testingPreview ? "Testing recognition" : showingCamera && !scanner.isMonitoring && scanner.error == nil ? "Preview only" : scanner.state.title)
                     .font(.subheadline.weight(.semibold))
-                Text(scanner.error ?? scanner.status)
+                Text(scanner.testingPreview ? "Scores are not saved." : scanner.error ?? scanner.status)
                     .font(.caption)
                     .foregroundStyle(scanner.error == nil ? Color.secondary : .red)
                     .lineLimit(scanner.error == nil ? 1 : 2)
@@ -318,7 +317,13 @@ struct SessionView: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
-        .background(.bar)
+        .background {
+            if showingCamera {
+                Color.black
+            } else {
+                Rectangle().fill(.bar)
+            }
+        }
     }
 
 }
