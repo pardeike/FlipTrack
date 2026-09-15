@@ -100,6 +100,17 @@ Run the focused recognition and SwiftData tests on macOS:
 swift test
 ```
 
+For a completed development-signed release, use the project command:
+
+```sh
+Scripts/release-ios.sh AP11
+```
+
+It runs the tests, assigns the next build number from the live FlipTrack catalog, creates a
+signed archive, installs it when the selected phone is reachable, publishes it to the web, and
+verifies the public download. It writes full output to `.build/logs/release-ios.log` and prints
+only `ok` when every required step succeeds.
+
 Optional private-photo regression tests take a JSON manifest containing absolute
 image paths and manually verified score pairs. A `null` pair marks a negative
 example, such as the GAME OVER screen without scores:
