@@ -43,12 +43,6 @@ struct SessionsView: View {
                                             .font(.headline)
                                             .lineLimit(1)
                                             .minimumScaleFactor(0.8)
-                                        Spacer()
-                                        let count = session.games?.count ?? 0
-                                        Text("\(session.date.formatted(date: .omitted, time: .shortened)) · \(count == 1 ? "1 game" : "\(count) games")")
-                                            .font(.caption).foregroundStyle(.secondary)
-                                            .lineLimit(1)
-                                            .fixedSize(horizontal: true, vertical: false)
                                     }
                                     if session.games?.isEmpty == false {
                                         OverviewBalanceBar(values: session.playerWins, players: [session.player1, session.player2])
