@@ -128,7 +128,8 @@ func recordedLiveScoreboards() throws {
         for height in [1920.0, 1280.0] {
             let image = original.transformed(by: CGAffineTransform(scaleX: height/original.extent.height, y: height/original.extent.height))
             let observed = try DisplayReader.analyze(image)
-            #expect(observed.live?.turn == MachineTurn(slot: fixture.slot, ball: fixture.ball) || (fixture.allowUnknown == true && observed.live == nil))
+            print("Live fixture",URL(fileURLWithPath:fixture.path).lastPathComponent,height,String(describing:observed.live))
+            #expect(observed.live?.turn == MachineTurn(slot: fixture.slot, ball: fixture.ball) || (fixture.allowUnknown == true && observed.live == nil), "\(URL(fileURLWithPath:fixture.path).lastPathComponent) at \(height): \(String(describing:observed.live))")
             if let left = fixture.left, let read = observed.live?.left { #expect(read == left) }
             if let right = fixture.right, let read = observed.live?.right { #expect(read == right) }
             #expect(EndGameLayout.result(in: observed.text) == nil)
@@ -174,4 +175,46 @@ func recordedPlayerSwitchAndResync() throws {
     tracker.cancelRecovery(at:5)
     #expect(tracker.progress == initial)
     #expect(tracker.recoveryNextTurn == nil)
+}
+
+@Test func nextGameFinalsCannotFillAnOlderMissingGame() {
+    let old = GameProgress(turn:MachineTurn(slot:2,ball:3),observedStart:true,nextGameTurn:MachineTurn(slot:1,ball:1))
+    #expect(!old.canAcceptFinal(recovering:false))
+    #expect(!old.canAcceptFinal(recovering:true))
+    #expect(GameProgress(turn:MachineTurn(slot:2,ball:3)).canAcceptFinal(recovering:false))
+    #expect(!GameProgress(turn:MachineTurn(slot:1,ball:2)).canAcceptFinal(recovering:false))
+    #expect(GameProgress(turn:MachineTurn(slot:1,ball:2)).canAcceptFinal(recovering:true))
+}
+
+@Test(.enabled(if: ProcessInfo.processInfo.environment["FLIPTRACK_FINAL_FIXTURES"] != nil))
+func recordedFinalPairsLeaveTheOccludedResultUnknown() throws {
+    struct Fixture: Decodable { let path:String; let scores:[Int]? }
+    let manifest = try #require(ProcessInfo.processInfo.environment["FLIPTRACK_FINAL_FIXTURES"])
+    let fixtures = try JSONDecoder().decode([Fixture].self,from:Data(contentsOf:URL(fileURLWithPath:manifest)))
+    for fixture in fixtures {
+        let original = try #require(CIImage(contentsOf:URL(fileURLWithPath:fixture.path)))
+        for height in [1920.0,1280.0] {
+            let image = original.transformed(by:CGAffineTransform(scaleX:height/original.extent.height,y:height/original.extent.height))
+            let result = try DisplayReader.analyze(image)
+            #expect(result.live == nil)
+            #expect(result.final?.scores == fixture.scores)
+        }
+    }
+}
+
+@Test @MainActor func undoTrailingGameKeepsRaceWinnerAndReopensItsDraft() throws {
+    let container = try ModelContainer(for:Session.self,Game.self,configurations:ModelConfiguration(isStoredInMemoryOnly:true))
+    let context = container.mainContext, session = Session(date:.now)
+    context.insert(session)
+    for _ in 0..<9 {
+        try session.record(session.firstPlayerIndex == 0 ? DisplayResult(left:200,right:100) : DisplayResult(left:100,right:200),in:context)
+    }
+    try session.updateProgress(GameProgress(turn:MachineTurn(slot:2,ball:3),observedStart:true,nextGameTurn:MachineTurn(slot:1,ball:1)),for:session.currentGameID,in:context)
+    try session.record(session.firstPlayerIndex == 0 ? DisplayResult(left:200,right:100) : DisplayResult(left:100,right:200),in:context)
+    try session.record(DisplayResult(left:300,right:400),in:context)
+    try session.undoLastGame(in:context)
+    #expect(session.raceWinnerIndex == 0)
+    #expect(!session.sessionFinished)
+    #expect(session.pendingCaptureScores == [300,400])
+    #expect(session.games?.count == 10)
 }

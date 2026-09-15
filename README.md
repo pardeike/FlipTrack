@@ -1,7 +1,7 @@
 ![FlipTrackLogo](https://github.com/user-attachments/assets/73a95e57-81ec-4d07-8ae0-bff8487fecb3)
 
 FlipTrack tracks two-player pinball scores, wins, and statistics across sessions.
-The continuous scanner targets the Indiana Jones two-player final-score display.
+The continuous scanner targets Indiana Jones two-player live turns and final scores.
 
 ## Use
 
@@ -17,8 +17,21 @@ player names, date, and machine order. Set the actual left/right assignment even
 when joining a game already in progress. This does not change historical scores.
 
 Tap the red record-style button to scan. Confirmed score pairs save automatically.
-There are no inferred active-player or “Up next” prompts. Each successful save
-advances the current game and alternates its proposed starting order.
+The current strip shows **X turn** from repeatedly observed BALL/active-score
+screens. Each successful final-score save advances the current game and alternates
+its proposed starting order. Scores seen during play do not add wins.
+
+If a switch was missed, tap **Resync** (`→|`) beside Pause. Leave the next ball
+unlaunched so the scoreboard stays visible. The camera keeps scanning behind a
+**Scanning… / Cancel** blocker until it confirms the outgoing score and current
+turn. At the end of a game, let it wait through the animations for both final
+scores. Cancel leaves the previous tracking state intact. Unreadable final scores
+still use the existing Add scores/editor flow. If the next game has already
+started and the older final pair is missing, add the older scores first; the
+scanner will not attach the next game's eventual result to the older game.
+
+The first player with ten confirmed wins wins the session. A game already seen
+starting before that confirmation is allowed to finish, then scanning stops.
 
 **Edit** changes both scores, the game number, or the recorded starter. Game
 numbers must be unique. **Undo** reopens the last saved game as an unsaved draft,
@@ -32,7 +45,7 @@ uses the same current-game save operation. Deleting a historical entry removes
 its scores without changing the current order; Undo is the action for reopening
 a mistaken latest save.
 
-The bottom controls group scanning status, record/stop, pause/resume, and camera.
+The bottom controls group scanning status, record/stop, pause/resume, Resync, and camera.
 Use Pause before picking up the phone. Backgrounding pauses capture automatically.
 Returning or reopening the session offers Resume; it never starts the camera
 automatically. The current game, player order, and any unsaved captured pair
@@ -157,3 +170,26 @@ relying on unattended recording. CloudKit account synchronization has not been
 live-tested in this update.
 
 Camera session work follows Apple's [AVCaptureSession threading guidance](https://developer.apple.com/documentation/avfoundation/avcapturesession).
+
+## Production integration checks
+
+- `Scripts/check.sh`: core tests and signed iOS build.
+- `Scripts/check.sh --recording`: also extracts private frames from the recovered
+  movie and checks sampled live layouts plus a real player-switch/recovery sequence.
+- `Scripts/test-ios.sh [DEVICE_UDID]`: separate development-signed test host on AP11
+  by default. Uses an in-memory store without CloudKit. Exercises the production
+  score screen, real camera delivery, cancel, mid-game recovery, delayed finals,
+  duplicate suppression, and recorded pixels through the production reader.
+  Physical XCTest may require entering the iPhone passcode for Enable UI Automation.
+  The controlled recovery screens prove routing and persistence, not live-machine accuracy.
+- `Scripts/check-camera.py --device AP11`: physical camera-driven checks without
+  XCTest button automation. The first install needs camera permission. With
+  `--reuse-benchmark`, it temporarily uses the camera-authorized benchmark
+  identity and restores the original benchmark app even if a check fails.
+- `Scripts/release-ios.sh AP11`: finished signed production release and web delivery.
+
+Full logs, recordings, generated test projects and xcresults stay in `.build/`.
+The last successful device result path is in `.build/last-device-test-result`.
+The device-test compilation flag and separate bundle keep fixture injection out
+of the production app. The earlier full-video benchmark measures the research
+engine; sampled production-reader checks must not inherit its accuracy claim.

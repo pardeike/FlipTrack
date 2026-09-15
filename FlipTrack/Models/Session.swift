@@ -184,10 +184,10 @@ public final class Session: Identifiable, Hashable {
         lastCapturedScores = game.previousCapturedScores
         lastRecordedGameID = games?.filter { $0.id != game.id }.max { $0.nr < $1.nr }?.id
         allowRepeatedCapture = false
-        progressData = nil
-        raceWinnerIndex = nil
-        sessionFinished = false
+        progressData = try JSONEncoder().encode(GameProgress(observedStart: true, needsResync: true))
+        games?.removeAll { $0.id == game.id }
         context.delete(game)
+        recalculateRace()
         do { try context.save() }
         catch { context.rollback(); throw error }
     }

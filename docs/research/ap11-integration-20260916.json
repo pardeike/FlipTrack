@@ -1,0 +1,88 @@
+{
+  "date": "2026-09-16",
+  "device": "AP11, iPhone 11 Pro, iOS 27.0",
+  "configuration": "Release",
+  "scope": "Short production-reader and scanner integration check, camera active, isolated in-memory store, no CloudKit",
+  "checks": [
+    {
+      "cameraRunning": true,
+      "gameCount": 2,
+      "passed": true,
+      "runID": "9d9204be-5177-4b2b-b199-6f2493772d3e",
+      "scenario": "turn",
+      "turnBall": 2,
+      "turnSlot": 2
+    },
+    {
+      "cameraRunning": true,
+      "gameCount": 3,
+      "passed": true,
+      "runID": "9d9204be-5177-4b2b-b199-6f2493772d3e",
+      "scenario": "finalPixels"
+    },
+    {
+      "cameraRunning": true,
+      "gameCount": 2,
+      "passed": true,
+      "runID": "9d9204be-5177-4b2b-b199-6f2493772d3e",
+      "scenario": "recorded",
+      "turnBall": 1,
+      "turnSlot": 2
+    }
+  ],
+  "reader": {
+    "cameraFrames": 102,
+    "durationsMS": [
+      459.5655833254568,
+      260.83754166029394,
+      286.70004167361185,
+      266.78279165935237,
+      264.2395416623913,
+      271.31395833566785,
+      286.3750416727271,
+      271.2410833337344,
+      269.4314999971539,
+      277.6280833350029,
+      278.0474583269097,
+      269.160166659276,
+      275.00470833911095,
+      269.9929166556103,
+      277.103749991511,
+      276.1141666560434,
+      271.3038333313307,
+      279.72345834132284,
+      276.14554166211747,
+      277.0556250034133,
+      269.1402083291905,
+      282.58887499396224,
+      286.70354165660683,
+      286.6652500088094,
+      270.0722500012489,
+      272.8413333243225,
+      277.92308332573157,
+      276.1315416719299,
+      264.5758333383128,
+      281.252458342351,
+      278.9604999998119,
+      276.1578333302168
+    ],
+    "maxMS": 459.5655833254568,
+    "p50MS": 276.14554166211747,
+    "p95MS": 286.70004167361185,
+    "samples": 32,
+    "thermalStates": [
+      0
+    ]
+  },
+  "uiTests": {
+    "device": "iPhone 11 Pro simulator, iOS 27.0",
+    "passed": 3,
+    "result": ".build/device-tests-20260916-012032.xcresult"
+  },
+  "physicalUIAutomation": "Blocked before tests by iOS passcode confirmation for Enable UI Automation",
+  "limitations": [
+    "Recorded-pixel check is 32 observations of an eight-frame switch sequence, not the full video.",
+    "Recovery cancel/turn observations are controlled; finalPixels and recorded use actual recording images.",
+    "Fresh live placement, changing illumination, extended nudging and an all-evening session remain acceptance work."
+  ]
+}

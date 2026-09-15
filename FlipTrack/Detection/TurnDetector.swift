@@ -9,6 +9,12 @@ struct GameProgress: Codable, Equatable, Sendable {
     var needsResync = false
     var nextGameTurn: MachineTurn?
 
+    func canAcceptFinal(recovering: Bool) -> Bool {
+        // Once another game has started, its eventual finals cannot repair an
+        // older missing pair. Finish the older game through the existing editor.
+        nextGameTurn == nil && (recovering || turn == nil || turn?.isLast == true)
+    }
+
     mutating func accept(_ reading: LiveScoreboard) {
         turn = reading.turn
         if let value = reading.left { left = value }

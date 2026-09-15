@@ -33,7 +33,7 @@ struct SessionsView: View {
                             NavigationLink(value: session) {
                                 VStack(alignment: .leading, spacing: 12) {
                                     HStack(alignment: .firstTextBaseline, spacing: 8) {
-                                        if session.id.uuidString == lastSessionID {
+                                        if session.id.uuidString == lastSessionID && !session.sessionFinished {
                                             Image(systemName: "play.fill")
                                                 .font(.caption)
                                                 .foregroundStyle(.tint)

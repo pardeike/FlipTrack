@@ -47,7 +47,7 @@ final class Scanner: ObservableObject {
         #endif
         detector.discardPendingReadings()
         isResyncing = false
-        status = progress.needsResync ? "Tracking uncertain · Resync" : "Watching the display"
+        status = progress.needsResync ? "Use Resync" : "Watching the display"
     }
 
 
@@ -75,8 +75,12 @@ final class Scanner: ObservableObject {
         status = "Starting camera…"
         state = .starting
         Task { [self] in
+            #if FLIPTRACK_DEVICE_TESTING && targetEnvironment(simulator)
+            let granted = true
+            #else
             let permission = AVCaptureDevice.authorizationStatus(for: .video)
             let granted = permission == .notDetermined ? await requestPermission() : permission == .authorized
+            #endif
             guard generation == token, isMonitoring else { return }
             guard granted else { fail("Allow camera access for FlipTrack in Settings."); return }
             camera.start(configuration: configuration) { [weak self] event in
@@ -113,14 +117,9 @@ final class Scanner: ObservableObject {
                         let readable = EndGameLayout.hasDisplayText(in: text)
                         // Non-terminal turn context is not sufficient for an automatic
                         // final. Explicit Resync can recover a missed terminal turn.
-                        let canFinish = self.isResyncing || self.progress.turn == nil || self.progress.turn?.isLast == true
+                        let canFinish = self.progress.canAcceptFinal(recovering: self.isResyncing) && self.tracker.recoveryNextTurn == nil
                         if let confirmed = self.detector.observe(canFinish ? result : nil, at: time, readable: readable,
                             newGame: GameDisplayLayout.isNewGame(in: text)) {
-                            if let nextTurn = self.tracker.recoveryNextTurn {
-                                var pending = self.progress
-                                pending.nextGameTurn = nextTurn
-                                try update(pending, activeGameID)
-                            }
                             let next = try save(confirmed, activeGameID)
                             activeGameID = next.id
                             self.progress = next.progress
@@ -135,13 +134,13 @@ final class Scanner: ObservableObject {
                         } else if self.isResyncing {
                             self.setStatus("Scanning…")
                         } else if self.progress.nextGameTurn != nil {
-                            self.setStatus("Final scores missing · Add scores or Resync")
+                            self.setStatus("Add final scores")
                         } else if self.progress.needsResync {
-                            self.setStatus("Tracking uncertain · Resync")
+                            self.setStatus("Use Resync")
                         } else if ignored {
                             self.setStatus("Discarded reading ignored")
                         } else if !readable {
-                            self.setStatus("Display not ready · Check alignment")
+                            self.setStatus("Check alignment")
                         } else if let turn = self.progress.turn {
                             self.setStatus("Ball \(turn.ball)")
                         } else {
@@ -219,8 +218,12 @@ final class Scanner: ObservableObject {
         previewError = nil
         usesCenteredScanArea = configuration.useCenteredScanArea
         Task { [self] in
+            #if FLIPTRACK_DEVICE_TESTING && targetEnvironment(simulator)
+            let granted = true
+            #else
             let permission = AVCaptureDevice.authorizationStatus(for: .video)
             let granted = permission == .notDetermined ? await requestPermission() : permission == .authorized
+            #endif
             guard generation == token, previewConfiguration != nil else { return }
             guard granted else {
                 previewError = "Allow camera access for FlipTrack in Settings."

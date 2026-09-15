@@ -12,9 +12,10 @@
 
 ## Workflow
 
-- Use `Scripts/check.sh` for production-core tests and a signed iOS build. Optional recorded-pixel regressions use `FLIPTRACK_LIVE_FIXTURES` and `FLIPTRACK_TURN_SEQUENCE` manifests.
+- Use `Scripts/check.sh` for production-core tests and a signed iOS build. Use `--recording` to extract and run the private recorded-pixel regressions.
 
 - Use `Scripts/test-recognition.sh` for the recovered engine's focused tests. Use `Scripts/benchmark-ios.sh build|install|smoke|full|results|verify [AP11]` for the separate device experiment. Launch success is not benchmark completion; inspect the retrieved results. See `Benchmark/README.md`.
+- Use `Scripts/test-ios.sh [DEVICE_UDID]` for isolated score-screen UI tests. Use `Scripts/check-camera.py --device AP11` for physical camera/recovery/pixel checks. Its explicit `--reuse-benchmark` mode temporarily uses the already-authorized benchmark app identity and restores that app afterward; production sessions and CloudKit are never used. Do not equate controlled observations with live-machine acceptance.
 - Use `Scripts/release-ios.sh AP11` for completed production versions. It tests, archives, signs, installs/launches, publishes, and verifies the signed web package. Development experiments must not replace the production web build.
 - Keep full routine logs under ignored local paths and print `ok` only after every requested step succeeds. On failure, report the failed step, concise diagnostics, and log path; stop dependent steps.
 - Stage intended paths explicitly. Preserve unrelated work. Keep video, build products, personal reference images, profiles, and research binary inputs untracked.

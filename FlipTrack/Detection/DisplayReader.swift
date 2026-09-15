@@ -27,6 +27,17 @@ enum DisplayReader {
 
     static func analyze(_ input: CIImage) throws -> DisplayObservation {
         let image = input.transformed(by: CGAffineTransform(translationX: -input.extent.minX, y: -input.extent.minY))
+        let fullText = try recognize(image)
+        // A complete BALL/footer anchor locates the moving display directly.
+        // Avoid OCR on unrelated cabinet rectangles before this common path.
+        if GameDisplayLayout.isNewGame(in: fullText) { return DisplayObservation(fullText) }
+        if fullText.contains(where: { EndGameLayout.score(from: $0.text) == 0 }),
+           !fullText.contains(where: { (EndGameLayout.score(from: $0.text) ?? 0) > 0 }),
+           fullText.contains(where: { $0.text.uppercased().hasPrefix("BALL") }) {
+            let smaller = try recognize(image.transformed(by: CGAffineTransform(scaleX: 2.0/3, y: 2.0/3)))
+            if GameDisplayLayout.isNewGame(in: smaller) { return DisplayObservation(smaller) }
+        }
+        if let anchored = try footerDisplay(image, text: fullText) { return anchored }
         let rectangles = VNDetectRectanglesRequest()
         rectangles.minimumAspectRatio = 0.15
         rectangles.maximumAspectRatio = 0.65
@@ -52,10 +63,6 @@ enum DisplayReader {
         if matches.count == 1 { return matches[0] }
         // Multiple matching displays are ambiguous; never pick one arbitrarily.
         if matches.count > 1 { return DisplayObservation([]) }
-        let fullText = try recognize(image)
-        // Re-read a footer-located display before trusting sizes from a tilted
-        // full-frame OCR box. Long small numbers can have taller boxes than 00.
-        if let anchored = try footerDisplay(image, text: fullText) { return anchored }
         if EndGameLayout.result(in: fullText) != nil || GameDisplayLayout.isNewGame(in: fullText) || GameDisplayLayout.isBonusScreen(in: fullText) { return DisplayObservation(fullText) }
         // Dot-matrix strokes can fragment at one OCR scale. Retry only a
         // potential two-zero screen; the same complete layout must still match.
@@ -116,14 +123,19 @@ enum DisplayReader {
         }
         words = try separatedScores(in: resized, text: words)
         let result = DisplayObservation(words, activeSlot: try activeScoreSlot(resized, text: words))
-        return result.live != nil ? result : nil
+        // A located BALL screen can be momentarily unreadable while its digits
+        // blink. Keep it unknown instead of spending more OCR on cabinet art.
+        return words.contains(where: { $0.text.uppercased().hasPrefix("BALL") }) ? result : nil
     }
 
     private static func separatedScores(in image: CIImage, text: [DisplayText]) throws -> [DisplayText] {
         guard let footer = text.filter({ $0.text.uppercased().contains("FREE") }).first else { return text }
         let bottom = footer.bounds.maxY + footer.bounds.height * 0.2
         let numbers = text.filter { $0.bounds.minY > bottom && EndGameLayout.score(from: $0.text) != nil }
-        guard numbers.count != 2 else { return text }
+        guard numbers.count != 2,
+              text.contains(where: { word in
+                  word.bounds.minY > bottom && word.text.filter(\.isNumber).count >= 12
+              }) else { return text }
         let slot = try activeScoreSlot(image, text: text)
         let split: CGFloat = slot == 1 ? 0.60 : slot == 2 ? 0.45 : 0.5
         var recovered: [DisplayText] = []

@@ -1,0 +1,48 @@
+name: FlipTrackDeviceTests
+options:
+  deploymentTarget:
+    iOS: '18.2'
+settings:
+  base:
+    DEVELOPMENT_TEAM: W65292CD8T
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_VERSION: '5.0'
+    TARGETED_DEVICE_FAMILY: '1'
+targets:
+  FlipTrackDeviceHost:
+    type: application
+    platform: iOS
+    sources:
+      - path: ../FlipTrack
+        excludes: [FlipTrackApp.swift, FlipTrack.entitlements, Info.plist]
+      - path: Host
+      - path: ../.build/live-fixtures
+        type: folder
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: net.pardeike.FlipTrackDeviceHost
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: '$(inherited) FLIPTRACK_DEVICE_TESTING'
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: FlipTrack Checks
+        INFOPLIST_KEY_NSCameraUsageDescription: Checks camera delivery during scanner recovery.
+        INFOPLIST_KEY_UIFileSharingEnabled: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+  FlipTrackDeviceUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [Tests]
+    dependencies:
+      - target: FlipTrackDeviceHost
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: net.pardeike.FlipTrackDeviceUITests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  FlipTrackDeviceHost:
+    build:
+      targets:
+        FlipTrackDeviceHost: all
+    test:
+      targets: [FlipTrackDeviceUITests]

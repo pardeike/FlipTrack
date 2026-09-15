@@ -19,6 +19,7 @@ final class Camera: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unc
     private var recognizesScores = true
     #if FLIPTRACK_DEVICE_TESTING
     private let fixture = CameraFixture()
+    private var fixtureTimer: DispatchSourceTimer?
     func setFixtureRecovery(_ active: Bool) {
         queue.async { self.fixture.recoveryStarted = active ? ProcessInfo.processInfo.systemUptime : nil }
     }
@@ -38,6 +39,19 @@ final class Camera: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unc
             self.configuration = configuration
             self.onEvent = onEvent
             self.lastFrame = -Double.infinity
+            #if FLIPTRACK_DEVICE_TESTING && targetEnvironment(simulator)
+            self.fixtureTimer?.cancel()
+            let timer = DispatchSource.makeTimerSource(queue: self.queue)
+            timer.schedule(deadline: .now(), repeating: 0.5)
+            timer.setEventHandler {
+                let now = ProcessInfo.processInfo.systemUptime
+                do { self.emit(.frame(try self.fixture.observation(at:now),now)) }
+                catch { self.fail(error.localizedDescription) }
+            }
+            self.fixtureTimer = timer
+            timer.resume()
+            self.emit(.started)
+            #else
             do {
                 try self.configure()
                 self.session.startRunning()
@@ -49,12 +63,17 @@ final class Camera: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unc
             } catch {
                 self.fail(error.localizedDescription)
             }
+            #endif
         }
     }
 
     func stop() {
         queue.async {
             self.onEvent = nil
+            #if FLIPTRACK_DEVICE_TESTING
+            self.fixtureTimer?.cancel()
+            self.fixtureTimer = nil
+            #endif
             self.session.stopRunning()
         }
     }

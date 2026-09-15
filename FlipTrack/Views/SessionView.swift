@@ -114,7 +114,7 @@ struct SessionView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Add scores", systemImage: "plus") { openEditor(.scores) }.disabled(scanner.isResyncing)
+                Button("Add scores", systemImage: "plus") { openEditor(.scores) }.disabled(scanner.isResyncing || session.sessionFinished)
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
@@ -130,7 +130,7 @@ struct SessionView: View {
                         scanner.pause(.editing)
                         confirmingRecapture = true
                     }
-                    .disabled(!session.pendingCaptureScores.isEmpty)
+                    .disabled(session.sessionFinished || !session.pendingCaptureScores.isEmpty)
                     Button("Scanner settings", systemImage: "viewfinder") {
                         openEditor(.settings)
                     }
@@ -161,6 +161,9 @@ struct SessionView: View {
         .alert("Changes could not be completed", isPresented: Binding(get: { recordingError != nil }, set: { if !$0 { recordingError = nil } })) {
             Button("OK", role: .cancel) { }
         } message: { Text(recordingError ?? "") }
+        #if FLIPTRACK_DEVICE_TESTING
+        .task { await DeviceCheck.run(scanner:scanner,session:session,context:context,start:startMonitoring) }
+        #endif
         .onAppear {
             lastSessionID = session.id.uuidString
             if session.scanningRequested { scanner.restorePausedSession() }
@@ -305,7 +308,6 @@ struct SessionView: View {
                 }
                 .padding(28)
                 .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
-                .accessibilityIdentifier("resyncOverlay")
             }
         }
     }
