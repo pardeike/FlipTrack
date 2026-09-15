@@ -5,16 +5,16 @@ The continuous scanner targets the Indiana Jones two-player final-score display.
 
 ## Use
 
-Create a session or use **Continue session** to return to the last one. The
-score table keeps each player's column fixed, shows wins prominently, and keeps
-detailed statistics in an expandable section.
+Create a session or select one from the history. The last session you opened is
+marked **Continue** in its existing row. The score table keeps each player's
+column fixed, shows wins prominently, and places detailed statistics directly
+below the game list.
 
 Tap the current-game strip or **Players & game order** to set the game number,
 player names, date, and machine order. Set the actual left/right assignment even
 when joining a game already in progress. This does not change historical scores.
 
 Tap the red record-style button to scan. Confirmed score pairs save automatically.
-The **Last saved** card shows the pair with direct **Edit** and **Undo** actions.
 There are no inferred active-player or “Up next” prompts. Each successful save
 advances the current game and alternates its proposed starting order.
 

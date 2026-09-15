@@ -28,26 +28,6 @@ struct SessionsView: View {
                     }
                 } else {
                     List {
-                        if let recent = sortedSessions.first(where: { $0.id.uuidString == lastSessionID }) {
-                            Section {
-                                Button {
-                                    path.append(recent)
-                                } label: {
-                                    HStack(spacing: 12) {
-                                        Image(systemName: "play.circle.fill").font(.title)
-                                        VStack(alignment: .leading, spacing: 4) {
-                                            Text("Continue session").font(.headline)
-                                            Text("\(recent.player1) & \(recent.player2) · Game \(recent.upcomingGameNumber)")
-                                                .font(.subheadline).foregroundStyle(.secondary)
-                                        }
-                                        Spacer(minLength: 0)
-                                        Image(systemName: "chevron.right").font(.caption.weight(.semibold))
-                                    }
-                                    .padding(.vertical, 8)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
                         Section("Session history") {
                         ForEach(sortedSessions) { session in
                             NavigationLink(value: session) {
@@ -55,6 +35,11 @@ struct SessionsView: View {
                                     HStack(alignment: .firstTextBaseline) {
                                         Text(session.date.formatted(date: .abbreviated, time: .omitted))
                                             .font(.headline)
+                                        if session.id.uuidString == lastSessionID {
+                                            Label("Continue", systemImage: "play.fill")
+                                                .font(.caption.weight(.semibold))
+                                                .foregroundStyle(.tint)
+                                        }
                                         Spacer()
                                         let count = session.games?.count ?? 0
                                         Text("\(session.date.formatted(date: .omitted, time: .shortened)) · \(count == 1 ? "1 game" : "\(count) games")")
