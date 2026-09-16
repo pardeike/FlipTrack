@@ -1,0 +1,112 @@
+{
+  "date": "2026-09-16",
+  "device": "AP11 (iPhone 11 Pro, iOS 27)",
+  "kind": "Physical camera with controlled observations and recorded image inputs; isolated store",
+  "runID": "77daae99-701c-4e2d-82d4-8ddb34474194",
+  "scenarios": [
+    {
+      "cameraRunning": true,
+      "gameCount": 10,
+      "passed": true,
+      "runID": "77daae99-701c-4e2d-82d4-8ddb34474194",
+      "scenario": "continuation",
+      "scoreImages": 0,
+      "telemetryDirectory": "2026-09-16T05-00-13Z-BE0C2FA6-69D2-4C85-83E3-FE01DB5F896D",
+      "telemetryEvents": 54,
+      "turnBall": 2,
+      "turnSlot": 2
+    },
+    {
+      "cameraRunning": true,
+      "gameCount": 3,
+      "passed": true,
+      "runID": "77daae99-701c-4e2d-82d4-8ddb34474194",
+      "scenario": "corrections",
+      "scoreImages": 8,
+      "telemetryDirectory": "2026-09-16T04-59-50Z-6D4AAA06-F62B-480D-8A09-D84021E165E6",
+      "telemetryEvents": 76
+    },
+    {
+      "cameraRunning": true,
+      "gameCount": 3,
+      "passed": true,
+      "runID": "77daae99-701c-4e2d-82d4-8ddb34474194",
+      "scenario": "finalPixels",
+      "scoreImages": 8,
+      "telemetryDirectory": "2026-09-16T04-59-11Z-F48FC849-4EFC-4327-8982-B1113AA75C6B",
+      "telemetryEvents": 49
+    },
+    {
+      "cameraRunning": true,
+      "gameCount": 2,
+      "passed": true,
+      "runID": "77daae99-701c-4e2d-82d4-8ddb34474194",
+      "scenario": "recorded",
+      "scoreImages": 7,
+      "telemetryDirectory": "2026-09-16T04-59-29Z-3CADE631-975F-4A13-8D2F-5AFF52C475C2",
+      "telemetryEvents": 54,
+      "turnBall": 1,
+      "turnSlot": 2
+    },
+    {
+      "cameraRunning": true,
+      "gameCount": 2,
+      "passed": true,
+      "runID": "77daae99-701c-4e2d-82d4-8ddb34474194",
+      "scenario": "turn",
+      "scoreImages": 0,
+      "telemetryDirectory": "2026-09-16T04-59-02Z-A2675644-9182-4A73-BBC1-7D200B19EEA2",
+      "telemetryEvents": 32,
+      "turnBall": 2,
+      "turnSlot": 2
+    }
+  ],
+  "readerPerformance": {
+    "cameraFrames": 94,
+    "durationsMS": [
+      468.7537499994505,
+      282.03050000593066,
+      293.36608333687764,
+      284.07029165828135,
+      277.5747083360329,
+      277.959708328126,
+      287.67900000093505,
+      290.18116666702554,
+      289.54800000065006,
+      285.45304166618735,
+      296.30320833530277,
+      285.6586249981774,
+      285.64258333062753,
+      284.2590833315626,
+      292.1201666613342,
+      286.3649583305232,
+      288.618916660198,
+      289.56645833386574,
+      291.31454166781623,
+      288.7886250100564,
+      275.973708339734,
+      283.0703333456768,
+      282.8024166665273,
+      291.7850833327975,
+      282.63662500830833,
+      302.8469999990193,
+      295.9250833373517,
+      289.5040416624397,
+      287.38024999620393,
+      291.027708328329,
+      278.49204165977426,
+      290.1480000000447
+    ],
+    "maxMS": 468.7537499994505,
+    "p50MS": 288.618916660198,
+    "p95MS": 296.30320833530277,
+    "samples": 32,
+    "thermalStates": [
+      0
+    ]
+  },
+  "limits": [
+    "Not live pinball acceptance",
+    "Storage faults injected in local tests, not on production iPhone"
+  ]
+}

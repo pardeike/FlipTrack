@@ -3,14 +3,14 @@ import SwiftData
 import Testing
 @testable import FlipTrackCore
 
-@Test func telemetryWritesOrderedJSONAndExactEvidence() throws {
+@Test func telemetryWritesOrderedJSONAndExactEvidence() async throws {
     let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: root) }
     let writer = try TelemetryWriter(root: root)
     let jpeg = Data([0xff, 0xd8, 0xff, 0xd9])
     try writer.record("first", ["score": 42], images: [.init(name: "game-003-ball-2-unique.jpg", data: jpeg)])
     for index in 0..<50 { try writer.record("action", ["index": index]) }
-    try writer.flush()
+    try await writer.flush()
     let lines = try String(contentsOf: writer.directory.appendingPathComponent("events.jsonl"), encoding: .utf8).split(separator: "\n")
     #expect(lines.count == 51)
     for (index, line) in lines.enumerated() {
@@ -23,12 +23,12 @@ import Testing
     #expect(try Data(contentsOf: writer.directory.appendingPathComponent("images/game-003-ball-2-unique.jpg")) == jpeg)
 }
 
-@Test func imageFailureIsExplicitAndDoesNotDropScoreEvent() throws {
+@Test func imageFailureIsExplicitAndDoesNotDropScoreEvent() async throws {
     let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: root) }
     let writer = try TelemetryWriter(root: root)
     try writer.record("score", ["left": 100], images: [.init(name: "../escape.jpg", data: Data())])
-    try writer.flush()
+    try await writer.flush()
     let line = try Data(contentsOf: writer.directory.appendingPathComponent("events.jsonl"))
     let item = try #require(JSONSerialization.jsonObject(with: line) as? [String: Any])
     #expect(item["event"] as? String == "score")

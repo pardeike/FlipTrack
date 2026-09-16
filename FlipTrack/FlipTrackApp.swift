@@ -42,11 +42,12 @@ struct FlipTrackApp: App {
                 while !Task.isCancelled {
                     do { try await Task.sleep(for: .seconds(30)) } catch { return }
                     AppTelemetry.sample()
+                    await Telemetry.shared.flush()
                 }
             }
             .onChange(of: scenePhase, initial: true) { _, phase in
                 Telemetry.shared.log("app.phase", ["phase": String(describing: phase)])
-                if phase != .active { Telemetry.shared.flush() }
+                if phase != .active { Task { await Telemetry.shared.flush() } }
                 if phase == .active {
                     if previousIdleTimerDisabled == nil {
                         previousIdleTimerDisabled = UIApplication.shared.isIdleTimerDisabled

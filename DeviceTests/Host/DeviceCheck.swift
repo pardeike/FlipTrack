@@ -39,6 +39,33 @@ enum DeviceCheck {
                 try require(session.progress.turn == MachineTurn(slot:2,ball:2),"Wrong recovered turn")
                 try require(session.progress.left == 1_234_000,"Outgoing score not captured")
                 try require(session.games?.count == 2,"Live recovery saved a game")
+            } else if scenario == "continuation" {
+                for game in session.games ?? [] { game.scores = [200,100] }
+                session.recalculateRace()
+                for _ in 0..<7 {
+                    session.startingPlayerOverride = 0
+                    try session.record(.init(left:200,right:100),in:context)
+                }
+                session.startingPlayerOverride = 0
+                try session.updateProgress(GameProgress(turn:.init(slot:2,ball:3),observedStart:true,
+                    nextGameTurn:.init(slot:1,ball:1)),for:session.currentGameID,in:context)
+                try session.record(.init(left:200,right:100),for:session.currentGameID,in:context)
+                let continuationID = session.currentGameID
+                let continuation = GameProgress(turn:.init(slot:2,ball:1),left:7_000,right:500,observedStart:true)
+                try session.updateProgress(continuation,for:continuationID,in:context)
+                try await wait { scanner.progress == continuation }
+                try require(session.raceWinnerIndex == 0 && !session.sessionFinished,"Winning game closed an active continuation")
+                try session.undoLastGame(in:context)
+                try await wait { scanner.isPaused }
+                try session.record(.init(left:200,right:100),for:session.currentGameID,in:context)
+                try require(session.currentGameID == continuationID && session.progress == continuation,"Undo lost the active game")
+                try require(session.games?.count == 10 && !session.sessionFinished,"Resaving the winning result closed the session")
+                start()
+                scanner.resync()
+                try await wait { !scanner.isResyncing || scanner.error != nil }
+                try require(scanner.error == nil,scanner.error ?? "Continuation recovery failed")
+                try require(session.currentGameID == continuationID && session.games?.count == 10,"Recovery changed game identity")
+                try require(session.progress.turn == MachineTurn(slot:2,ball:2),"Continuation did not resume tracking")
             } else if scenario == "corrections" {
                 let oldID = session.currentGameID
                 guard let firstGame = session.games?.min(by: { $0.nr < $1.nr }) else { throw Failure(message: "Missing fixture game") }
@@ -100,14 +127,14 @@ enum DeviceCheck {
             try require(scanner.camera.session.isRunning,"Camera stopped during recovery")
             let stored = try ModelContext(context.container).fetch(FetchDescriptor<Session>()).first
             try require(stored?.progress == session.progress,"Accepted progress did not persist")
-            Telemetry.shared.flush()
+            await Telemetry.shared.flush()
             try require(Telemetry.shared.failure == nil, Telemetry.shared.failure ?? "Telemetry failed")
             guard let directory = Telemetry.shared.directory else { throw Failure(message: "Telemetry never started") }
             let log = try String(contentsOf: directory.appendingPathComponent("events.jsonl"), encoding: .utf8)
             let entries = try log.split(separator: "\n").map { try JSONSerialization.jsonObject(with: Data($0.utf8)) as! [String:Any] }
             try require(entries.contains { $0["event"] as? String == "frame" }, "No frame telemetry")
             let images = entries.flatMap { $0["images"] as? [String] ?? [] }
-            if scenario != "turn" {
+            if scenario != "turn" && scenario != "continuation" {
                 try require(!images.isEmpty, "Accepted pixel scores did not save images")
                 for image in images {
                     let data = try Data(contentsOf: directory.appendingPathComponent(image))
@@ -128,7 +155,7 @@ enum DeviceCheck {
             report["right"] = session.progress.right
             report["slot"] = session.progress.turn?.slot
         }
-        Telemetry.shared.flush()
+        await Telemetry.shared.flush()
         report["telemetryDirectory"] = Telemetry.shared.directory?.lastPathComponent
         try? JSONSerialization.data(withJSONObject:report,options:[.prettyPrinted,.sortedKeys]).write(to:output,options:.atomic)
     }

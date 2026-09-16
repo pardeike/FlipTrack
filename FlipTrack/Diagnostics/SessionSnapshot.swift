@@ -17,6 +17,7 @@ struct SessionSnapshot: Codable, Equatable, Sendable {
     let allowRepeated: Bool
     let rejected: [String]
     let pending: [Int]
+    let deferredGame: Data?
     let games: [SavedGame]
 
     struct SavedGame: Codable, Equatable, Sendable {
@@ -42,6 +43,7 @@ struct SessionSnapshot: Codable, Equatable, Sendable {
         allowRepeated = session.allowRepeatedCapture
         rejected = session.rejectedCaptureSignatures
         pending = session.pendingCaptureScores
+        deferredGame = session.deferredGameData
         games = (session.games ?? []).map {
             SavedGame(id: $0.id, number: $0.nr, scores: $0.scores, starter: $0.startingPlayerIndex, captureID: $0.captureGameID)
         }.sorted { $0.id.uuidString < $1.id.uuidString }

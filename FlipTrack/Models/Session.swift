@@ -22,6 +22,7 @@ public final class Session: Identifiable, Hashable {
     public var raceWinnerIndex: Int?
     public var sessionFinished = false
     public var awaitingNextStart = false
+    public var deferredGameData: Data?
     @Relationship(deleteRule: .cascade, inverse: \Game.session)
     public var games: [Game]?
 
@@ -128,6 +129,7 @@ public final class Session: Identifiable, Hashable {
             if games?.contains(where: { $0.captureGameID == gameID }) == true { return }
             guard gameID == currentGameID else { throw RecordingError.staleGame }
         }
+        let deferred = try deferredGameData.map { try JSONDecoder().decode(DeferredGame.self, from: $0) }
         let number = upcomingGameNumber
         let nextObservedTurn = progress.nextGameTurn
         awaitingNextStart = nextObservedTurn == nil
@@ -153,18 +155,18 @@ public final class Session: Identifiable, Hashable {
         currentGameID = UUID()
         pendingCaptureScores = []
         progressData = try JSONEncoder().encode(GameProgress(turn: nextObservedTurn, observedStart: nextObservedTurn != nil))
-        // Latch the first player to reach ten confirmed wins. An observed next
-        // game is allowed to finish; merely allocating an ID never extends play.
-        if raceWinnerIndex == nil {
-            var wins = [0, 0]
-            for saved in games ?? [] where saved.id != game.id && saved.winningIndex >= 0 { wins[saved.winningIndex] += 1 }
-            if game.winningIndex >= 0 { wins[game.winningIndex] += 1 }
-            raceWinnerIndex = wins.firstIndex(where: { $0 >= 10 })
+        if let deferred {
+            currentGameID = deferred.id
+            nextGameNumber = deferred.number
+            currentGameNumberOverride = deferred.number
+            startingPlayerOverride = deferred.starter
+            progressData = try JSONEncoder().encode(deferred.progress)
+            awaitingNextStart = false
         }
-        if raceWinnerIndex != nil, nextObservedTurn == nil {
-            sessionFinished = true
-            scanningRequested = false
-        }
+        deferredGameData = nil
+        // Use chronological game order for both normal saves and a missing
+        // historical result. Appending a trailing game preserves the first winner.
+        recalculateRace()
         do {
             try context.save(); Telemetry.shared.change("session.gameSaved", before: before, session: self)
         } catch {
@@ -184,6 +186,12 @@ public final class Session: Identifiable, Hashable {
         guard pendingCaptureScores.isEmpty else { throw RecordingError.pendingCapture }
         guard let game = lastRecordedGame else { return }
         let starter = game.startingPlayerIndex ?? game.nr % 2
+        if deferredGameData == nil, progress.observedStart, progress.turn != nil {
+            deferredGameData = try JSONEncoder().encode(DeferredGame(id: currentGameID ?? UUID(),
+                number: upcomingGameNumber, starter: firstPlayerIndex, progress: progress))
+        }
+        let deferred = try deferredGameData.map { try JSONDecoder().decode(DeferredGame.self, from: $0) }
+        let continuationTurn = deferred?.progress.turn
         awaitingNextStart = false
         nextGameNumber = game.nr
         currentGameNumberOverride = game.nr
@@ -194,7 +202,7 @@ public final class Session: Identifiable, Hashable {
         lastCapturedScores = game.previousCapturedScores
         lastRecordedGameID = games?.filter { $0.id != game.id }.max { $0.nr < $1.nr }?.id
         allowRepeatedCapture = false
-        progressData = try JSONEncoder().encode(GameProgress(observedStart: true, needsResync: true))
+        progressData = try JSONEncoder().encode(GameProgress(observedStart: true, needsResync: true, nextGameTurn: continuationTurn))
         games?.removeAll { $0.id == game.id }
         context.delete(game)
         recalculateRace()
@@ -232,4 +240,13 @@ public final class Session: Identifiable, Hashable {
 
     public var firstPlayer: String { [player1, player2][firstPlayerIndex] }
     public var secondPlayer: String { [player1, player2][1 - firstPlayerIndex] }
+}
+
+/// While an older result is reopened, retain the game already being played.
+/// This is separate from that older game's draft and survives app termination.
+struct DeferredGame: Codable, Equatable, Sendable {
+    let id: UUID
+    let number: Int
+    let starter: Int
+    let progress: GameProgress
 }

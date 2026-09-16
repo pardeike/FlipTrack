@@ -30,7 +30,6 @@ enum AppTelemetry {
         Telemetry.shared.log("device.sample", Sample(thermal: thermal, lowPower: info.isLowPowerModeEnabled,
             batteryLevel: UIDevice.current.batteryLevel, batteryState: UIDevice.current.batteryState.rawValue,
             freeBytes: free))
-        Telemetry.shared.flush()
     }
 
     private struct Sample: Encodable {

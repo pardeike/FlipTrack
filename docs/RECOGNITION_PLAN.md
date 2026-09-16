@@ -299,3 +299,20 @@ copies of session state.
   and `abd60dd` contain the implementation and periodic-sampling fix. The
   remaining acceptance is sustained real-machine play with nudges/lighting;
   this checkpoint does not claim an unattended evening has been tested.
+
+### 2026-09-16: adversarial review repairs
+
+- Reviewed corrections, first-to-ten completion, source-image attribution and
+  diagnostic storage. Reproduced and repaired five findings; see
+  `ADVERSARIAL_REVIEW_20260916.md` for scenarios, severity and limits.
+- Recording a missing historical result now recalculates the chronological
+  first-to-ten winner. Undo/resave preserves the identity, starter and progress
+  of an already-started game across reload and repeated undo operations.
+- Saved image evidence uses the recognizer's time/count limits. Telemetry
+  detects removed/replaced active files, flushes asynchronously, and bounds
+  pending payloads/images to 16 MiB with visible failures and explicit gap counts.
+- All 56 core tests, private recorded-pixel checks and the signed build passed.
+  Five AP11 camera scenarios passed, including correction/undo at the tenth win.
+  The resumed game retained its identity and recovered to P2/ball 2. Controlled
+  recorded-input timing was median/p95/max 289/296/469 ms, nominal thermal state.
+  This remains controlled physical-camera evidence, not live pinball acceptance.

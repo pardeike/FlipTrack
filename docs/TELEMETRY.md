@@ -11,6 +11,8 @@ Connect and trust the iPhone on the Mac. In Finder, select the iPhone, open
 Documents folder is exposed in Files on the phone under **On My iPhone → FlipTrack**.
 Copy the whole run folder so image references remain usable. Stop scanning before
 copying a finished run; an active run can still be growing.
+Deleting or replacing the active run makes logging fail visibly. Restart the
+app to create a new run after doing so.
 
 For development, `xcrun devicectl device copy from --device AP11 --domain-type
 appDataContainer --domain-identifier net.pardeike.FlipTrack --source
@@ -23,6 +25,9 @@ Each JSON line has schema version 1, a sequence number, UTC wall time, monotonic
 uptime, event name, payload, image paths and image-write errors. Sequence numbers
 restart for each run. A forced termination can leave an incomplete last line;
 readers should retain all preceding complete lines.
+Writes and flushes run off the main thread. The pending payload/image queue is
+limited to 16 MiB: if storage falls behind, the app reports the failure and the
+next accepted event includes the number skipped in `droppedEventsBefore`.
 
 - User actions include opening/closing editors, submitted manual scores, score
   swaps, save/delete/undo requests and outcomes, player/game-order corrections,
@@ -77,6 +82,10 @@ screen from being saved again, including after manual addition or app restart.
 Confirmed live play clears the latch. Use **Resync** to explicitly join a game
 whose start was missed, or the existing identical-score action when appropriate.
 Historical score edits never rewrite the raw captured-pair duplicate guard.
+Undoing an older result preserves the identity, player order and progress of an
+already-started next game, including across app restart. Saving the reopened
+result restores that game. Inserting a missing historical result recomputes who
+first reached ten wins in game-number order.
 
 ## Verification
 

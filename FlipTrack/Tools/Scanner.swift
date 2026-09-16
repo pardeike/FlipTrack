@@ -45,7 +45,7 @@ final class Scanner: ObservableObject {
                                    requiredReadings: scanConfiguration.requiredScanCount, historyLimit: scanConfiguration.historyLimit)
         detector.resumeCurrentGame()
         isResyncing = false
-        evidence.clear()
+        evidence = ScoreEvidence(finalHistoryLimit: detector.historyLimit)
         acceptFramesAfter = ProcessInfo.processInfo.systemUptime
         if latest.finished { stop(); setStatus("Session complete") }
         else if latest.id == nil || !latest.pending.isEmpty { pause(.editing) }
@@ -149,6 +149,7 @@ final class Scanner: ObservableObject {
                         }
                         self.isResyncing = self.tracker.recovering
                         if wasRecovering && !self.isResyncing {
+                            self.evidence.clear()
                             self.detector.discardPendingReadings()
                             self.acceptFramesAfter = ProcessInfo.processInfo.systemUptime
                             UINotificationFeedbackGenerator().notificationOccurred(.success)

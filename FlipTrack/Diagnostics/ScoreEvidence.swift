@@ -22,6 +22,8 @@ struct FrameReading: Encodable, Sendable {
 /// Only the short confirmation window is retained in memory. Save the agreeing
 /// source images, including partial pairs, when their readings become durable.
 struct ScoreEvidence {
+    private let finalHistoryLimit: Int
+    init(finalHistoryLimit: Int = 10) { self.finalHistoryLimit = max(4, min(20, finalHistoryLimit)) }
     private var frames: [(time: TimeInterval, observation: DisplayObservation)] = []
     mutating func clear() { frames.removeAll() }
     mutating func append(_ observation: DisplayObservation, at time: TimeInterval) {
@@ -42,9 +44,11 @@ struct ScoreEvidence {
 
     func accepted(before: SessionSnapshot, after: SessionSnapshot, final: DisplayResult? = nil, proposedProgress: GameProgress? = nil) -> (Acceptance, [TelemetryWriter.Image]) {
         let acceptedProgress = proposedProgress ?? after.progress
-        let selected = frames.filter { frame in
+        let now = frames.last?.time ?? 0
+        let candidates = final == nil ? frames : Array(frames.suffix(finalHistoryLimit))
+        let selected = candidates.filter { frame in
             if let final { return frame.observation.final == final }
-            guard let live = frame.observation.live, live.turn == acceptedProgress.turn else { return false }
+            guard now - frame.time <= 3, let live = frame.observation.live, live.turn == acceptedProgress.turn else { return false }
             return (live.left != nil && live.left == acceptedProgress.left) ||
                 (live.right != nil && live.right == acceptedProgress.right)
         }
