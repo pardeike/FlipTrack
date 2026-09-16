@@ -13,6 +13,7 @@ final class Camera: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unc
 
     let session = AVCaptureSession()
     private let queue = DispatchQueue(label: "net.pardeike.FlipTrack.camera", qos: .userInitiated)
+    private let imageContext = CIContext()
     private var configuration = Configuration()
     private var onEvent: (@MainActor @Sendable (Event) -> Void)?
     private var lastFrame = -Double.infinity
@@ -152,7 +153,12 @@ final class Camera: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unc
                 strength: configuration.filterStrength, contrast: configuration.contrast,
                 sharpness: configuration.sharpness) : raw
             do {
-                emit(.frame(try DisplayReader.analyze(image), now))
+                var observation = try DisplayReader.analyze(image)
+                observation.processingMS = (ProcessInfo.processInfo.systemUptime - now) * 1000
+                if observation.live != nil || observation.final != nil {
+                    observation.jpeg = imageContext.jpegRepresentation(of: image, colorSpace: CGColorSpaceCreateDeviceRGB())
+                }
+                emit(.frame(observation, now))
             } catch {
                 fail("The display could not be read: \(error.localizedDescription)")
             }

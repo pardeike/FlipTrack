@@ -1,0 +1,79 @@
+{
+  "date": "2026-09-16",
+  "device": "AP11, iPhone 11 Pro, iOS 27",
+  "scenarios": [
+    {
+      "cameraRunning": true,
+      "gameCount": 2,
+      "passed": true,
+      "runID": "672786d5-cc12-4ec5-a792-272957a4547a",
+      "scenario": "turn",
+      "scoreImages": 0,
+      "telemetryDirectory": "2026-09-16T04-24-38Z-5031CE68-B0F2-4590-BFF4-A83EE5F47128",
+      "telemetryEvents": 32,
+      "turnBall": 2,
+      "turnSlot": 2
+    },
+    {
+      "cameraRunning": true,
+      "gameCount": 3,
+      "passed": true,
+      "runID": "672786d5-cc12-4ec5-a792-272957a4547a",
+      "scenario": "finalPixels",
+      "scoreImages": 8,
+      "telemetryDirectory": "2026-09-16T04-24-46Z-4F276AD0-9BEE-4749-8D98-F1DEF41EFDDA",
+      "telemetryEvents": 49
+    },
+    {
+      "cameraRunning": true,
+      "gameCount": 2,
+      "passed": true,
+      "runID": "672786d5-cc12-4ec5-a792-272957a4547a",
+      "scenario": "recorded",
+      "scoreImages": 9,
+      "telemetryDirectory": "2026-09-16T04-25-03Z-DE44DCAB-92BD-4F8C-8377-93D527161E27",
+      "telemetryEvents": 54,
+      "turnBall": 1,
+      "turnSlot": 2
+    },
+    {
+      "cameraRunning": true,
+      "gameCount": 3,
+      "passed": true,
+      "runID": "6552f91a-057d-46d5-a571-5d778e8fe79a",
+      "scenario": "corrections",
+      "scoreImages": 8,
+      "telemetryDirectory": "2026-09-16T04-27-53Z-81DEB4B3-A022-4C63-8BC4-1438CCF02FBD",
+      "telemetryEvents": 76
+    }
+  ],
+  "recordedReaderWithJPEG": {
+    "samples": 32,
+    "medianMS": 289.399395835062,
+    "p95MS": 302.07908333977684,
+    "maxMS": 489.9393749947194
+  },
+  "localTests": {
+    "total": 47,
+    "recordedPixelGate": "passed",
+    "signedBuild": "passed"
+  },
+  "uiTests": {
+    "device": "iPhone 11 Pro simulator",
+    "passed": 4,
+    "result": ".build/device-tests-20260916-062252.xcresult"
+  },
+  "evidenceDirectories": [
+    ".build/camera-checks/672786d5-cc12-4ec5-a792-272957a4547a",
+    ".build/camera-checks/6552f91a-057d-46d5-a571-5d778e8fe79a"
+  ],
+  "limits": [
+    "Physical camera supplies workload; observations are controlled or recorded pixels, not live-machine accuracy.",
+    "No sustained evening test of telemetry storage overhead."
+  ],
+  "harnessNotes": [
+    "First launch sequence stopped at a CoreDevice relaunch failure; explicit termination and process-exit verification fixed the sequence.",
+    "Correction test initially assigned the already-selected starter; log inspection identified the fixture mistake. Corrected test changes starter and passes.",
+    "All simulator assertions passed; the optional simctl diagnostics collector hung afterward and was terminated. Xcode then finalized the result bundle and exited successfully."
+  ]
+}

@@ -26,9 +26,38 @@ final class Scanner: ObservableObject {
     @Published private(set) var progress = GameProgress()
     private var tracker = GameTracker()
     private var acceptFramesAfter = -Double.infinity
+    private var currentContext: (@MainActor () -> SessionSnapshot)?
+    private var boundContext: SessionSnapshot?
+    private var scanConfiguration = Configuration()
+    private var evidence = ScoreEvidence()
+
+    /// Called before every frame and after editing. No persisted session value
+    /// is owned by the recognizer; only unconfirmed temporal votes are cached.
+    @discardableResult func refreshContext() -> Bool {
+        guard let currentContext else { return false }
+        let latest = currentContext()
+        guard latest != boundContext else { return false }
+        Telemetry.shared.log("scanner.contextChanged", latest)
+        boundContext = latest
+        progress = latest.progress
+        tracker = GameTracker(progress: latest.progress)
+        detector = EndGameDetector(lastScores: latest.allowRepeated || latest.progress.observedStart ? [] : latest.lastScores,
+                                   requiredReadings: scanConfiguration.requiredScanCount, historyLimit: scanConfiguration.historyLimit)
+        detector.resumeCurrentGame()
+        isResyncing = false
+        evidence.clear()
+        acceptFramesAfter = ProcessInfo.processInfo.systemUptime
+        if latest.finished { stop(); setStatus("Session complete") }
+        else if latest.id == nil || !latest.pending.isEmpty { pause(.editing) }
+        return true
+    }
 
     func resync() {
         guard isMonitoring, !isPaused, !isResyncing else { return }
+        refreshContext()
+        guard isMonitoring, !isPaused else { return }
+        Telemetry.shared.action("resync")
+        evidence.clear()
         acceptFramesAfter = ProcessInfo.processInfo.systemUptime
         tracker.beginRecovery(at: acceptFramesAfter)
         #if FLIPTRACK_DEVICE_TESTING
@@ -40,6 +69,8 @@ final class Scanner: ObservableObject {
     }
 
     func cancelResync() {
+        if isResyncing { Telemetry.shared.action("cancelResync") }
+        evidence.clear()
         acceptFramesAfter = ProcessInfo.processInfo.systemUptime
         tracker.cancelRecovery(at: acceptFramesAfter)
         #if FLIPTRACK_DEVICE_TESTING
@@ -51,26 +82,22 @@ final class Scanner: ObservableObject {
     }
 
 
-    func start(configuration: Configuration, gameID: UUID, progress initialProgress: GameProgress,
-               lastScores: [Int], allowRepeatedScores: Bool = false, rejectedSignatures: [String] = [],
+    func start(configuration: Configuration, current: @escaping @MainActor () -> SessionSnapshot,
                update: @escaping @MainActor (GameProgress, UUID) throws -> Void,
-               save: @escaping @MainActor (DisplayResult, UUID) throws -> ScanGameContext) {
+               save: @escaping @MainActor (DisplayResult, UUID) throws -> Void) {
         guard !isMonitoring || isPaused else { return }
         resetPreviewTest()
         previewRunning = false
         previewError = nil
         generation = UUID()
         let token = generation
-        var activeGameID = gameID
-        let rejected = Set(rejectedSignatures)
-        progress = initialProgress
-        tracker = GameTracker(progress: initialProgress)
-        isResyncing = false
-        acceptFramesAfter = ProcessInfo.processInfo.systemUptime
-        detector = EndGameDetector(lastScores: allowRepeatedScores || initialProgress.observedStart ? [] : lastScores,
-                                   requiredReadings: configuration.requiredScanCount,
-                                   historyLimit: configuration.historyLimit)
-        detector.resumeCurrentGame()
+        currentContext = current
+        scanConfiguration = configuration
+        boundContext = nil
+        refreshContext()
+        guard let initial = boundContext, initial.id != nil, !initial.finished, initial.pending.isEmpty else { return }
+        Telemetry.shared.log("scanner.start", initial)
+        Telemetry.shared.log("scanner.configuration", configuration)
         usesCenteredScanArea = configuration.useCenteredScanArea
         status = "Starting camera…"
         state = .starting
@@ -87,16 +114,34 @@ final class Scanner: ObservableObject {
                 guard let self, self.generation == token, self.isMonitoring, !self.isPaused else { return }
                 switch event {
                 case .started:
+                    Telemetry.shared.log("camera.started", ["mode": "scanning"])
                     self.state = .scanning
                     self.setStatus("Watching the display")
                 case .failed(let message): self.fail(message)
                 case .frame(let observation, let time):
-                    guard time > self.acceptFramesAfter else { return }
+                    let reading = FrameReading(observation, at: time)
+                    Telemetry.shared.log("frame", reading)
+                    if self.refreshContext() {
+                        Telemetry.shared.log("frame.ignored", ["id": observation.frameID.uuidString, "reason": "session corrected"])
+                        return
+                    }
+                    guard time > self.acceptFramesAfter, self.isMonitoring, !self.isPaused,
+                          let before = self.boundContext, let activeGameID = before.id else {
+                        Telemetry.shared.log("frame.ignored", ["id": observation.frameID.uuidString, "reason": "stale or paused"])
+                        return
+                    }
+                    self.evidence.append(observation, at: time)
                     let text = observation.text
                     do {
                         let wasRecovering = self.isResyncing
                         if let updated = self.tracker.observe(observation.live, at: time) {
+                            let confirmed = self.evidence.accepted(before: before, after: before, proposedProgress: updated)
+                            Telemetry.shared.log("score.progressConfirmed", confirmed.0, images: confirmed.1)
                             try update(updated, activeGameID)
+                            let after = current()
+                            let accepted = self.evidence.accepted(before: before, after: after)
+                            Telemetry.shared.log("score.progressAccepted", accepted.0)
+                            self.boundContext = after
                             if !self.progress.observedStart && updated.observedStart {
                                 self.detector = EndGameDetector(requiredReadings: configuration.requiredScanCount, historyLimit: configuration.historyLimit)
                             }
@@ -112,16 +157,23 @@ final class Scanner: ObservableObject {
                         }
                         // BALL screens can update the turn, never finish the game.
                         let observed = observation.final
-                        let ignored = observed.map { rejected.contains($0.signature) } ?? false
+                        let ignored = observed.map { current().rejected.contains($0.signature) } ?? false
                         let result = ignored ? nil : observed
                         let readable = EndGameLayout.hasDisplayText(in: text)
                         // Non-terminal turn context is not sufficient for an automatic
                         // final. Explicit Resync can recover a missed terminal turn.
-                        let canFinish = self.progress.canAcceptFinal(recovering: self.isResyncing) && self.tracker.recoveryNextTurn == nil
+                        let canFinish = (!current().awaitingNextStart || self.isResyncing || current().allowRepeated) && self.progress.canAcceptFinal(recovering: self.isResyncing) && self.tracker.recoveryNextTurn == nil
                         if let confirmed = self.detector.observe(canFinish ? result : nil, at: time, readable: readable,
                             newGame: GameDisplayLayout.isNewGame(in: text)) {
-                            let next = try save(confirmed, activeGameID)
-                            activeGameID = next.id
+                            let beforeSave = current()
+                            let confirmation = self.evidence.accepted(before: beforeSave, after: beforeSave, final: confirmed)
+                            Telemetry.shared.log("score.finalConfirmed", confirmation.0, images: confirmation.1)
+                            try save(confirmed, activeGameID)
+                            let next = current()
+                            let accepted = self.evidence.accepted(before: beforeSave, after: next, final: confirmed)
+                            Telemetry.shared.log("score.finalAccepted", accepted.0)
+                            self.boundContext = next
+                            self.evidence.clear()
                             self.progress = next.progress
                             self.tracker = GameTracker(progress: next.progress)
                             self.isResyncing = false
@@ -139,6 +191,8 @@ final class Scanner: ObservableObject {
                             self.setStatus("Use Resync")
                         } else if ignored {
                             self.setStatus("Discarded reading ignored")
+                        } else if current().awaitingNextStart {
+                            self.setStatus("Waiting for next game")
                         } else if !readable {
                             self.setStatus("Check alignment")
                         } else if let turn = self.progress.turn {
@@ -153,7 +207,10 @@ final class Scanner: ObservableObject {
     }
 
     private func setStatus(_ value: String) {
-        if status != value { status = value }
+        if status != value {
+            Telemetry.shared.log("scanner.status", ["before": status, "after": value])
+            status = value
+        }
     }
 
     private func requestPermission() async -> Bool {
@@ -162,6 +219,7 @@ final class Scanner: ObservableObject {
 
     func pause(_ reason: ScanState.PauseReason = .user) {
         guard isMonitoring, !isPaused else { return }
+        Telemetry.shared.log("scanner.pause", ["reason": reason.message])
         cancelResync()
         generation = UUID()
         state = .paused(reason)
@@ -172,6 +230,9 @@ final class Scanner: ObservableObject {
     }
 
     func stop() {
+        Telemetry.shared.action("scanner.stop")
+        currentContext = nil
+        boundContext = nil
         cancelResync()
         generation = UUID()
         state = .off
@@ -183,6 +244,7 @@ final class Scanner: ObservableObject {
     /// Preview owns camera access only while recording is stopped or paused.
     /// Optional test recognition is isolated from recording and persistence.
     func setPreview(_ visible: Bool, configuration: Configuration) {
+        Telemetry.shared.log("camera.preview", ["visible": visible])
         previewConfiguration = visible ? configuration : nil
         if visible {
             startPreviewIfNeeded()
@@ -200,6 +262,7 @@ final class Scanner: ObservableObject {
     func setPreviewTest(_ enabled: Bool) {
         guard previewConfiguration != nil, !isMonitoring else { return }
         resetPreviewTest()
+        Telemetry.shared.log("camera.recognitionTest", ["enabled": enabled])
         testingPreview = enabled
         startPreviewIfNeeded()
     }
@@ -238,6 +301,7 @@ final class Scanner: ObservableObject {
                     self.previewError = message
                 case .frame(let text, let time):
                     guard self.testingPreview, !self.isMonitoring else { return }
+                    Telemetry.shared.log("preview.frame", FrameReading(text, at: time))
                     self.appendTestReadings(text.text, at: time)
                 }
             }
@@ -267,13 +331,8 @@ final class Scanner: ObservableObject {
     }
 
     private func fail(_ message: String) {
+        Telemetry.shared.log("scanner.error", ["message": message])
         stop()
         state = .failed(message)
     }
-}
-
-struct ScanGameContext {
-    let id: UUID
-    let progress: GameProgress
-    let finished: Bool
 }

@@ -4,6 +4,9 @@ import Vision
 /// Locate the display frame, correct perspective, then read the layout. No
 /// position or size is tied to the original holder photo.
 struct DisplayObservation: Sendable {
+    let frameID = UUID()
+    var jpeg: Data?
+    var processingMS: Double?
     var text: [DisplayText]
     var live: LiveScoreboard?
     var final: DisplayResult?

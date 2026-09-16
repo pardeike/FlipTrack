@@ -4,6 +4,7 @@ import Foundation
 final class ConfigStore: ObservableObject {
     @Published var config: Configuration {
         didSet {
+            Telemetry.shared.log("settings.changed", config)
             if let data = try? JSONEncoder().encode(config) {
                 UserDefaults.standard.set(data, forKey: "Configuration")
             }

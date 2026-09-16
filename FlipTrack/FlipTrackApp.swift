@@ -13,6 +13,8 @@ struct FlipTrackApp: App {
         return try ModelContainer(for: schema, configurations: [configuration])
     }
 
+    init() { AppTelemetry.start() }
+
     var body: some Scene {
         WindowGroup {
             Group {
@@ -29,7 +31,21 @@ struct FlipTrackApp: App {
                     }
                 }
             }
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.didReceiveMemoryWarningNotification)) { _ in
+                Telemetry.shared.action("device.memoryWarning")
+            }
+            .task {
+                if case .failure(let error) = sharedModelContainer {
+                    Telemetry.shared.log("store.error", ["message": error.localizedDescription])
+                }
+                while !Task.isCancelled {
+                    do { try await Task.sleep(for: .seconds(30)) } catch { return }
+                    if scenePhase == .active { AppTelemetry.sample() }
+                }
+            }
             .onChange(of: scenePhase, initial: true) { _, phase in
+                Telemetry.shared.log("app.phase", ["phase": String(describing: phase)])
+                if phase != .active { Telemetry.shared.flush() }
                 if phase == .active {
                     if previousIdleTimerDisabled == nil {
                         previousIdleTimerDisabled = UIApplication.shared.isIdleTimerDisabled

@@ -67,6 +67,24 @@ final class RecoveryUITests: XCTestCase {
         screenshot("iPhone11Pro-final-saved-once")
     }
 
+    func testManualAdditionPausesAndResumesUsingNewGame() {
+        let app = launch("turn")
+        app.buttons["Add scores"].tap()
+        XCTAssertTrue(app.textFields["leftScore"].waitForExistence(timeout:5))
+        app.textFields["leftScore"].tap()
+        app.textFields["leftScore"].typeText("777000")
+        app.textFields["rightScore"].tap()
+        app.textFields["rightScore"].typeText("888000")
+        app.buttons["saveGame"].tap()
+        waitLabel(current(app),contains:"Game 4. Andreas turn")
+        XCTAssertEqual(app.buttons["pauseMonitoring"].label,"Resume scanning")
+        app.buttons["pauseMonitoring"].tap()
+        app.buttons["resyncTracking"].tap()
+        waitLabel(current(app),contains:"Game 4. Fredrik turn")
+        XCTAssertFalse(app.buttons["cancelResync"].exists)
+        screenshot("iPhone11Pro-manual-add-resume")
+    }
+
     func testRecordedSwitchWithCameraRunning() {
         let app = launch("recorded")
         waitLabel(current(app),contains:"Game 3. Andreas turn",timeout:25)

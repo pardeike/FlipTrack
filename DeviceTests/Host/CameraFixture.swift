@@ -7,6 +7,7 @@ final class CameraFixture {
     private let scenario = ProcessInfo.processInfo.environment["FLIPTRACK_TEST_SCENARIO"] ?? "turn"
     var recoveryStarted: TimeInterval?
     var cameraFrames = 0
+    private let imageContext = CIContext()
     private var sample = 0
     private var durations: [Double] = []
     private var thermals: [Int] = []
@@ -17,7 +18,9 @@ final class CameraFixture {
             let url = Bundle.main.resourceURL!.appendingPathComponent("live-fixtures/switch-\(sample % 8).png")
             guard let image = CIImage(contentsOf:url) else { throw CocoaError(.fileReadCorruptFile) }
             let start = ProcessInfo.processInfo.systemUptime
-            let observation = try DisplayReader.analyze(image)
+            var observation = try DisplayReader.analyze(image)
+            observation.jpeg = imageContext.jpegRepresentation(of: image, colorSpace: CGColorSpaceCreateDeviceRGB())
+            observation.processingMS = (ProcessInfo.processInfo.systemUptime-start)*1000
             durations.append((ProcessInfo.processInfo.systemUptime-start)*1000)
             thermals.append(ProcessInfo.processInfo.thermalState.rawValue)
             sample += 1
@@ -35,10 +38,12 @@ final class CameraFixture {
         func label(_ text:String,_ x:CGFloat,_ y:CGFloat,_ width:CGFloat,_ height:CGFloat) -> DisplayText {
             DisplayText(text:text,confidence:1,bounds:CGRect(x:x,y:y,width:width,height:height),isInsideDisplay:true)
         }
-        if scenario == "finalPixels" {
+        if scenario == "finalPixels" || scenario == "corrections" {
             let url = Bundle.main.resourceURL!.appendingPathComponent("live-fixtures/final-1.png")
             guard let image = CIImage(contentsOf:url) else { throw CocoaError(.fileReadCorruptFile) }
-            return try DisplayReader.analyze(image)
+            var observation = try DisplayReader.analyze(image)
+            observation.jpeg = imageContext.jpegRepresentation(of: image, colorSpace: CGColorSpaceCreateDeviceRGB())
+            return observation
         }
         if scenario == "final" {
             return DisplayObservation([label("24,274,100",0.05,0.6,0.35,0.2),label("37,531,870",0.6,0.6,0.35,0.2),label("FREE PLAY",0.4,0.1,0.25,0.1)])

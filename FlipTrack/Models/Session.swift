@@ -21,6 +21,7 @@ public final class Session: Identifiable, Hashable {
     public var progressData: Data?
     public var raceWinnerIndex: Int?
     public var sessionFinished = false
+    public var awaitingNextStart = false
     @Relationship(deleteRule: .cascade, inverse: \Game.session)
     public var games: [Game]?
 
@@ -93,30 +94,35 @@ public final class Session: Identifiable, Hashable {
 
     @MainActor
     func updateProgress(_ progress: GameProgress, for gameID: UUID?, in context: ModelContext) throws {
+        let before = SessionSnapshot(self)
         guard gameID == currentGameID, !sessionFinished else { throw RecordingError.staleGame }
+        if progress.observedStart { awaitingNextStart = false }
         progressData = try JSONEncoder().encode(progress)
-        do { try context.save() }
-        catch { context.rollback(); throw error }
+        do { try context.save(); Telemetry.shared.change("session.progressSaved", before: before, session: self) }
+        catch { context.rollback(); Telemetry.shared.log("session.progressSaved.error", ["message": error.localizedDescription]); throw error }
     }
 
     @MainActor
     func prepareCurrentGame(in context: ModelContext) throws {
+        let before = SessionSnapshot(self)
         guard currentGameID == nil else { return }
         currentGameID = UUID()
-        do { try context.save() }
-        catch { context.rollback(); throw error }
+        do { try context.save(); Telemetry.shared.change("session.prepared", before: before, session: self) }
+        catch { context.rollback(); Telemetry.shared.log("session.prepared.error", ["message": error.localizedDescription]); throw error }
     }
 
     @MainActor
     func stageCapture(_ result: DisplayResult, in context: ModelContext) throws {
+        let before = SessionSnapshot(self)
         if currentGameID == nil { currentGameID = UUID() }
         pendingCaptureScores = result.scores
-        do { try context.save() }
-        catch { context.rollback(); throw error }
+        do { try context.save(); Telemetry.shared.change("session.captureStaged", before: before, session: self) }
+        catch { context.rollback(); Telemetry.shared.log("session.captureStaged.error", ["message": error.localizedDescription]); throw error }
     }
 
     @MainActor
     func record(_ result: DisplayResult, for gameID: UUID? = nil, in context: ModelContext) throws {
+        let before = SessionSnapshot(self)
         if let gameID {
             // A retry of a committed capture is a no-op, even after relaunch.
             if games?.contains(where: { $0.captureGameID == gameID }) == true { return }
@@ -124,6 +130,7 @@ public final class Session: Identifiable, Hashable {
         }
         let number = upcomingGameNumber
         let nextObservedTurn = progress.nextGameTurn
+        awaitingNextStart = nextObservedTurn == nil
         let explicitNumber = currentGameNumberOverride != nil
         let starter = firstPlayerIndex
         let ordered = firstPlayerIndex == 0 ? result.scores : result.scores.reversed().map { $0 }
@@ -159,9 +166,10 @@ public final class Session: Identifiable, Hashable {
             scanningRequested = false
         }
         do {
-            try context.save()
+            try context.save(); Telemetry.shared.change("session.gameSaved", before: before, session: self)
         } catch {
             context.rollback()
+            Telemetry.shared.log("session.gameSaved.error", ["message": error.localizedDescription])
             throw error
         }
     }
@@ -172,9 +180,11 @@ public final class Session: Identifiable, Hashable {
 
     @MainActor
     func undoLastGame(in context: ModelContext) throws {
+        let before = SessionSnapshot(self)
         guard pendingCaptureScores.isEmpty else { throw RecordingError.pendingCapture }
         guard let game = lastRecordedGame else { return }
         let starter = game.startingPlayerIndex ?? game.nr % 2
+        awaitingNextStart = false
         nextGameNumber = game.nr
         currentGameNumberOverride = game.nr
         startingPlayerOverride = starter
@@ -188,16 +198,17 @@ public final class Session: Identifiable, Hashable {
         games?.removeAll { $0.id == game.id }
         context.delete(game)
         recalculateRace()
-        do { try context.save() }
-        catch { context.rollback(); throw error }
+        do { try context.save(); Telemetry.shared.change("session.gameUndone", before: before, session: self) }
+        catch { context.rollback(); Telemetry.shared.log("session.gameUndone.error", ["message": error.localizedDescription]); throw error }
     }
 
     @MainActor
     func discardPendingCapture(in context: ModelContext) throws {
+        let before = SessionSnapshot(self)
         rejectCapture(pendingCaptureScores)
         pendingCaptureScores = []
-        do { try context.save() }
-        catch { context.rollback(); throw error }
+        do { try context.save(); Telemetry.shared.change("session.captureDiscarded", before: before, session: self) }
+        catch { context.rollback(); Telemetry.shared.log("session.captureDiscarded.error", ["message": error.localizedDescription]); throw error }
     }
 
     private func rejectCapture(_ scores: [Int]) {

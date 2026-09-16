@@ -42,20 +42,24 @@ struct SessionDetailsView: View {
             .navigationTitle("Players & game order")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { Telemetry.shared.action("SessionDetailsView.cancel", session: session); dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
+                        Telemetry.shared.action("session.saveEdits", session: session)
+                        let before = SessionSnapshot(session)
                         session.player1 = player1.trimmingCharacters(in: .whitespacesAndNewlines)
                         session.player2 = player2.trimmingCharacters(in: .whitespacesAndNewlines)
                         session.date = date
                         session.startingPlayerOverride = starter
                         session.currentGameNumberOverride = Int(gameNumber)
-                        do { try context.save(); dismiss() }
-                        catch { context.rollback(); saveError = error.localizedDescription }
+                        do { try context.save(); Telemetry.shared.change("session.corrected", before: before, session: session); dismiss() }
+                        catch { context.rollback(); Telemetry.shared.log("SessionDetailsView.error", ["message": error.localizedDescription]); saveError = error.localizedDescription }
                     }.disabled(!valid)
                 }
             }
+            .onDisappear { Telemetry.shared.action("SessionDetailsView.closed", session: session) }
             .onAppear {
+                Telemetry.shared.action("SessionDetailsView.opened", session: session)
                 player1 = session.player1
                 player2 = session.player2
                 date = session.date

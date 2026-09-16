@@ -49,6 +49,8 @@ struct PreferencesView: View {
                     }
                 }
             }
+            .onAppear { Telemetry.shared.action("settings.open") }
+            .onDisappear { Telemetry.shared.action("settings.close") }
             .navigationTitle("Settings")
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
             .onChange(of: configStore.config.requiredScanCount) { _, count in

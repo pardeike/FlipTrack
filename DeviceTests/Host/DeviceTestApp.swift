@@ -9,6 +9,7 @@ struct DeviceTestApp: App {
     @State private var replaySummary = ""
 
     init() {
+        AppTelemetry.start()
         container = try! ModelContainer(for: Session.self, Game.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none))
         session = Session(date: .now)

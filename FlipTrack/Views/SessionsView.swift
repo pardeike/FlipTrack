@@ -70,7 +70,7 @@ struct SessionsView: View {
                             }
                             .listRowBackground(Color(white: 0.08))
                             .swipeActions {
-                                Button("Delete", systemImage: "trash", role: .destructive) { deletingSession = session }
+                                Button("Delete", systemImage: "trash", role: .destructive) { Telemetry.shared.action("session.requestDelete", session: session); deletingSession = session }
                             }
                         }
                         }
@@ -82,6 +82,9 @@ struct SessionsView: View {
             .navigationTitle("FlipTrack")
             .navigationBarTitleDisplayMode(.large)
             .navigationDestination(for: Session.self) { SessionView(session: $0) }
+            .safeAreaInset(edge: .top) {
+                if let error = Telemetry.shared.failure { Text(error).font(.caption).foregroundStyle(.red).padding() }
+            }
             .safeAreaInset(edge: .bottom, spacing: 12) {
                 if !sortedSessions.isEmpty {
                     Button("New Session", systemImage: "plus", action: addSession)
@@ -98,8 +101,10 @@ struct SessionsView: View {
         .confirmationDialog("Delete this session?", isPresented: Binding(get: { deletingSession != nil }, set: { if !$0 { deletingSession = nil } }), titleVisibility: .visible) {
             Button("Delete session", role: .destructive) {
                 if let deletingSession {
+                    Telemetry.shared.action("session.confirmDelete", session: deletingSession)
+                    let snapshot = SessionSnapshot(deletingSession)
                     context.delete(deletingSession)
-                    _ = saveChanges()
+                    if saveChanges() { Telemetry.shared.log("session.deleted", snapshot) }
                 }
                 deletingSession = nil
             }
@@ -110,9 +115,10 @@ struct SessionsView: View {
     }
 
     private func addSession() {
+        Telemetry.shared.action("session.new")
         let session = Session(date: .now)
         context.insert(session)
-        if saveChanges() { path.append(session) }
+        if saveChanges() { Telemetry.shared.action("session.created", session: session); path.append(session) }
     }
 
     private func topScorer(in session: Session) -> String? {
@@ -125,6 +131,7 @@ struct SessionsView: View {
         do { try context.save(); return true }
         catch {
             context.rollback()
+            Telemetry.shared.log("session.saveError", ["message": error.localizedDescription])
             saveError = error.localizedDescription
             return false
         }

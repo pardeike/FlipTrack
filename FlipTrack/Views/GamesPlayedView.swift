@@ -31,11 +31,13 @@ struct GamesPlayedView: View {
                     Menu {
                         Button("Swap scores", systemImage: "arrow.left.arrow.right") {
                             onBeginEditing()
+                            Telemetry.shared.action("game.swapScores", session: game.session, gameID: game.id)
+                            let before = game.session.map(SessionSnapshot.init)
                             game.scores.swapAt(0, 1)
                             game.session?.recalculateRace()
-                            saveChanges(in: game.modelContext)
+                            if saveChanges(in: game.modelContext), let before, let session = game.session { Telemetry.shared.change("game.swapped", before: before, session: session) }
                         }
-                        Button("Delete game", systemImage: "trash", role: .destructive) { onBeginEditing(); deletingGame = game }
+                        Button("Delete game", systemImage: "trash", role: .destructive) { Telemetry.shared.action("game.requestDelete", session: game.session, gameID: game.id); onBeginEditing(); deletingGame = game }
                     } label: {
                         Text("\(game.nr)")
                             .font(.subheadline.weight(.medium).monospacedDigit())
@@ -78,11 +80,13 @@ struct GamesPlayedView: View {
         .confirmationDialog("Delete game \(deletingGame?.nr ?? 0)?", isPresented: Binding(get: { deletingGame != nil }, set: { if !$0 { deletingGame = nil } }), titleVisibility: .visible) {
             Button("Delete game", role: .destructive) {
                 if let game = deletingGame, let context = game.modelContext {
+                    Telemetry.shared.action("game.confirmDelete", session: game.session, gameID: game.id)
+                    let before = game.session.map(SessionSnapshot.init)
                     let session = game.session
                     session?.games?.removeAll { $0.id == game.id }
                     context.delete(game)
                     session?.recalculateRace()
-                    saveChanges(in: context)
+                    if saveChanges(in: context), let before, let session { Telemetry.shared.change("game.deleted", before: before, session: session) }
                 }
                 deletingGame = nil
             }
@@ -90,16 +94,19 @@ struct GamesPlayedView: View {
         .alert("Changes were not saved", isPresented: Binding(get: { saveError != nil }, set: { if !$0 { saveError = nil } })) {
             Button("OK", role: .cancel) { saveError = nil }
         } message: { Text(saveError ?? "") }
+        .onChange(of: deletingGame?.id) { _, id in Telemetry.shared.log("dialog.deleteGame", ["open": id != nil]) }
         .sheet(item: $editGame) {
             GameEditView(game: $0)
         }
     }
 
-    private func saveChanges(in context: ModelContext?) {
-        do { try context?.save() }
+    private func saveChanges(in context: ModelContext?) -> Bool {
+        do { try context?.save(); return true }
         catch {
             context?.rollback()
+            Telemetry.shared.log("game.editError", ["message": error.localizedDescription])
             saveError = error.localizedDescription
+            return false
         }
     }
 }

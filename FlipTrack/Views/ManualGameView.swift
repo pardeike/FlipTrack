@@ -31,7 +31,7 @@ struct ManualGameView: View {
             .navigationTitle("Add scores")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { Telemetry.shared.action("ManualGameView.cancel", session: session); dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") { save() }
                         .disabled(scores == nil)
@@ -47,7 +47,9 @@ struct ManualGameView: View {
             .alert("Scores were not saved", isPresented: Binding(get: { saveError != nil }, set: { if !$0 { saveError = nil } })) {
                 Button("OK", role: .cancel) { saveError = nil }
             } message: { Text(saveError ?? "") }
+            .onDisappear { Telemetry.shared.action("ManualGameView.closed", session: session) }
             .onAppear {
+                Telemetry.shared.action("ManualGameView.opened", session: session)
                 if session.pendingCaptureScores.count == 2 {
                     firstScore = String(session.pendingCaptureScores[0])
                     secondScore = String(session.pendingCaptureScores[1])
@@ -77,10 +79,12 @@ struct ManualGameView: View {
 
     private func save() {
         guard let scores else { return }
+        Telemetry.shared.action("game.addManually", session: session)
+        Telemetry.shared.log("game.manualInput", scores)
         do {
             try session.prepareCurrentGame(in: context)
             try session.record(scores, for: session.currentGameID, in: context)
             dismiss()
-        } catch { saveError = error.localizedDescription }
+        } catch { Telemetry.shared.log("ManualGameView.error", ["message": error.localizedDescription]); saveError = error.localizedDescription }
     }
 }

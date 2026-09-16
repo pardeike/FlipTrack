@@ -11,7 +11,7 @@ struct MachineTurn: Codable, Equatable, Sendable {
     var isLast: Bool { slot == 2 && ball == 3 }
 }
 
-struct LiveScoreboard: Equatable, Sendable {
+struct LiveScoreboard: Codable, Equatable, Sendable {
     let turn: MachineTurn
     let left: Int?
     let right: Int?

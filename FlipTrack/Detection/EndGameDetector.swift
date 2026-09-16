@@ -1,6 +1,6 @@
 import Foundation
 
-struct DisplayText: Sendable {
+struct DisplayText: Codable, Sendable {
     let text: String
     let confidence: Float
     /// Vision coordinates: origin at bottom left, normalized to the image.
@@ -11,7 +11,7 @@ struct DisplayText: Sendable {
     var corners: [CGPoint] = []
 }
 
-struct DisplayResult: Equatable, Sendable {
+struct DisplayResult: Codable, Equatable, Sendable {
     let left: Int
     let right: Int
     var scores: [Int] { [left, right] }

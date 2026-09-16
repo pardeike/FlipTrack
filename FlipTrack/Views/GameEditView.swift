@@ -26,6 +26,7 @@ struct GameEditView: View {
                     field(game.session?.player1 ?? "Player 1", text: $firstScore)
                     field(game.session?.player2 ?? "Player 2", text: $secondScore)
                     Button("Swap scores", systemImage: "arrow.left.arrow.right") {
+                        Telemetry.shared.action("game.swapDraft", session: game.session, gameID: game.id)
                         swap(&firstScore, &secondScore)
                     }
                 }
@@ -42,20 +43,28 @@ struct GameEditView: View {
             .navigationTitle("Edit game")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { Telemetry.shared.action("GameEditView.cancel", session: game.session, gameID: game.id); dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         guard let (first, second, nr) = values else { return }
+                        Telemetry.shared.action("game.saveEdits", session: game.session, gameID: game.id)
+                        let before = game.session.map(SessionSnapshot.init)
                         game.scores = [first, second]
                         game.nr = nr
                         game.startingPlayerIndex = starter
                         game.session?.recalculateRace()
-                        do { try context.save(); dismiss() }
-                        catch { context.rollback(); saveError = error.localizedDescription }
+                        do {
+                            try context.save()
+                            if let before, let session = game.session { Telemetry.shared.change("game.corrected", before: before, session: session) }
+                            dismiss()
+                        }
+                        catch { context.rollback(); Telemetry.shared.log("GameEditView.error", ["message": error.localizedDescription]); saveError = error.localizedDescription }
                     }.disabled(values == nil)
                 }
             }
+            .onDisappear { Telemetry.shared.action("GameEditView.closed", session: game.session, gameID: game.id) }
             .onAppear {
+                Telemetry.shared.action("GameEditView.opened", session: game.session, gameID: game.id)
                 firstScore = String(game.scores[0])
                 secondScore = String(game.scores[1])
                 number = String(game.nr)

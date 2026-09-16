@@ -226,3 +226,49 @@ Current checkpoint: the basic live capture and Resync slice passes local, record
 - Production AP11 screenshot shows the existing session after launch. Read-only before/after store copies agree on every pre-existing session/game value, excluding Core Data's update counter: one session and five games preserved. Local backup is under `.build/production-before-release/`; comparison result is `.build/production-data-verification.json`.
 - The original separate FlipTrack Bench app was restored after camera checks. Test fixtures and hooks are absent from the production build. Physical XCTest button automation still requires the device's passcode confirmation; the camera checks and simulator UI checks described above are the actual evidence.
 - Implementation checkpoints: `90c22a4` and `aea9d26`. Next acceptance is play on the actual machine, with Resync available for missed turns and existing score editing for unreadable finals. No perfect unattended-evening claim is made.
+
+### 2026-09-16: telemetry and correction authority
+
+Requested additions: retain local action/event telemetry in Documents, save score
+confirmation images with game/ball identifiers and unique names, expose Documents
+through Finder, and ensure manual edits/additions never compete with scanner
+copies of session state.
+
+- Added per-launch JSONL telemetry, accepted-reading evidence images, editor and
+  correction snapshots, scanner/lifecycle/error events and 30-second device
+  samples. Images are attached to confirmation attempts; successful persistence
+  is a separate accepted event. Logging failures remain visible without losing
+  game scores. Retrieval and schema are documented in `docs/TELEMETRY.md`.
+- Scanner now binds to a fresh authoritative session snapshot before each frame
+  and at edit/Resync boundaries. Manual changes invalidate temporal votes and
+  old callbacks. Editors retain explicit pause/Resume. An undo draft blocks
+  further scanning until reviewed/discarded.
+- A durable awaiting-next-start flag prevents a previous final screen becoming
+  a new game after manual addition or restart. Confirmed live play, deliberate
+  Resync or the existing repeated-score override establishes the next capture.
+  Manual addition remains available even after completion, for correction.
+- Initial local gate passed 47 tests including recorded pixels; signed iOS build
+  passed. AP11 live recovery produced retrievable telemetry. The first physical
+  run stopped at a CoreDevice launch error between scenarios, without an app
+  crash report; this is a harness failure, not a passed final-score check.
+  Full correction/evidence checks and finished-version deployment are pending.
+
+- Completed verification: 47 core/recorded-pixel tests and signed build passed;
+  all four iPhone 11 Pro simulator UI flows passed, including manual addition,
+  explicit Resume and Resync against the new game. AP11 checks passed live
+  recovery, actual recorded final images, recorded turn switching and manual
+  changes while camera delivery continued. Retrieved logs and JPEG signatures
+  were verified; one saved final image was visually inspected.
+- The AP11 correction check changes scores/game number/current progress, adds a
+  game manually, changes player mapping during Resync to invalidate pending
+  votes, confirms the next final pair with the corrected ownership, then undoes,
+  discards and resumes without recapturing the rejected pair. Historical edits
+  survive. This is controlled physical-camera evidence, not real-machine play.
+- With JPEG generation and telemetry active, 32 recorded observations measured
+  median/p95/max 289/302/490 ms. Final capture saved eight supporting images;
+  recorded live tracking saved nine. Details: `docs/research/ap11-telemetry-20260916.json`.
+- The initial correction test selected the already-selected starter; telemetry
+  exposed the test error. The corrected test passes. Simulator assertions all
+  passed; its optional diagnostic collector stalled afterward, was terminated,
+  and Xcode finalized the successful result bundle. Production release follows
+  this verified checkpoint.

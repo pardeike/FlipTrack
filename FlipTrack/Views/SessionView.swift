@@ -72,7 +72,7 @@ struct SessionView: View {
                             Button("Discard", role: .destructive) {
                                 scanner.pause(.editing)
                                 do { try session.discardPendingCapture(in: context) }
-                                catch { recordingError = error.localizedDescription }
+                                catch { Telemetry.shared.log("session.actionError", ["message": error.localizedDescription]); recordingError = error.localizedDescription }
                             }
                         }
                     }
@@ -114,7 +114,7 @@ struct SessionView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Add scores", systemImage: "plus") { openEditor(.scores) }.disabled(scanner.isResyncing || session.sessionFinished)
+                Button("Add scores", systemImage: "plus") { openEditor(.scores) }.disabled(scanner.isResyncing)
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
@@ -123,11 +123,13 @@ struct SessionView: View {
                     }
                     Button("Undo last saved game", systemImage: "arrow.uturn.backward") {
                         scanner.pause(.editing)
+                        Telemetry.shared.action("game.requestUndo", session: session)
                         confirmingUndo = true
                     }
                     .disabled(session.games?.isEmpty != false || !session.pendingCaptureScores.isEmpty)
                     Button("Capture same scores again", systemImage: "arrow.clockwise") {
                         scanner.pause(.editing)
+                        Telemetry.shared.action("scanner.requestRepeated", session: session)
                         confirmingRecapture = true
                     }
                     .disabled(session.sessionFinished || !session.pendingCaptureScores.isEmpty)
@@ -142,18 +144,20 @@ struct SessionView: View {
         }
         .confirmationDialog("Allow the previous score pair again?", isPresented: $confirmingRecapture, titleVisibility: .visible) {
             Button("Allow and start scanning") {
+                Telemetry.shared.action("scanner.allowRepeated", session: session)
                 session.allowRepeatedCapture = true
                 session.rejectedCaptureSignatures = []
                 do { try context.save(); startMonitoring() }
-                catch { context.rollback(); recordingError = error.localizedDescription }
+                catch { context.rollback(); Telemetry.shared.log("session.actionError", ["message": error.localizedDescription]); recordingError = error.localizedDescription }
             }
         } message: {
             Text("Use this for another game with identical scores. The display can be saved again as a new game.")
         }
         .confirmationDialog("Reopen the last saved game?", isPresented: $confirmingUndo, titleVisibility: .visible) {
             Button("Undo save") {
+                Telemetry.shared.action("game.confirmUndo", session: session)
                 do { try session.undoLastGame(in: context) }
-                catch { recordingError = error.localizedDescription }
+                catch { Telemetry.shared.log("session.actionError", ["message": error.localizedDescription]); recordingError = error.localizedDescription }
             }
         } message: {
             Text("Its scores will become an editable draft. Its game number and player order will be restored.")
@@ -165,10 +169,18 @@ struct SessionView: View {
         .task { await DeviceCheck.run(scanner:scanner,session:session,context:context,start:startMonitoring) }
         #endif
         .onAppear {
+            Telemetry.shared.action("session.open", session: session)
             lastSessionID = session.id.uuidString
             if session.scanningRequested { scanner.restorePausedSession() }
         }
-        .onDisappear { if !showingCamera { scanner.stop() } }
+        .onDisappear {
+            Telemetry.shared.action("session.disappear", session: session)
+            if !showingCamera { scanner.stop() }
+        }
+        .onChange(of: SessionSnapshot(session)) { before, _ in
+            Telemetry.shared.change("session.observedChange", before: before, session: session)
+            scanner.refreshContext()
+        }
         .onChange(of: scenePhase) { _, phase in
             if phase == .background {
                 scanner.setPreview(false, configuration: configStore.config)
@@ -177,7 +189,12 @@ struct SessionView: View {
                 scanner.setPreview(true, configuration: configStore.config)
             }
         }
-        .sheet(item: $editor) { item in
+        .onChange(of: confirmingUndo) { _, open in Telemetry.shared.log("dialog.undo", ["open": open]) }
+        .onChange(of: confirmingRecapture) { _, open in Telemetry.shared.log("dialog.recapture", ["open": open]) }
+        .sheet(item: $editor, onDismiss: {
+            Telemetry.shared.action("editor.dismiss", session: session)
+            scanner.refreshContext()
+        }) { item in
             switch item {
             case .settings: PreferencesView()
             case .scores: ManualGameView(session: session)
@@ -260,6 +277,7 @@ struct SessionView: View {
     }
 
     private func openEditor(_ destination: Editor) {
+        Telemetry.shared.action("editor.open.\(destination.rawValue)", session: session)
         scanner.pause(.editing)
         if showingCamera {
             editorAfterCamera = destination
@@ -270,6 +288,7 @@ struct SessionView: View {
     }
 
     private func startMonitoring() {
+        Telemetry.shared.action("scanner.startOrResume", session: session)
         guard !session.sessionFinished else { return }
         guard session.pendingCaptureScores.isEmpty else {
             openEditor(.scores)
@@ -280,20 +299,17 @@ struct SessionView: View {
             session.scanningRequested = true
             try context.save()
         } catch {
-            recordingError = error.localizedDescription
+            Telemetry.shared.log("session.actionError", ["message": error.localizedDescription]); recordingError = error.localizedDescription
             return
         }
-        guard let gameID = session.currentGameID else { return }
-        scanner.start(configuration: configStore.config, gameID: gameID, progress: session.progress,
-                      lastScores: session.lastCapturedScores, allowRepeatedScores: session.allowRepeatedCapture,
-                      rejectedSignatures: session.rejectedCaptureSignatures, update: { progress, id in
+        let session = session
+        let context = context
+        scanner.start(configuration: configStore.config, current: { SessionSnapshot(session) }, update: { progress, id in
             try session.updateProgress(progress, for: id, in: context)
         }, save: { result, id in
             guard id == session.currentGameID else { throw Session.RecordingError.staleGame }
             try session.stageCapture(result, in: context)
             try session.record(result, for: id, in: context)
-            guard let nextID = session.currentGameID else { throw Session.RecordingError.staleGame }
-            return ScanGameContext(id: nextID, progress: session.progress, finished: session.sessionFinished)
         })
     }
 
@@ -313,10 +329,11 @@ struct SessionView: View {
     }
 
     private func stopMonitoring() {
+        Telemetry.shared.action("scanner.stopButton", session: session)
         scanner.stop()
         session.scanningRequested = false
         do { try context.save() }
-        catch { context.rollback(); recordingError = error.localizedDescription }
+        catch { context.rollback(); Telemetry.shared.log("session.actionError", ["message": error.localizedDescription]); recordingError = error.localizedDescription }
     }
 
     private var monitorControls: some View {
@@ -328,10 +345,10 @@ struct SessionView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(session.sessionFinished ? "Session complete" : scanner.testingPreview ? "Testing recognition" : showingCamera && !scanner.isMonitoring && scanner.error == nil ? "Preview only" : scanner.state.title)
                     .font(.subheadline.weight(.semibold))
-                Text(scanner.testingPreview ? "Scores are not saved." : scanner.error ?? scanner.status)
+                Text(Telemetry.shared.failure ?? (scanner.testingPreview ? "Scores are not saved." : scanner.error ?? scanner.status))
                     .font(.caption)
-                    .foregroundStyle(scanner.error == nil ? Color.secondary : .red)
-                    .lineLimit(scanner.error == nil ? 1 : 2)
+                    .foregroundStyle(scanner.error == nil && Telemetry.shared.failure == nil ? Color.secondary : .red)
+                    .lineLimit(scanner.error == nil && Telemetry.shared.failure == nil ? 1 : 2)
                     .minimumScaleFactor(0.7)
                     .accessibilityAddTraits(.updatesFrequently)
             }
