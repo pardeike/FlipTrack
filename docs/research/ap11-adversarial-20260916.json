@@ -108,5 +108,47 @@
   "limits": [
     "Not live pinball acceptance",
     "Storage faults injected in local tests, not on production iPhone"
-  ]
+  ],
+  "delivery": {
+    "version": "1.0",
+    "build": 16,
+    "implementationCommit": "469daab",
+    "web": {
+      "name": "FlipTrack",
+      "slug": "fliptrack",
+      "bundle_id": "net.pardeike.FlipTrack",
+      "version": "1.0",
+      "build": "16",
+      "updated_at": "2026-09-16T05:02:51+00:00",
+      "sha256": "2b466dfb252fa3eeb0e30b6edd2073e838754d7ac5c7b5ad2af48a64a1127683",
+      "bytes": 1123429,
+      "ipa": "app-2b466dfb252f.ipa",
+      "icon": true
+    },
+    "documentsSharing": true,
+    "productionData": {
+      "ZSESSION": {
+        "preExistingRows": 1,
+        "allPreExistingValuesPreserved": true
+      },
+      "ZGAME": {
+        "preExistingRows": 5,
+        "allPreExistingValuesPreserved": true
+      }
+    },
+    "telemetry": {
+      "run": "2026-09-16T05-02-51Z-C742F7CB-E470-44F1-97D3-5911C3B2C220",
+      "events": 5,
+      "deviceSamples": 2,
+      "sampleIntervalsSeconds": [
+        31.446
+      ]
+    },
+    "simulatorUITests": {
+      "passed": 4,
+      "failed": 0,
+      "result": ".build/device-tests-20260916-065958.xcresult"
+    },
+    "benchmarkRestored": true
+  }
 }

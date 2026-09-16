@@ -316,3 +316,11 @@ copies of session state.
   The resumed game retained its identity and recovered to P2/ball 2. Controlled
   recorded-input timing was median/p95/max 289/296/469 ms, nominal thermal state.
   This remains controlled physical-camera evidence, not live pinball acceptance.
+- Four iPhone 11 Pro simulator UI tests passed. Source repair `469daab` was
+  committed and pushed. `Scripts/release-ios.sh AP11` delivered **1.0 build 16**
+  to AP11 and the signed web page; installed and hosted versions were read back.
+- Before/after production store checks preserve all values in the existing
+  session/five games except Core Data's update counter. The new deferred-game
+  field migrated as nil. Finder sharing flags remain enabled; production
+  Documents contains build-16 startup and periodic telemetry. Full evidence:
+  `research/ap11-adversarial-20260916.json`.

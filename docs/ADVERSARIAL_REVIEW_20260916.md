@@ -66,7 +66,17 @@ overflow/recovery gap count.
 - All four iPhone 11 Pro simulator UI tests passed: recovery/cancel, manual
   addition/resume, recorded switching and final capture without duplication.
   Result bundle: `.build/device-tests-20260916-065958.xcresult`.
-- Completed-release evidence is recorded below after delivery verification.
+- `Scripts/release-ios.sh AP11` delivered **1.0 build 16** from `469daab`,
+  installed/launched on AP11 and published the verified signed web package at
+  https://brrai.nz/apps/fliptrack/. Device and live catalog versions agree.
+- The production app retained all pre-existing values in one session and five
+  games, excluding Core Data's update counter. The added deferred-game field
+  migrated as nil. A pre-release backup is in `.build/adversarial-before-release`.
+  The installed screenshot shows the preserved session.
+- Production telemetry was retrieved from Documents and includes build-16
+  startup plus a scheduled sample after 31.446 seconds, with no reported gaps.
+  Archive document-sharing flags remain enabled. The separate benchmark app
+  was restored successfully after the physical tests.
 
 ## Limits
 
