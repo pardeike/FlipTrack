@@ -63,6 +63,21 @@ struct SessionView: View {
                     ActiveGameView(display: session.activeDisplay,
                                    tracking: scanner.isMonitoring && !scanner.isPaused && !scanner.isResyncing,
                                    formattedNumber: formattedNumber, colorFor: color(for:))
+                        .contentShape(Rectangle())
+                        .contextMenu {
+                            if !session.activeDisplay.missingFinals && session.deferredGameData == nil {
+                                Button("Reset", systemImage: "arrow.counterclockwise") {
+                                    scanner.pause(.editing)
+                                    do {
+                                        try session.resetCurrentTracking(in: context)
+                                        scanner.refreshContext()
+                                    } catch {
+                                        Telemetry.shared.log("session.actionError", ["message": error.localizedDescription])
+                                        recordingError = error.localizedDescription
+                                    }
+                                }
+                            }
+                        }
                 }
                 if session.pendingCaptureScores.count == 2 {
                     VStack(alignment: .leading, spacing: 10) {

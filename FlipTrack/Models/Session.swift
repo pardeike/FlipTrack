@@ -117,6 +117,22 @@ public final class Session: Identifiable, Hashable {
     }
 
     @MainActor
+    func resetCurrentTracking(in context: ModelContext) throws {
+        guard !sessionFinished, progress.nextGameTurn == nil, deferredGameData == nil else {
+            throw RecordingError.staleGame
+        }
+        guard pendingCaptureScores.isEmpty else { throw RecordingError.pendingCapture }
+        let before = SessionSnapshot(self)
+        // Keep actual start evidence for the first-to-ten continuation rule.
+        // Clearing readings must not invent zero scores or a confirmed turn.
+        progressData = try JSONEncoder().encode(GameProgress(observedStart: progress.observedStart))
+        awaitingNextStart = true
+        allowRepeatedCapture = false
+        do { try context.save(); Telemetry.shared.change("session.trackingReset", before: before, session: self) }
+        catch { context.rollback(); Telemetry.shared.log("session.trackingReset.error", ["message": error.localizedDescription]); throw error }
+    }
+
+    @MainActor
     func prepareCurrentGame(in context: ModelContext) throws {
         let before = SessionSnapshot(self)
         guard currentGameID == nil else { return }

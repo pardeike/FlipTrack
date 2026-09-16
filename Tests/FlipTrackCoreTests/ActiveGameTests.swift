@@ -3,6 +3,44 @@ import SwiftData
 import Testing
 @testable import FlipTrackCore
 
+@Test @MainActor func resettingLiveTrackingPreservesGameIdentityAndSavedResults() throws {
+    let container = try ModelContainer(for: Session.self, Game.self,
+        configurations: ModelConfiguration(isStoredInMemoryOnly:true,cloudKitDatabase:.none))
+    let context = container.mainContext
+    let session = Session(date:.now)
+    context.insert(session)
+    try session.record(.init(left:100,right:200),in:context)
+    try session.updateProgress(GameProgress(turn:.init(slot:2,ball:2),left:300,right:400,
+        observedStart:true,needsResync:true),for:session.currentGameID,in:context)
+    let id = session.currentGameID, number = session.upcomingGameNumber, starter = session.firstPlayerIndex
+    let wins = session.playerWins, totals = session.playerTotals, savedID = session.lastRecordedGameID
+    session.allowRepeatedCapture = true
+    try session.resetCurrentTracking(in:context)
+    #expect(session.progress == GameProgress(observedStart:true))
+    #expect(session.awaitingNextStart && !session.allowRepeatedCapture)
+    #expect(session.currentGameID == id && session.upcomingGameNumber == number)
+    #expect(session.firstPlayerIndex == starter)
+    #expect(session.playerWins == wins && session.playerTotals == totals)
+    #expect(session.lastRecordedGameID == savedID && session.games?.count == 1)
+    #expect(session.activeDisplay.turn == nil && session.activeDisplay.left == nil && session.activeDisplay.right == nil)
+    // The reset is persisted and fresh live evidence can establish any turn.
+    let reloaded = try ModelContext(container).fetch(FetchDescriptor<Session>()).first!
+    #expect(reloaded.progress == session.progress)
+    var tracker = GameTracker(progress:session.progress)
+    for tick in 0...2 {
+        _ = tracker.observe(.init(turn:.init(slot:1,ball:1),left:0,right:0),at:Double(tick)*0.5)
+    }
+    try session.updateProgress(tracker.progress,for:id,in:context)
+    #expect(session.progress.turn == MachineTurn(slot:1,ball:1))
+    #expect(!session.awaitingNextStart)
+    // A missing older result must not lose the evidence of a subsequent game.
+    try session.updateProgress(GameProgress(turn:.init(slot:2,ball:3),observedStart:true,
+        nextGameTurn:.init(slot:1,ball:1)),for:id,in:context)
+    let before = session.progress
+    #expect(throws:Session.RecordingError.self) { try session.resetCurrentTracking(in:context) }
+    #expect(session.progress == before)
+}
+
 @Test @MainActor func activeDisplayKeepsMachineScoresWhileNamesAndSavedScoresFollowTheirOrders() throws {
     let container = try ModelContainer(for: Session.self, Game.self,
         configurations: ModelConfiguration(isStoredInMemoryOnly:true,cloudKitDatabase:.none))

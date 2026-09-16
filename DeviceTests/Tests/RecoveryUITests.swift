@@ -92,6 +92,23 @@ final class RecoveryUITests: XCTestCase {
         screenshot("iPhone11Pro-recorded-reader-performance")
         XCTAssertFalse(app.buttons["cancelResync"].exists)
     }
+    func testLongPressResetClearsLiveRowAndPausesScanning() {
+        let app = launch("activeLeft")
+        let left = app.descendants(matching:.any)["liveScore1"].firstMatch
+        let right = app.descendants(matching:.any)["liveScore2"].firstMatch
+        waitLabel(left,contains:"67060330, playing")
+        left.press(forDuration:1.2)
+        XCTAssertTrue(app.buttons["Reset"].waitForExistence(timeout:3))
+        app.buttons["Reset"].tap()
+        waitLabel(left,contains:"score unknown")
+        waitLabel(right,contains:"score unknown")
+        XCTAssertEqual(app.buttons["pauseMonitoring"].label,"Resume scanning")
+        let ball = app.descendants(matching:.any)["liveBall"].firstMatch
+        XCTAssertEqual(ball.label,"Ball unknown")
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format:"label BEGINSWITH %@","Game 5, Andreas,")).firstMatch.exists)
+        screenshot("iPhone11Pro-live-reset")
+    }
+
     func testLiveStripUsesMachineOrderAndHistoryUsesPersonOrder() {
         for scenario in ["activeLeft", "activeRight"] {
             let app = launch(scenario)

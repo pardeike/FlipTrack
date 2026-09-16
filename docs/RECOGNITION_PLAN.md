@@ -1,5 +1,21 @@
 # FlipTrack recognition engine: recovery and first integration
 
+### 2026-09-17: long-press reset of live tracking
+
+- Added a context menu on the live score row with **Reset**. Reset clears its
+  score readings, turn and uncertainty, pauses scanning, and requires fresh
+  live-start evidence before ordinary final capture. Resume uses the existing
+  control. No zero scores or ball number are invented.
+- Game identity, number, player assignment, completed results and wins remain
+  unchanged. Actual prior start evidence stays intact for first-to-ten trailing
+  game handling. Missing older finals and deferred games retain their existing
+  recovery path; Reset cannot erase those ownership boundaries.
+- `Scripts/check.sh` passed 59 core tests and the signed iOS build, including
+  reset persistence, saved-result preservation, fresh turn acquisition and
+  protection of an older missing result. The focused iPhone 11 Pro simulator
+  test passed the real long-press menu, Reset, empty live row, preserved history
+  and explicit Resume state. No production installation or publication performed.
+
 Date: 2026-09-15. Approved working plan. Read this before each engine checkpoint and after context compaction. Keep the requirements and evidence distinctions intact; update the tracking section with actual results.
 
 ## Recovered sources
