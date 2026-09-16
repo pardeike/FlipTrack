@@ -58,7 +58,7 @@ final class RecoveryUITests: XCTestCase {
         let app = launch("final")
         app.buttons["resyncTracking"].tap()
         XCTAssertTrue(app.buttons["cancelResync"].waitForExistence(timeout:3))
-        waitLabel(current(app),contains:"Game 4. Andreas turn",timeout:20)
+        waitLabel(current(app),contains:"Game 4. Waiting for play.",timeout:20)
         XCTAssertFalse(app.buttons["cancelResync"].exists)
         // The camera continues presenting the same final pair for several seconds.
         let unchanged = XCTNSPredicateExpectation(predicate:NSPredicate(format:"label CONTAINS %@","Game 5."),object:current(app))
@@ -76,7 +76,7 @@ final class RecoveryUITests: XCTestCase {
         app.textFields["rightScore"].tap()
         app.textFields["rightScore"].typeText("888000")
         app.buttons["saveGame"].tap()
-        waitLabel(current(app),contains:"Game 4. Andreas turn")
+        waitLabel(current(app),contains:"Game 4. Waiting for play.")
         XCTAssertEqual(app.buttons["pauseMonitoring"].label,"Resume scanning")
         app.buttons["pauseMonitoring"].tap()
         app.buttons["resyncTracking"].tap()
@@ -92,4 +92,23 @@ final class RecoveryUITests: XCTestCase {
         screenshot("iPhone11Pro-recorded-reader-performance")
         XCTAssertFalse(app.buttons["cancelResync"].exists)
     }
+    func testLiveStripUsesMachineOrderAndHistoryUsesPersonOrder() {
+        for scenario in ["activeLeft", "activeRight"] {
+            let app = launch(scenario)
+            let left = app.descendants(matching:.any)["liveScore1"].firstMatch
+            let right = app.descendants(matching:.any)["liveScore2"].firstMatch
+            waitLabel(left, contains: scenario == "activeLeft" ? "Left, Andreas, 67060330, playing" : "Left, Fredrik, 67060330, playing")
+            waitLabel(right, contains: scenario == "activeLeft" ? "Right, Fredrik, 24838210" : "Right, Andreas, 24838210")
+            screenshot("iPhone11Pro-" + scenario)
+            let andreas = app.buttons.matching(NSPredicate(format:"label BEGINSWITH %@", "Game 5, Andreas,")).firstMatch
+            let fredrik = app.buttons.matching(NSPredicate(format:"label BEGINSWITH %@", "Game 5, Fredrik,")).firstMatch
+            XCTAssertTrue(andreas.exists)
+            XCTAssertTrue(fredrik.exists)
+            // SwiftUI localizes numeric interpolation in accessibility labels.
+            XCTAssertEqual(andreas.label.filter(\.isNumber), "5174059210")
+            XCTAssertEqual(fredrik.label.filter(\.isNumber), "5110459980")
+            app.terminate()
+        }
+    }
+
 }

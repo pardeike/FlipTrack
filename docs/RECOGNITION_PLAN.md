@@ -324,3 +324,27 @@ copies of session state.
   field migrated as nil. Finder sharing flags remain enabled; production
   Documents contains build-16 startup and periodic telemetry. Full evidence:
   `research/ap11-adversarial-20260916.json`.
+
+### 2026-09-16: active game display
+
+- Added the requested neutral live-score strip between the win totals and
+  completed games. Left/right scores stay in physical machine-slot order; names
+  and identity colors follow the current starter. History and totals retain
+  permanent person order. There is no additional score cache.
+- The strip uses confirmed progress, distinguishes unknown scores from zero,
+  marks a known ball, and outlines the active machine slot only while monitoring
+  with a confirmed turn. Uncertain/recovery/paused states have no active outline.
+  Missing older finals show a recovery message instead of stale live scores.
+  Pending drafts keep their existing review UI; finished sessions hide the strip.
+- The compact header now shows the ball instead of repeating the active name.
+  Accessibility retains game/turn context. Larger accessibility text uses a
+  vertical strip arrangement.
+- Added focused mapping/reset/uncertainty tests and an iPhone 11 Pro UI check of
+  both player assignments against the unchanged person-order history table.
+  All 58 core tests and the signed build passed. The four existing simulator UI
+  tests passed in `.build/device-tests-20260916-071714.xcresult`; the new mapping
+  test passed for both assignments in `.build/device-tests-20260916-072008.xcresult`.
+  Its initial exact accessibility-label assertion needed to accept SwiftUI's
+  localized number grouping; full numeric values are now compared independently
+  of separators. Both iPhone 11 Pro screenshots were inspected with no score
+  wrapping. Larger-text layout is implemented but was not visually exercised.

@@ -9,6 +9,7 @@ struct CurrentGameView: View {
     var currentPlayerIndex: Int?
     var uncertain = false
     var winner: Int?
+    var ball: Int?
 
     private var playerIndex: Int { winner ?? currentPlayerIndex ?? firstPlayerIndex }
     private var name: String { playerIndex == firstPlayerIndex ? firstPlayer : secondPlayer }
@@ -20,15 +21,15 @@ struct CurrentGameView: View {
                 .font(.caption.weight(.bold))
                 .foregroundStyle(.primary)
             Spacer(minLength: 4)
-            Text(winner != nil ? "\(name) won" : uncertain ? "\(name) turn?" : "\(name) turn")
+            Text(winner != nil ? "\(name) won" : ball.map { "BALL \($0)" } ?? "")
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(colorFor(playerIndex))
+                .foregroundStyle(winner != nil ? colorFor(playerIndex) : Color.primary)
         }
         .lineLimit(1)
         .minimumScaleFactor(0.75)
         .padding(.vertical, 6)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(winner != nil ? "\(name) won the session" : "Game \(gameNumber). \(name) turn.\(uncertain ? " Tracking uncertain. Use Resync." : "")")
+        .accessibilityLabel(winner != nil ? "\(name) won the session" : "Game \(gameNumber). \(ball != nil ? "\(name) turn. Ball \(ball!)." : uncertain ? "Tracking uncertain. Use Resync." : "Waiting for play.")")
         .accessibilityIdentifier("currentTurn")
     }
 }

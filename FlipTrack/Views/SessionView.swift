@@ -34,7 +34,8 @@ struct SessionView: View {
                                 colorFor: color(for:), gameNumber: session.upcomingGameNumber,
                                 currentPlayerIndex: session.currentPlayerIndex,
                                 uncertain: session.progress.needsResync,
-                                winner: session.sessionFinished ? session.raceWinnerIndex : nil)
+                                winner: session.sessionFinished ? session.raceWinnerIndex : nil,
+                                ball: session.activeDisplay.turn?.ball)
                     .contentShape(Rectangle())
                     .onTapGesture { openEditor(.details) }
                     .accessibilityAddTraits(.isButton)
@@ -57,6 +58,11 @@ struct SessionView: View {
                         .padding(16)
                         .background(color(for: index).opacity(0.12), in: RoundedRectangle(cornerRadius: 18))
                     }
+                }
+                if session.activeDisplay.visible {
+                    ActiveGameView(display: session.activeDisplay,
+                                   tracking: scanner.isMonitoring && !scanner.isPaused && !scanner.isResyncing,
+                                   formattedNumber: formattedNumber, colorFor: color(for:))
                 }
                 if session.pendingCaptureScores.count == 2 {
                     VStack(alignment: .leading, spacing: 10) {

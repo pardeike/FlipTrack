@@ -82,6 +82,19 @@ public final class Session: Identifiable, Hashable {
         progress.turn?.slot == 2 ? 1-firstPlayerIndex : firstPlayerIndex
     }
 
+    /// Live scores are already in machine order. Only the names follow the
+    /// starter; saved Game.scores remain in permanent person order.
+    var activeDisplay: ActiveGameDisplay {
+        let state = progress
+        let missingFinals = state.nextGameTurn != nil
+        let visible = !sessionFinished && pendingCaptureScores.isEmpty
+        return ActiveGameDisplay(leftName: firstPlayer, rightName: secondPlayer,
+            leftPerson: firstPlayerIndex,
+            left: missingFinals ? nil : state.left, right: missingFinals ? nil : state.right,
+            turn: state.observedStart && !state.needsResync && !missingFinals ? state.turn : nil,
+            uncertain: state.needsResync, missingFinals: missingFinals, visible: visible)
+    }
+
     func recalculateRace() {
         var wins = [0, 0]
         raceWinnerIndex = nil
@@ -249,4 +262,16 @@ struct DeferredGame: Codable, Equatable, Sendable {
     let number: Int
     let starter: Int
     let progress: GameProgress
+}
+
+struct ActiveGameDisplay {
+    let leftName: String
+    let rightName: String
+    let leftPerson: Int
+    let left: Int?
+    let right: Int?
+    let turn: MachineTurn?
+    let uncertain: Bool
+    let missingFinals: Bool
+    let visible: Bool
 }
