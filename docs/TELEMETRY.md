@@ -30,7 +30,7 @@ readers should retain all preceding complete lines.
   Submitted changes are logged with before/after session snapshots. Typing each
   individual character is not logged. Settings changes record the new settings.
 - Every analyzed frame, at most twice a second, records its unique ID, capture
-  uptime, recognition duration when available, OCR text/confidence/geometry,
+  uptime, processing duration including JPEG encoding when available, OCR text/confidence/geometry,
   parsed live/final scores and image availability. These are observations, not
   automatically accepted scores. Scanner status, stale-frame rejection,
   correction boundaries, confirmation, persistence and failures are separate

@@ -272,3 +272,10 @@ copies of session state.
   passed; its optional diagnostic collector stalled afterward, was terminated,
   and Xcode finalized the successful result bundle. Production release follows
   this verified checkpoint.
+
+- Production read-back of build 14 caught a periodic-sampling lifecycle issue:
+  the unkeyed SwiftUI task retained the initial inactive phase and skipped its
+  subsequent samples. Bind the task to scene phase, start it only while active,
+  and cancel it on background. Core tests and signed build pass; final installed
+  periodic-sample verification is required before closing this checkpoint.
+  Frame timing also includes JPEG encoding consistently with the device replay.

@@ -34,13 +34,14 @@ struct FlipTrackApp: App {
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didReceiveMemoryWarningNotification)) { _ in
                 Telemetry.shared.action("device.memoryWarning")
             }
-            .task {
+            .task(id: scenePhase) {
                 if case .failure(let error) = sharedModelContainer {
                     Telemetry.shared.log("store.error", ["message": error.localizedDescription])
                 }
+                guard scenePhase == .active else { return }
                 while !Task.isCancelled {
                     do { try await Task.sleep(for: .seconds(30)) } catch { return }
-                    if scenePhase == .active { AppTelemetry.sample() }
+                    AppTelemetry.sample()
                 }
             }
             .onChange(of: scenePhase, initial: true) { _, phase in

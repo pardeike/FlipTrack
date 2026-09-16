@@ -154,10 +154,10 @@ final class Camera: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unc
                 sharpness: configuration.sharpness) : raw
             do {
                 var observation = try DisplayReader.analyze(image)
-                observation.processingMS = (ProcessInfo.processInfo.systemUptime - now) * 1000
                 if observation.live != nil || observation.final != nil {
                     observation.jpeg = imageContext.jpegRepresentation(of: image, colorSpace: CGColorSpaceCreateDeviceRGB())
                 }
+                observation.processingMS = (ProcessInfo.processInfo.systemUptime - now) * 1000
                 emit(.frame(observation, now))
             } catch {
                 fail("The display could not be read: \(error.localizedDescription)")
