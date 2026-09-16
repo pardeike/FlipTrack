@@ -1,0 +1,31 @@
+{
+  "version": "1.0",
+  "build": 17,
+  "implementationCommit": "a49ede9",
+  "web": {
+    "name": "FlipTrack",
+    "slug": "fliptrack",
+    "bundle_id": "net.pardeike.FlipTrack",
+    "version": "1.0",
+    "build": "17",
+    "updated_at": "2026-09-16T05:22:07+00:00",
+    "sha256": "9ea68daa65723152cb824c6a3e21d7875c081dd9244fea03cc8a71c8d2141933",
+    "bytes": 1137388,
+    "ipa": "app-9ea68daa6572.ipa",
+    "icon": true
+  },
+  "preservedRows": {
+    "ZSESSION": 1,
+    "ZGAME": 5
+  },
+  "coreTestsPassed": 58,
+  "simulatorUITestsPassed": 5,
+  "screenshotsInspected": [
+    ".build/active-left.png",
+    ".build/active-right.png"
+  ],
+  "limits": [
+    "Simulator layout and controlled-state proof; no new live pinball acceptance",
+    "Accessibility-size alternate layout not visually verified"
+  ]
+}

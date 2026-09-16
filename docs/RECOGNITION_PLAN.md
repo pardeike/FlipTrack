@@ -348,3 +348,8 @@ copies of session state.
   localized number grouping; full numeric values are now compared independently
   of separators. Both iPhone 11 Pro screenshots were inspected with no score
   wrapping. Larger-text layout is implemented but was not visually exercised.
+- Delivered **1.0 build 17** from `a49ede9` through the canonical signed workflow,
+  including AP11 installation/launch and verified web publication. Installed and
+  hosted build numbers agree. The existing session and five games retain all
+  pre-existing values apart from Core Data's update counter. Delivery evidence:
+  `research/active-game-view-20260916.json`.
