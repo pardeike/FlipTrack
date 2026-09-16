@@ -14,7 +14,14 @@
   reset persistence, saved-result preservation, fresh turn acquisition and
   protection of an older missing result. The focused iPhone 11 Pro simulator
   test passed the real long-press menu, Reset, empty live row, preserved history
-  and explicit Resume state. No production installation or publication performed.
+  and explicit Resume state.
+- `Scripts/release-ios.sh AP11` delivered **1.0 build 18**, installed and launched
+  on AP11 and published with signed-package verification at
+  https://brrai.nz/apps/fliptrack/. Device app read-back confirms build 18.
+  Source commit: `4384e15`. Published IPA SHA-256:
+  `dd79105fec7494143b71c04ece79431b665779e7cde2c5b36cfb2f64556a2847`.
+  The Reset interaction was exercised in the simulator; physical live-machine
+  acceptance of this control remains separate from installation verification.
 
 Date: 2026-09-15. Approved working plan. Read this before each engine checkpoint and after context compaction. Keep the requirements and evidence distinctions intact; update the tracking section with actual results.
 
