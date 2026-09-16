@@ -166,7 +166,7 @@ The prototype has its own bundle ID and output directory, no production CloudKit
 - [x] Basic final-score and turn integration with persistence/recovery and race-to-ten completion.
 - [ ] Independent footage and sustained real-machine acceptance.
 
-Current checkpoint: the basic live capture and Resync slice passes local, recorded-pixel and isolated AP11 camera checks and is released as 1.0 build 13. The frame after the earlier AP11 movement supplies a turn and one valid score, but its outgoing score remains unknown in this reader. Full assisted recovery at that placement and sustained live-machine acceptance remain open. Retain the measured 2 Hz cap; do not claim the previous engine's full-video accuracy for this integration.
+Current checkpoint: live capture, Resync, local telemetry/evidence and correction authority pass local, recorded-pixel and isolated AP11 camera checks and are released as 1.0 build 15. The frame after the earlier AP11 movement supplies a turn and one valid score, but its outgoing score remains unknown in this reader. Full assisted recovery at that placement and sustained live-machine acceptance remain open. Retain the measured 2 Hz cap; do not claim the previous engine's full-video accuracy for this integration.
 
 ### 2026-09-15: baseline recovered, device harness implemented
 
@@ -279,3 +279,23 @@ copies of session state.
   and cancel it on background. Core tests and signed build pass; final installed
   periodic-sample verification is required before closing this checkpoint.
   Frame timing also includes JPEG encoding consistently with the device replay.
+
+### 2026-09-16: telemetry release delivered
+
+- `Scripts/release-ios.sh AP11` completed for **FlipTrack 1.0 build 15**, including
+  tests, signed archive, AP11 installation/launch and verified web publication at
+  https://brrai.nz/apps/fliptrack/. Installed-app and live catalog read-back agree.
+- The archived app enables `UIFileSharingEnabled` and
+  `LSSupportsOpeningDocumentsInPlace`. Its production Documents telemetry was
+  retrieved from AP11. The build-15 log contains startup and scheduled device
+  samples, proving the scene-phase fix in the actual production app. Measured
+  interval and artifact fingerprint are in the telemetry evidence JSON.
+- Read-only before/after database comparisons preserve every pre-existing
+  session/game value apart from Core Data's update counter: one session and
+  five games. The new next-start field is additive. Production screenshot also
+  showed the preserved session after installation. Local pre-release backup:
+  `.build/telemetry-before-release/`.
+- The original separate benchmark app was restored. Source commits `86e5b49`
+  and `abd60dd` contain the implementation and periodic-sampling fix. The
+  remaining acceptance is sustained real-machine play with nudges/lighting;
+  this checkpoint does not claim an unattended evening has been tested.

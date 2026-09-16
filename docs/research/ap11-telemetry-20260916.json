@@ -75,5 +75,46 @@
     "First launch sequence stopped at a CoreDevice relaunch failure; explicit termination and process-exit verification fixed the sequence.",
     "Correction test initially assigned the already-selected starter; log inspection identified the fixture mistake. Corrected test changes starter and passes.",
     "All simulator assertions passed; the optional simctl diagnostics collector hung afterward and was terminated. Xcode then finalized the result bundle and exited successfully."
-  ]
+  ],
+  "delivery": {
+    "version": "1.0",
+    "build": 15,
+    "web": {
+      "name": "FlipTrack",
+      "slug": "fliptrack",
+      "bundle_id": "net.pardeike.FlipTrack",
+      "version": "1.0",
+      "build": "15",
+      "updated_at": "2026-09-16T04:36:22+00:00",
+      "sha256": "b8df8b71212ead6588f6827dc8247055d3c38b2b9efc036f36dbce5e038b79df",
+      "bytes": 1111537,
+      "ipa": "app-b8df8b71212e.ipa",
+      "icon": true
+    },
+    "documentsSharing": true,
+    "productionData": {
+      "ZSESSION": {
+        "preExistingRows": 1,
+        "allPreExistingValuesPreserved": true
+      },
+      "ZGAME": {
+        "preExistingRows": 5,
+        "allPreExistingValuesPreserved": true
+      }
+    },
+    "telemetry": {
+      "run": "2026-09-16T04-36-22Z-22E9C66B-8B6C-43AC-AD5D-B6CDD8096E75",
+      "events": 7,
+      "deviceSamples": 4,
+      "sampleIntervalsSeconds": [
+        31.533,
+        31.807,
+        30.736
+      ]
+    },
+    "implementationCommits": [
+      "86e5b49",
+      "abd60dd"
+    ]
+  }
 }
