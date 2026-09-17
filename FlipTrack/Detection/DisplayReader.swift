@@ -11,11 +11,13 @@ struct DisplayObservation: Sendable {
     var visibleBall: Int?
     var live: LiveScoreboard?
     var final: DisplayResult?
+    var features: [FeatureReading]
     init(_ text: [DisplayText], activeSlot: Int? = nil) {
         self.text = text
         self.visibleBall = LiveGameLayout.visibleBall(in: text)
         self.live = LiveGameLayout.result(in: text, activeSlot: activeSlot)
         self.final = live == nil && activeSlot == nil ? EndGameLayout.result(in: text) : nil
+        self.features = live == nil && final == nil ? FeatureLayout.readings(in: text) : []
     }
 }
 
@@ -52,6 +54,7 @@ enum DisplayReader {
         rectangles.quadratureTolerance = 35
         try VNImageRequestHandler(ciImage: image).perform([rectangles])
         var matches: [DisplayObservation] = []
+        var featureMatches: [DisplayObservation] = []
         var display = DisplayObservation([])
         for rectangle in rectangles.results ?? [] {
             guard let corrected = correctedDisplay(image, rectangle: rectangle) else { continue }
@@ -63,6 +66,7 @@ enum DisplayReader {
             let observation = DisplayObservation(text, activeSlot: try activeScoreSlot(corrected, text: text))
             if observation.final != nil || (observation.live != nil && (observation.live?.left != nil || observation.live?.right != nil)) || GameDisplayLayout.isNewGame(in: text) ||
                 GameDisplayLayout.isBonusScreen(in: text) { matches.append(observation) }
+            if !observation.features.isEmpty { featureMatches.append(observation) }
             if EndGameLayout.hasDisplayText(in: text) { display = observation }
         }
         if matches.count == 1 { return matches[0] }
@@ -95,7 +99,12 @@ enum DisplayReader {
             let text = try recognize(aligned)
             if EndGameLayout.result(in: text) != nil || LiveGameLayout.result(in: text) != nil || GameDisplayLayout.isNewGame(in: text) { return DisplayObservation(text) }
         }
-        return display.text.isEmpty ? DisplayObservation(fullText) : display
+        let full = DisplayObservation(fullText)
+        // Feature candidates cannot compete with an existing score match.
+        if featureMatches.count == 1 { return featureMatches[0] }
+        if featureMatches.isEmpty && !full.features.isEmpty { return full }
+        if featureMatches.count > 1 { display.features = [] }
+        return display.text.isEmpty ? full : display
     }
 
     private static func footerDisplay(_ image: CIImage, text: [DisplayText]) throws -> DisplayObservation? {

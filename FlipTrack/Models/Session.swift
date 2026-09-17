@@ -23,6 +23,9 @@ public final class Session: Identifiable, Hashable {
     public var sessionFinished = false
     public var awaitingNextStart = false
     public var deferredGameData: Data?
+    /// Additive, optional storage for observed features. Independent of wins,
+    /// score editing and the currently selected/undone game.
+    public var collectedFeatureData: Data?
     @Relationship(deleteRule: .cascade, inverse: \Game.session)
     public var games: [Game]?
 

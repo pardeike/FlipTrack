@@ -44,6 +44,11 @@ next accepted event includes the number skipped in `droppedEventsBefore`.
   power, free disk space and iOS thermal state are sampled at startup and every
   30 seconds while the app is active. iOS thermal state is a category, not a
   temperature in degrees.
+- Per-frame readings include feature candidates. `feature.accepted` records
+  durably collected mode/result/bonus and other feature observations, with
+  revision IDs and agreeing JPEGs. Revisions update one presentation rather
+  than count another award. The semantics, ownership rules, private replay
+  commands and coverage limits are documented in [FEATURE_COLLECTION.md](FEATURE_COLLECTION.md).
 - `score.progressConfirmed` and `score.finalConfirmed` save the agreeing JPEG
   inputs before attempting the database update. Their corresponding `Accepted`
   events establish successful persistence. A confirmation alone does not prove

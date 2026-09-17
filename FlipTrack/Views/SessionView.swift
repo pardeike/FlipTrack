@@ -325,8 +325,13 @@ struct SessionView: View {
         }
         let session = session
         let context = context
+        let features: [CollectedFeature]
+        do { features = try session.collectedFeatures() }
+        catch { recordingError = "Could not read collected features: \(error.localizedDescription)"; return }
         scanner.start(configuration: configStore.config, current: { SessionSnapshot(session) }, update: { progress, id in
             try session.updateProgress(progress, for: id, in: context)
+        }, previousFeatures: features, collect: { event, authority in
+            try session.collect(event, for: authority, in: context)
         }, save: { result, id in
             guard id == session.currentGameID else { throw Session.RecordingError.staleGame }
             try session.stageCapture(result, in: context)

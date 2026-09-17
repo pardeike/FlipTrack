@@ -516,3 +516,63 @@ copies of session state.
   imported. Evidence and limitations: `research/six-ball-20260917.json`.
 - The final binary is available for play now. Fresh live-game acceptance and
   sustained nudging/lighting checks remain distinct from the repaired replay.
+
+### 2026-09-17: feature collection authorized, no AP11 access
+
+Andreas has expanded scope beyond the first release: collect mode starts, mode
+scores, multiball, jackpots, ball saves, bonuses and end-bonus totals. Concentrate
+on collection; UX is deferred. AP11 is in active use and must not be contacted,
+controlled, tested or deployed to during this work. Use local pixels and builds.
+
+- Keep this as a separate observer of the score/turn pipeline. Feature detections
+  never switch players, complete games, change wins, or supply score totals.
+- Persist observed events/updates with session/game/slot/ball/person context,
+  source/confirmation times, text, evidence-frame IDs and images. Preserve nil
+  values and unknown ownership. Named recap totals do not imply another start;
+  lit/available jackpot values and lock counts do not imply awards or multiball.
+- Require temporal confirmation, group repeated animation frames, and retain
+  duplicate suppression across pauses/restarts. Invalidate pending feature votes
+  at manual correction, recovery, capture-gap and game boundaries. After an end
+  bonus, require fresh turn evidence before attributing subsequent play.
+- Retain the existing interface. Collection data and telemetry are the deliverable.
+- Recovered this Mac's original Photos asset read-only and verified its recorded
+  SHA-256. `Research/Local/source-original.mov` is an ignored symlink, not an
+  export/replacement. Selected mode/result frames and the 767 six-ball frames
+  provide local pixel regressions; missing screen variants remain unvalidated.
+- Implemented a separate `FeatureLayout`/`FeatureCollector` observer, durable
+  optional session JSON, accepted-event/JPEG telemetry and scanner wiring. No
+  visible interface changes. Identity needs two distinct frames; numeric fields
+  need three agreeing readings. Revisions update one occurrence, and uncertain
+  ownership stays nil. Feature candidates cannot compete with score matches.
+- Targeted original-movie fixtures cover 12 start episodes and three named
+  result samples. The six-ball recording also contains a visually verified
+  Monkey Brains start (frame 140), plus Steal the Stones and Mine Cart. The
+  collector preserves jackpot-value/zero-lock screens as status observations.
+- Restoring the original movie enabled previously unavailable legacy score
+  regressions. The first expanded gate reports four assertions across three
+  legacy tests (one false active slot, a missing final, and an unreadable new
+  game at two resolutions). All four assertions reproduce unchanged in a
+  detached build-19 source checkout (`fca2bad`). They remain open; assertions
+  were not relaxed. Evidence: `.build/feature-investigation/baseline-recording.log`
+  and `expanded-recording-gate.log` in that same folder.
+- Final normal `Scripts/check.sh` passed with feature, new-movie, stationary
+  camera and six-ball fixture environments enabled: **62 executed tests pass**,
+  10 optional tests skip, and the signed generic iOS build succeeds. No Swift
+  compiler warnings; Xcode's existing no-AppIntents metadata notice remains.
+  Full log: `.build/feature-investigation/current-check.log`.
+- Pixel evidence: 69 selected original frames temporally confirm all 12 start
+  episodes (seven identities) and classify three named result samples. The 767
+  six-ball frames persist 18 presentations through 32 accepted revisions,
+  including three starts and all six correct end-bonus totals/turn owners. The
+  19-tunnel result confirms 29,000,000 and links to the Mine Cart start. No
+  multiball/jackpot-award/ball-save false positives appear in that replay. Two
+  brief numeric presentations remain unknown rather than guessing a value.
+- Existing 210-frame new-movie and 64-frame stationary-camera assertions pass;
+  the six-ball replay still confirms all turns and the exact final pair. The
+  pixel tests now perform OCR off the main actor so they do not artificially
+  block the existing asynchronous telemetry responsiveness test.
+- Multiball, jackpot-award, save and extra-ball handlers have synthetic checks,
+  not positive physical-camera acceptance. Original-movie legacy score failures
+  remain separate from the passing normal gate. AP11 was not accessed, installed
+  to or tested. No web publication or UX changes. Details:
+  `docs/FEATURE_COLLECTION.md`.

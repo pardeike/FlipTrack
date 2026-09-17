@@ -30,6 +30,7 @@ final class Scanner: ObservableObject {
     private var boundContext: SessionSnapshot?
     private var scanConfiguration = Configuration()
     private var evidence = ScoreEvidence()
+    private var featureCollector = FeatureCollector()
 
     /// Called before every frame and after editing. No persisted session value
     /// is owned by the recognizer; only unconfirmed temporal votes are cached.
@@ -40,6 +41,7 @@ final class Scanner: ObservableObject {
         Telemetry.shared.log("scanner.contextChanged", latest)
         boundContext = latest
         progress = latest.progress
+        featureCollector.invalidate()
         tracker = GameTracker(progress: latest.progress)
         detector = EndGameDetector(lastScores: latest.allowRepeated || latest.progress.observedStart ? [] : latest.lastScores,
                                    requiredReadings: scanConfiguration.requiredScanCount, historyLimit: scanConfiguration.historyLimit)
@@ -58,6 +60,7 @@ final class Scanner: ObservableObject {
         guard isMonitoring, !isPaused else { return }
         Telemetry.shared.action("resync")
         evidence.clear()
+        featureCollector.invalidate()
         acceptFramesAfter = ProcessInfo.processInfo.systemUptime
         tracker.beginRecovery(at: acceptFramesAfter)
         #if FLIPTRACK_DEVICE_TESTING
@@ -84,6 +87,8 @@ final class Scanner: ObservableObject {
 
     func start(configuration: Configuration, current: @escaping @MainActor () -> SessionSnapshot,
                update: @escaping @MainActor (GameProgress, UUID) throws -> Void,
+               previousFeatures: [CollectedFeature] = [],
+               collect: @escaping @MainActor (CollectedFeature, SessionSnapshot) throws -> Void = { _, _ in },
                save: @escaping @MainActor (DisplayResult, UUID) throws -> Void) {
         guard !isMonitoring || isPaused else { return }
         resetPreviewTest()
@@ -92,6 +97,7 @@ final class Scanner: ObservableObject {
         generation = UUID()
         let token = generation
         currentContext = current
+        featureCollector = FeatureCollector(previous: previousFeatures)
         scanConfiguration = configuration
         boundContext = nil
         refreshContext()
@@ -156,6 +162,23 @@ final class Scanner: ObservableObject {
                             self.setStatus("Tracking restored")
                             return
                         }
+                        if !wasRecovering && !self.isResyncing {
+                            let authority = current()
+                            let confirmations = self.featureCollector.observe(observation, at: time,
+                                context: FeatureContext(authority))
+                            for confirmation in confirmations {
+                                var event = confirmation.event
+                                event.evidenceRun = Telemetry.shared.directory?.lastPathComponent
+                                let images = confirmation.images.compactMap { frame -> TelemetryWriter.Image? in
+                                    guard let jpeg = frame.jpeg else { return nil }
+                                    return .init(name: "feature-\(event.id)-r\(event.revision)-\(frame.frameID).jpg", data: jpeg)
+                                }
+                                // The durable semantic event is authoritative. Image
+                                // storage failures remain visible through telemetry.
+                                try collect(event, authority)
+                                Telemetry.shared.log("feature.accepted", event, images: images)
+                            }
+                        }
                         // BALL screens can update the turn, never finish the game.
                         let observed = observation.final
                         let ignored = observed.map { current().rejected.contains($0.signature) } ?? false
@@ -177,6 +200,7 @@ final class Scanner: ObservableObject {
                             self.evidence.clear()
                             self.progress = next.progress
                             self.tracker = GameTracker(progress: next.progress)
+                            self.featureCollector.invalidate()
                             self.isResyncing = false
                             self.acceptFramesAfter = ProcessInfo.processInfo.systemUptime
                             self.detector = EndGameDetector(lastScores: next.progress.observedStart ? [] : confirmed.scores,

@@ -8,6 +8,7 @@ struct FrameReading: Encodable, Sendable {
     let visibleBall: Int?
     let live: LiveScoreboard?
     let final: DisplayResult?
+    let features: [FeatureReading]
     let imageAvailable: Bool
     init(_ observation: DisplayObservation, at time: TimeInterval) {
         id = observation.frameID
@@ -17,6 +18,7 @@ struct FrameReading: Encodable, Sendable {
         visibleBall = observation.visibleBall
         live = observation.live
         final = observation.final
+        features = observation.features
         imageAvailable = observation.jpeg != nil
     }
 }

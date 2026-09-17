@@ -1,6 +1,7 @@
 import Testing
 import Foundation
 import CoreImage
+import SwiftData
 @testable import FlipTrackCore
 
 @Test func ballLabelRepairIsBoundedToLocatedScreensAndBallsOneThroughThree() {
@@ -123,7 +124,7 @@ func capturedLiveCameraSwitches() throws {
 }
 
 @Test(.enabled(if: ProcessInfo.processInfo.environment["FLIPTRACK_SIX_BALL_FIXTURES"] != nil))
-func sixBallCameraReplay() throws {
+@MainActor func sixBallCameraReplay() async throws {
     struct Frame: Decodable { let capturedAt: Double }
     let folder = try #require(ProcessInfo.processInfo.environment["FLIPTRACK_SIX_BALL_FIXTURES"])
     let url = URL(fileURLWithPath: folder)
@@ -134,17 +135,28 @@ func sixBallCameraReplay() throws {
     var turns: [MachineTurn] = []
     var saved: [DisplayResult] = []
     var output = Data()
+    let container = try ModelContainer(for: Session.self, Game.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    let session = Session(date: .now)
+    container.mainContext.insert(session)
+    try session.prepareCurrentGame(in: container.mainContext)
+    var features = FeatureCollector()
     let selection = ProcessInfo.processInfo.environment["FLIPTRACK_SIX_BALL_SELECTION"]
     let selected = selection.map { Set($0.split(separator: ",").compactMap { Int($0) }) }
     for (index, frame) in frames.enumerated() {
         if let selected, !selected.contains(index) { continue }
+        let imageURL = url.appendingPathComponent(String(format: "frame-%05d.jpg", index))
+        let observation = try await Task.detached {
+            try autoreleasepool {
+                let image = try #require(CIImage(contentsOf: imageURL))
+                return try DisplayReader.analyze(image)
+            }
+        }.value
         try autoreleasepool {
-            let image = try #require(CIImage(contentsOf: url.appendingPathComponent(String(format: "frame-%05d.jpg", index))))
-            let observation = try DisplayReader.analyze(image)
             let time = frame.capturedAt - frames[0].capturedAt
             output.append(try JSONEncoder().encode(FrameReading(observation, at: time))); output.append(10)
             if selected != nil { print("FRAME", index, observation.live as Any, "ball", observation.visibleBall as Any, observation.text.map(\.text)) }
             if let progress = tracker.observe(observation.live, at: time, visibleBall: observation.visibleBall) {
+                try session.updateProgress(progress, for: session.currentGameID, in: container.mainContext)
                 print("PROGRESS", index, time, progress)
                 if selected == nil {
                     if index >= 170 && index < 360 { #expect(progress.left == 5_167_000) }
@@ -152,6 +164,11 @@ func sixBallCameraReplay() throws {
                 }
                 #expect(!progress.needsResync)
                 if let turn = progress.turn, turns.last != turn { turns.append(turn) }
+            }
+            let authority = SessionSnapshot(session)
+            for confirmation in features.observe(observation, at: time, context: FeatureContext(authority)) {
+                try session.collect(confirmation.event, for: authority, in: container.mainContext)
+                print("COLLECTED", index, confirmation.event)
             }
             if let result = finals.observe(tracker.progress.canAcceptFinal(recovering: false) ? observation.final : nil,
                                             at: time, readable: EndGameLayout.hasDisplayText(in: observation.text)) {
@@ -163,6 +180,17 @@ func sixBallCameraReplay() throws {
     if selected == nil {
         #expect(turns == (1...3).flatMap { [MachineTurn(slot: 1, ball: $0), MachineTurn(slot: 2, ball: $0)] })
         #expect(saved == [DisplayResult(left: 8_101_220, right: 55_093_440)])
+        let events = try session.collectedFeatures()
+        try JSONEncoder().encode(events).write(to: url.deletingLastPathComponent().appendingPathComponent("features.json"))
+        let starts = events.filter { $0.reading.kind == .modeStarted }
+        #expect(starts.map(\.reading.mode) == [.monkeyBrains, .stealTheStones, .mineCart])
+        let totals = events.filter { $0.reading.kind == .bonusTotal }
+        #expect(totals.map(\.reading.score) == [5_104_000, 5_348_000, 207_000, 112_000, 356_000, 34_456_000])
+        #expect(totals.map(\.context.turn) == turns)
+        let mineCart = try #require(events.first { $0.reading.kind == .modeScore && $0.reading.mode == .mineCart })
+        #expect(mineCart.reading.score == 29_000_000 && mineCart.reading.count == 19)
+        #expect(mineCart.modeOccurrenceID == starts.last?.id)
+        #expect(!events.contains { [.jackpotAward, .multiballStarted, .ballSaved].contains($0.reading.kind) })
     }
 }
 

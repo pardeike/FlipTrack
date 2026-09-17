@@ -156,7 +156,7 @@ final class Camera: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unc
                 sharpness: configuration.sharpness) : raw
             do {
                 var observation = try DisplayReader.analyze(image)
-                if observation.live != nil || observation.final != nil {
+                if observation.live != nil || observation.final != nil || !observation.features.isEmpty {
                     observation.jpeg = imageContext.jpegRepresentation(of: image, colorSpace: CGColorSpaceCreateDeviceRGB())
                 }
                 observation.processingMS = (ProcessInfo.processInfo.systemUptime - now) * 1000
