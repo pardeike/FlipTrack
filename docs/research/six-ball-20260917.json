@@ -1,0 +1,137 @@
+{
+  "runID": "six-ball-20260917-1610",
+  "samples": 767,
+  "orderedFrameDigest": "30c5b08bbd3601434e50636c8b13a656e9aba3f3d4e523a7428598b1ced72cb5",
+  "readingsSHA256": "a06aecf81c3c2725c8a9034f8093ca338d5acb62797922ded1a6c4008d6fb8cf",
+  "physicalTurnTimes": [
+    {
+      "elapsed": 7.839268208335852,
+      "turn": {
+        "slot": 1,
+        "ball": 1
+      }
+    },
+    {
+      "elapsed": 103.5946565833292,
+      "turn": {
+        "slot": 2,
+        "ball": 1
+      }
+    },
+    {
+      "elapsed": 202.591517166642,
+      "turn": {
+        "slot": 1,
+        "ball": 2
+      }
+    },
+    {
+      "elapsed": 238.66047049997724,
+      "turn": {
+        "slot": 2,
+        "ball": 2
+      }
+    },
+    {
+      "elapsed": 269.2153293750016,
+      "turn": {
+        "slot": 1,
+        "ball": 3
+      }
+    },
+    {
+      "elapsed": 317.91605279166833,
+      "turn": {
+        "slot": 2,
+        "ball": 3
+      }
+    }
+  ],
+  "confirmedFinal": [
+    8101220,
+    55093440
+  ],
+  "duplicateResults": 0,
+  "liveFindings": [
+    "P1 to P2 slow on balls 1 and 2",
+    "Outgoing 5167000 missing",
+    "7030220 misread as 1030220",
+    "Ball 3 switch reported 1-2 seconds",
+    "Final pair confirmed correct by user"
+  ],
+  "scope": "Physical run precedes final repairs; repaired pixel replay is separate evidence.",
+  "repairedReplay": {
+    "confirmedTurns": [
+      {
+        "frame": 6,
+        "sourceTime": 3.227167749981163,
+        "turn": {
+          "slot": 1,
+          "ball": 1
+        },
+        "firstReadableSourceTime": 0.5267552499717567,
+        "confirmationDelayFromFirstReadable": 2.7
+      },
+      {
+        "frame": 170,
+        "sourceTime": 94.05260891665239,
+        "turn": {
+          "slot": 2,
+          "ball": 1
+        },
+        "firstReadableSourceTime": 90.85325720830588,
+        "confirmationDelayFromFirstReadable": 3.199
+      },
+      {
+        "frame": 369,
+        "sourceTime": 201.64448529164656,
+        "turn": {
+          "slot": 1,
+          "ball": 2
+        },
+        "firstReadableSourceTime": 199.51274787497823,
+        "confirmationDelayFromFirstReadable": 2.132
+      },
+      {
+        "frame": 417,
+        "sourceTime": 227.44293774999096,
+        "turn": {
+          "slot": 2,
+          "ball": 2
+        },
+        "firstReadableSourceTime": 225.30921166666667,
+        "confirmationDelayFromFirstReadable": 2.134
+      },
+      {
+        "frame": 496,
+        "sourceTime": 269.7044256666559,
+        "turn": {
+          "slot": 1,
+          "ball": 3
+        },
+        "firstReadableSourceTime": 266.5047804583155,
+        "confirmationDelayFromFirstReadable": 3.2
+      },
+      {
+        "frame": 585,
+        "sourceTime": 317.167142374994,
+        "turn": {
+          "slot": 2,
+          "ball": 3
+        },
+        "firstReadableSourceTime": 314.5004388333182,
+        "confirmationDelayFromFirstReadable": 2.667
+      }
+    ],
+    "finals": [
+      [
+        8101220,
+        55093440
+      ]
+    ],
+    "samples": 767,
+    "pixelRegressionPassed": true,
+    "guardedAgainstScoreDecreases": true,
+    "scope": "Same collected camera pixels replayed on Mac, not a new physical game."
+  }
+}

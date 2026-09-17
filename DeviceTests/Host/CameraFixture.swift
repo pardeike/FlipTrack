@@ -5,10 +5,30 @@ import Foundation
 /// drive controlled observations, or recorded pixels through DisplayReader.
 final class CameraFixture {
     private let scenario = ProcessInfo.processInfo.environment["FLIPTRACK_TEST_SCENARIO"] ?? "turn"
-    var usesLiveCamera: Bool { scenario == "liveCamera" }
+    var usesLiveCamera: Bool { scenario == "liveCamera" || scenario == "liveSession" }
+    private var sessionSamples = 0
     private var liveReadings: [FrameReading] = []
 
     func recordLive(_ observation: DisplayObservation, image: CIImage, at time: TimeInterval) throws {
+        if scenario == "liveSession" {
+            // Bound the private diagnostic capture to 30 minutes at 2 Hz.
+            guard sessionSamples < 3600 else { return }
+            let run = ProcessInfo.processInfo.environment["FLIPTRACK_CHECK_ID"] ?? "manual"
+            let folder = URL.documentsDirectory.appendingPathComponent("live-session-" + run)
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            let data = observation.jpeg ?? imageContext.jpegRepresentation(of: image, colorSpace: CGColorSpaceCreateDeviceRGB())
+            try data?.write(to: folder.appendingPathComponent(String(format: "frame-%05d.jpg", sessionSamples)))
+            let log = folder.appendingPathComponent("readings.jsonl")
+            if !FileManager.default.fileExists(atPath: log.path) { FileManager.default.createFile(atPath: log.path, contents: nil) }
+            let handle = try FileHandle(forWritingTo: log)
+            defer { try? handle.close() }
+            try handle.seekToEnd()
+            var encoded = try JSONEncoder().encode(FrameReading(observation, at: time))
+            encoded.append(0x0a)
+            try handle.write(contentsOf: encoded)
+            sessionSamples += 1
+            return
+        }
         guard liveReadings.count < 32 else { return }
         let folder = URL.documentsDirectory.appendingPathComponent("live-camera")
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)

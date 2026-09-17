@@ -434,3 +434,69 @@ copies of session state.
   fingerprint: `research/player-switching-20260917.json`. Production build 18
   and its sessions are unchanged; AP11 currently shows the isolated check host.
   Production deployment is pending the existing explicit deploy boundary.
+
+### 2026-09-17: complete six-ball live acceptance in progress
+
+- Andreas requested a fresh two-player game through all six balls and GAME OVER
+  using the isolated host before production deployment. Added `liveSession`:
+  empty test history, ordinary recognition with no expected-turn injection,
+  rolling progress report and bounded real-camera JPEG/JSONL evidence.
+- The host waits for exactly one confirmed final pair, then observes eight more
+  seconds to check duplicate suppression. All six turn confirmations must occur
+  in order. A 30-minute diagnostic cap is explicit. Source fix checkpoint:
+  `a6b1c17`; production remains unchanged.
+
+### 2026-09-17: six-ball findings and release repair
+
+- The physical game completed all six turns and saved exactly one final pair,
+  **8,101,220 / 55,093,440**, confirmed correct by Andreas. This did not pass
+  intermediate accuracy/latency acceptance: P1-to-P2 switches were slow on balls
+  1 and 2, the outgoing 5,167,000 was missing, and 7,030,220 was read as 1,030,220.
+  Ball-3 P1-to-P2 switched in the user-observed 1–2 seconds.
+- Retained all 767 camera frames with original timestamps in ignored
+  `.build/six-ball-results/camera/`. The first bulk transfer timed out; missing
+  files were retrieved separately. No production session was used by the test.
+- Located BALL/footer screens with a valid score now supply blink context.
+  Same-ball blink-off frames are neutral, never positive player votes; unknown
+  screens and contradictory turns still count against confirmation. Three real
+  observations are still required, within a bounded four-second window. Evidence
+  images use that same window. Recovery still requires three agreeing scores.
+- Widened the footer-derived crop on the left to retain complete leading digits,
+  and included the leading glyph of long active scores when splitting touching
+  fields. Complete thousands-group validation and final-score rules remain.
+- Andreas explicitly requested a production fix and deployment now. Before
+  installation, copied the production store to
+  `.build/production-before-switch-release/` (two sessions and five games).
+  Final regression and deployment evidence follows below.
+- Full replay also exposed a later 7-to-1 OCR confusion despite the improved
+  crop. Ordinary live totals now retain the last confirmed value if a new OCR
+  value decreases it. Explicit Resync can still lower an incorrect prior value,
+  and complete final scores retain their existing authority. No replacement
+  digits or zero values are fabricated.
+- The widened crop exposed one inactive-score false player reading in the older
+  stationary capture. Requiring 1.8x footer height
+  when only one score is readable rejects it. Two readable fields retain the
+  1.7x minimum plus relative-size evidence. Raising the minimum for both fields
+  delayed valid detections and was rejected; recorded checks follow.
+- This Mac does not have the external `ios-release` helper. The canonical
+  release command can still test/archive; direct signed AP11 installation is
+  available if web publication cannot run. Report these outcomes separately.
+- Repaired full-game replay passes all 767 original camera frames: all six
+  turns, no continuity/recovery failure, corrected 5,167,000 and 7,030,220,
+  retained nondecreasing live totals, and exactly one final pair
+  8,101,220 / 55,093,440. This is replay of the physical run, not a fresh game
+  played with the final binary. Evidence: `research/six-ball-20260917.json`.
+- The separate movie's initial P2/ball-2 acquisition is now 4.5 s (previous
+  repair 2.0 s); the remaining turns confirm at 30.0, 62.0 and 99.0 s. The
+  initial acquisition bound is explicitly relaxed from 3 to 5 s to accept
+  stricter single-field rejection. Static camera cases remain 2.0 and 1.5 s.
+  This tradeoff is not represented as a uniform latency improvement.
+- Generic archiving initially reused a profile without AP11. A concrete AP11
+  Release build refreshed the production profile, and its embedded device list
+  now includes AP11. Bundle identity remains `net.pardeike.FlipTrack`, build 19.
+- Final `Scripts/check.sh` passed the core tests, 210-frame movie and both
+  32-frame camera regressions, plus the signed iOS build. The 767-frame replay
+  passed separately on the identical production source. Across these gates,
+  56 distinct tests executed successfully; 10 older private-input tests remain
+  unavailable. Full-game source-time confirmation is 2.1–3.2 s from first
+  readable turn evidence. Final gate: `.build/six-ball-results/final-gate.log`.

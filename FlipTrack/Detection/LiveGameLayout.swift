@@ -25,6 +25,38 @@ enum LiveGameLayout {
         if GameDisplayLayout.isNewGame(in: observations) {
             return LiveScoreboard(turn: MachineTurn(slot: 1, ball: 1), left: 0, right: 0)
         }
+        guard let layout = scoreboard(in: observations) else { return nil }
+        let (ball, a, scores) = layout
+        var left: Int?, right: Int?, sizedSlot: Int?
+        if scores.count == 2 {
+            let l = scores[0], r = scores[1]
+            guard l.1.maxX <= r.1.minX, abs(l.1.maxY-r.1.maxY) < max(l.1.height,r.1.height) else { return nil }
+            left = l.0; right = r.0
+            if l.2 > r.2 * 1.15 && l.2 > a.height*1.9 { sizedSlot = 1 }
+            if r.2 > l.2 * 1.15 && r.2 > a.height*1.9 { sizedSlot = 2 }
+        } else if scores.count == 1, let activeSlot {
+            // A single OCR number does not establish its side on a full frame.
+            // Rectified display coordinates can still supply a partial score.
+            if observations.allSatisfy(\.isInsideDisplay) {
+                if scores[0].1.midX < 0.48 { left = scores[0].0 }
+                if scores[0].1.midX > 0.52 { right = scores[0].0 }
+            }
+            return LiveScoreboard(turn: MachineTurn(slot: activeSlot, ball: ball), left: left, right: right)
+        }
+        if let activeSlot, let sizedSlot, activeSlot != sizedSlot { return nil }
+        guard let slot = sizedSlot ?? activeSlot, (1...2).contains(slot) else { return nil }
+        return LiveScoreboard(turn: MachineTurn(slot: slot, ball: ball), left: left, right: right)
+    }
+
+    /// A located scoreboard whose active score can be in the dark blink phase.
+    /// This supplies context only; it never supplies an active-player vote.
+    static func visibleBall(in observations: [DisplayText]) -> Int? {
+        guard let layout = scoreboard(in: observations), !layout.scores.isEmpty,
+              observations.allSatisfy(\.isInsideDisplay) else { return nil }
+        return layout.ball
+    }
+
+    private static func scoreboard(in observations: [DisplayText]) -> (ball: Int, anchor: CGRect, scores: [(Int, CGRect, CGFloat)])? {
         var text = observations.filter { $0.confidence >= 0.5 }.map { word in
             // The dot-matrix 2 resembles Z. Correct only the complete ball label
             // inside a located display; the footer and score layout must still agree.
@@ -77,24 +109,7 @@ enum LiveGameLayout {
                   r.height >= a.height * 0.65 else { return nil }
             return (score, r, observation.characterHeight ?? r.height)
         }.sorted { $0.1.midX < $1.1.midX }
-        var left: Int?, right: Int?, sizedSlot: Int?
-        if scores.count == 2 {
-            let l = scores[0], r = scores[1]
-            guard l.1.maxX <= r.1.minX, abs(l.1.maxY-r.1.maxY) < max(l.1.height,r.1.height) else { return nil }
-            left = l.0; right = r.0
-            if l.2 > r.2 * 1.15 && l.2 > a.height*1.9 { sizedSlot = 1 }
-            if r.2 > l.2 * 1.15 && r.2 > a.height*1.9 { sizedSlot = 2 }
-        } else if scores.count == 1, let activeSlot {
-            // A single OCR number does not establish its side on a full frame.
-            // Rectified display coordinates can still supply a partial score.
-            if text.allSatisfy(\.isInsideDisplay) {
-                if scores[0].1.midX < 0.48 { left = scores[0].0 }
-                if scores[0].1.midX > 0.52 { right = scores[0].0 }
-            }
-            return LiveScoreboard(turn: MachineTurn(slot: activeSlot, ball: ball), left: left, right: right)
-        }
-        if let activeSlot, let sizedSlot, activeSlot != sizedSlot { return nil }
-        guard let slot = sizedSlot ?? activeSlot, (1...2).contains(slot) else { return nil }
-        return LiveScoreboard(turn: MachineTurn(slot: slot, ball: ball), left: left, right: right)
+        return (ball, a, scores)
     }
+
 }

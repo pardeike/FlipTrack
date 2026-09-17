@@ -51,7 +51,7 @@ func recordedSwitchesAndGameOver() throws {
                 #expect((82...96).contains(sample.time))
                 #expect(result.scores == [13_097_110, 457_000])
             }
-            if let progress = tracker.observe(observation.live, at: sample.time) {
+            if let progress = tracker.observe(observation.live, at: sample.time, visibleBall: observation.visibleBall) {
                 #expect(!progress.needsResync)
                 if let turn = progress.turn, turns.last != turn { turns.append(turn); times.append(sample.time) }
             }
@@ -67,7 +67,9 @@ func recordedSwitchesAndGameOver() throws {
                       MachineTurn(slot: 2, ball: 3), MachineTurn(slot: 1, ball: 1)])
     #expect(saved == [DisplayResult(left: 13_097_110, right: 457_000)])
     if times.count == 4 {
-        #expect(times[0] <= 3 && times[1] <= 33 && times[2] <= 64 && times[3] <= 102)
+        // The wider crop plus single-field rejection trades 2 s of initial
+        // acquisition here for avoiding false active-player evidence.
+        #expect(times[0] <= 5 && times[1] <= 33 && times[2] <= 64 && times[3] <= 102)
     }
     print("Switch recording confirmed turns at", times)
 }
@@ -88,8 +90,8 @@ func capturedLiveCameraSwitches() throws {
                 let image = try #require(CIImage(contentsOf: path))
                 let observation = try DisplayReader.analyze(image)
                 #expect(observation.final == nil)
-                if let turn = observation.live?.turn { #expect(turn == expected) }
-                if let progress = tracker.observe(observation.live, at: Double(index) * 0.5) {
+                if let turn = observation.live?.turn { #expect(turn == expected, "Capture \(capture.folder), frame \(index)") }
+                if let progress = tracker.observe(observation.live, at: Double(index) * 0.5, visibleBall: observation.visibleBall) {
                     #expect(!progress.needsResync)
                     if progress.turn == expected && firstConfirmation == nil { firstConfirmation = Double(index) * 0.5 }
                 }
@@ -100,4 +102,79 @@ func capturedLiveCameraSwitches() throws {
         #expect(tracker.progress.left == capture.left && tracker.progress.right == capture.right)
         #expect(try #require(firstConfirmation) <= 5)
     }
+}
+
+@Test func locatedBlinkPhasesAreNeutralButNeverVotes() {
+    let reading = LiveScoreboard(turn: MachineTurn(slot: 2, ball: 1), left: 5_167_000, right: 0)
+    for context in [nil, 1, 2] as [Int?] {
+        var detector = TurnDetector()
+        var result: LiveScoreboard?
+        for index in 0...6 {
+            result = detector.observe(index % 3 == 0 ? reading : nil,
+                                      at: Double(index) * 0.54, visibleBall: context)
+        }
+        #expect((result != nil) == (context == 1))
+        if let result { #expect(result == reading) }
+    }
+    var detector = TurnDetector()
+    for index in 0...10 {
+        #expect(detector.observe(nil, at: Double(index)*0.5, visibleBall: 1) == nil)
+    }
+}
+
+@Test(.enabled(if: ProcessInfo.processInfo.environment["FLIPTRACK_SIX_BALL_FIXTURES"] != nil))
+func sixBallCameraReplay() throws {
+    struct Frame: Decodable { let capturedAt: Double }
+    let folder = try #require(ProcessInfo.processInfo.environment["FLIPTRACK_SIX_BALL_FIXTURES"])
+    let url = URL(fileURLWithPath: folder)
+    let frames = try String(contentsOf: url.appendingPathComponent("readings.jsonl"), encoding: .utf8)
+        .split(separator: "\n").map { try JSONDecoder().decode(Frame.self, from: Data($0.utf8)) }
+    var tracker = GameTracker()
+    var finals = EndGameDetector()
+    var turns: [MachineTurn] = []
+    var saved: [DisplayResult] = []
+    var output = Data()
+    let selection = ProcessInfo.processInfo.environment["FLIPTRACK_SIX_BALL_SELECTION"]
+    let selected = selection.map { Set($0.split(separator: ",").compactMap { Int($0) }) }
+    for (index, frame) in frames.enumerated() {
+        if let selected, !selected.contains(index) { continue }
+        try autoreleasepool {
+            let image = try #require(CIImage(contentsOf: url.appendingPathComponent(String(format: "frame-%05d.jpg", index))))
+            let observation = try DisplayReader.analyze(image)
+            let time = frame.capturedAt - frames[0].capturedAt
+            output.append(try JSONEncoder().encode(FrameReading(observation, at: time))); output.append(10)
+            if selected != nil { print("FRAME", index, observation.live as Any, "ball", observation.visibleBall as Any, observation.text.map(\.text)) }
+            if let progress = tracker.observe(observation.live, at: time, visibleBall: observation.visibleBall) {
+                print("PROGRESS", index, time, progress)
+                if selected == nil {
+                    if index >= 170 && index < 360 { #expect(progress.left == 5_167_000) }
+                    if index >= 417 && index < 580 { #expect((progress.left ?? 0) >= 7_030_220) }
+                }
+                #expect(!progress.needsResync)
+                if let turn = progress.turn, turns.last != turn { turns.append(turn) }
+            }
+            if let result = finals.observe(tracker.progress.canAcceptFinal(recovering: false) ? observation.final : nil,
+                                            at: time, readable: EndGameLayout.hasDisplayText(in: observation.text)) {
+                saved.append(result); tracker = GameTracker()
+            }
+        }
+    }
+    try output.write(to: url.deletingLastPathComponent().appendingPathComponent("replay.jsonl"))
+    if selected == nil {
+        #expect(turns == (1...3).flatMap { [MachineTurn(slot: 1, ball: $0), MachineTurn(slot: 2, ball: $0)] })
+        #expect(saved == [DisplayResult(left: 8_101_220, right: 55_093_440)])
+    }
+}
+
+@Test func liveScoresCannotDecreaseButExplicitRecoveryCanCorrectThem() {
+    let turn = MachineTurn(slot: 1, ball: 3)
+    let initial = GameProgress(turn: turn, left: 7_030_220, right: 19_831_440, observedStart: true)
+    let misread = LiveScoreboard(turn: turn, left: 1_745_220, right: 19_831_440)
+    var tracker = GameTracker(progress: initial)
+    for time in [1.0, 1.5, 2.0] { _ = tracker.observe(misread, at: time) }
+    #expect(tracker.progress == initial)
+    tracker.beginRecovery(at: 3)
+    for time in [4.0, 4.5, 5.0] { _ = tracker.observe(misread, at: time) }
+    #expect(tracker.progress.left == misread.left)
+    #expect(!tracker.recovering)
 }

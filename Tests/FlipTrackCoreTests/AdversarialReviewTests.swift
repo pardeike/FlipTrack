@@ -71,7 +71,7 @@ import Testing
     old.live = .init(turn:.init(slot:2,ball:1),left:100,right:200)
     old.jpeg = Data([1])
     evidence.append(old,at:0)
-    for time in [1.5,3.0,3.5,4.0] {
+    for time in [1.5,3.0,3.5,TurnDetector.confirmationWindow + 0.1] {
         var fresh = DisplayObservation([])
         fresh.live = old.live
         fresh.jpeg = Data([2])

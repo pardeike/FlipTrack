@@ -131,3 +131,25 @@ FLIPTRACK_SWITCH_FIXTURES="$PWD/.build/switch-fixtures/manifest.json" Scripts/ch
 This is a 2 Hz replay of the new 105-second recording, including turn changes,
 GAME OVER, the actual final score pair, and the following new game. It does not
 replace `Scripts/check.sh --recording` or the original research recording.
+
+For a complete live two-player game, leave the machine waiting on P1/ball 1 and
+run `python3 Scripts/check-camera.py --device AP11 --scenario liveSession`.
+This starts an empty isolated session and records up to 30 minutes of actual
+camera inputs. It requires confirmations in P1/P2 order for balls 1–3, exactly
+one saved final pair, and eight further seconds without a duplicate save.
+`Documents/live-session.json` exposes the running status, confirmed turns and
+session snapshot for read-only monitoring. The command waits for completion and
+retrieves its report, camera evidence, telemetry and screenshot. It does not
+press pinball controls or seed expected turns in the recognizer.
+
+Replay a retrieved complete six-ball run through the current production reader:
+
+```sh
+FLIPTRACK_SIX_BALL_FIXTURES="$PWD/.build/six-ball-results/camera" \
+  swift test --filter sixBallCameraReplay
+```
+
+This consumes every captured JPEG at its original observation timestamp, checks
+all six turns and one exact final pair, and writes `replay.jsonl` beside the
+camera folder. Source-time confirmation delays are replay evidence, not new
+physical-device timing. All camera pixels remain ignored/private.

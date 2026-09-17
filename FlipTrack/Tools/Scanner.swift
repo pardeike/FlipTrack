@@ -134,7 +134,7 @@ final class Scanner: ObservableObject {
                     let text = observation.text
                     do {
                         let wasRecovering = self.isResyncing
-                        if let updated = self.tracker.observe(observation.live, at: time) {
+                        if let updated = self.tracker.observe(observation.live, at: time, visibleBall: observation.visibleBall) {
                             let confirmed = self.evidence.accepted(before: before, after: before, proposedProgress: updated)
                             Telemetry.shared.log("score.progressConfirmed", confirmed.0, images: confirmed.1)
                             try update(updated, activeGameID)

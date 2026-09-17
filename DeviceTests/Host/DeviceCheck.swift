@@ -14,6 +14,53 @@ enum DeviceCheck {
             try await Task.sleep(for:.milliseconds(100))
         }
     }
+    struct LiveSessionTurn: Codable {
+        let elapsed: Double
+        let turn: MachineTurn
+    }
+    struct LiveSessionReport: Codable {
+        let runID: String
+        let state: String
+        let elapsed: Double
+        let turns: [LiveSessionTurn]
+        let session: SessionSnapshot
+        let cameraRunning: Bool
+        let passed: Bool?
+        let error: String?
+        let telemetryDirectory: String?
+        let cameraDirectory: String
+    }
+    static func observeLiveSession(scanner: Scanner, session: Session) async throws {
+        let run = ProcessInfo.processInfo.environment["FLIPTRACK_CHECK_ID"] ?? "manual"
+        let began = ProcessInfo.processInfo.systemUptime
+        var turns: [LiveSessionTurn] = []
+        var finishedAt: Double?
+        let expected = (1...3).flatMap { ball in [MachineTurn(slot: 1, ball: ball), MachineTurn(slot: 2, ball: ball)] }
+        while true {
+            let elapsed = ProcessInfo.processInfo.systemUptime - began
+            if let turn = session.progress.turn, turns.last?.turn != turn, finishedAt == nil {
+                turns.append(LiveSessionTurn(elapsed: elapsed, turn: turn))
+            }
+            if session.games?.count == 1 && finishedAt == nil { finishedAt = elapsed }
+            let complete = finishedAt.map { elapsed - $0 >= 8 } ?? false
+            let timedOut = elapsed >= 1800
+            let error = scanner.error ?? (timedOut ? "Thirty-minute capture limit reached" : nil)
+            let finished = complete || error != nil
+            let passed = complete && error == nil && turns.map(\.turn) == expected && session.games?.count == 1
+            let report = LiveSessionReport(runID: run, state: finished ? "complete" : "running", elapsed: elapsed,
+                turns: turns, session: SessionSnapshot(session), cameraRunning: scanner.camera.session.isRunning,
+                passed: finished ? passed : nil, error: error, telemetryDirectory: Telemetry.shared.directory?.lastPathComponent,
+                cameraDirectory: "live-session-" + run)
+            try JSONEncoder().encode(report).write(to: URL.documentsDirectory.appendingPathComponent("live-session.json"), options: .atomic)
+            if finished {
+                scanner.stop()
+                await Telemetry.shared.flush()
+                return
+            }
+            try await Task.sleep(for: .milliseconds(500))
+        }
+    }
+
     static var expectedLiveTurn: MachineTurn {
         let environment = ProcessInfo.processInfo.environment
         return MachineTurn(slot: Int(environment["FLIPTRACK_EXPECT_SLOT"] ?? "2") ?? 2,
@@ -22,7 +69,7 @@ enum DeviceCheck {
     static func run(scanner:Scanner, session:Session, context:ModelContext, start:() -> Void) async {
         guard ProcessInfo.processInfo.environment["FLIPTRACK_AUTOCHECK"] == "1" else { return }
         let scenario = ProcessInfo.processInfo.environment["FLIPTRACK_TEST_SCENARIO"] ?? "turn"
-        let output = URL.documentsDirectory.appendingPathComponent("autocheck-\(scenario).json")
+        let output = URL.documentsDirectory.appendingPathComponent(scenario == "liveSession" ? "live-session.json" : "autocheck-\(scenario).json")
         try? FileManager.default.removeItem(at:output)
         var report:[String:Any] = ["scenario":scenario,"passed":false,"runID":ProcessInfo.processInfo.environment["FLIPTRACK_CHECK_ID"] ?? "manual"]
         do {
@@ -34,6 +81,10 @@ enum DeviceCheck {
             try await wait { scanner.camera.session.isRunning || scanner.error != nil }
             try require(scanner.error == nil, scanner.error ?? "Camera failed")
             try require(scanner.camera.session.isRunning,"Camera must be running")
+            if scenario == "liveSession" {
+                try await observeLiveSession(scanner: scanner, session: session)
+                return
+            }
             let initial = session.progress
             if scenario == "liveCamera" {
                 try await wait({ FileManager.default.fileExists(atPath: URL.documentsDirectory.appendingPathComponent("live-camera/complete").path) }, timeout: 60)
@@ -185,6 +236,7 @@ enum DeviceCheck {
             report["turnSlot"] = session.progress.turn?.slot
             report["turnBall"] = session.progress.turn?.ball
         } catch {
+            report["state"] = "complete"
             report["error"] = error.localizedDescription
             report["left"] = session.progress.left
             report["right"] = session.progress.right

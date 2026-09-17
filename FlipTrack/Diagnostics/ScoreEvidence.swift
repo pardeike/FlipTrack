@@ -5,6 +5,7 @@ struct FrameReading: Encodable, Sendable {
     let capturedAt: TimeInterval
     let processingMS: Double?
     let text: [DisplayText]
+    let visibleBall: Int?
     let live: LiveScoreboard?
     let final: DisplayResult?
     let imageAvailable: Bool
@@ -13,6 +14,7 @@ struct FrameReading: Encodable, Sendable {
         capturedAt = time
         processingMS = observation.processingMS
         text = observation.text
+        visibleBall = observation.visibleBall
         live = observation.live
         final = observation.final
         imageAvailable = observation.jpeg != nil
@@ -48,7 +50,7 @@ struct ScoreEvidence {
         let candidates = final == nil ? frames : Array(frames.suffix(finalHistoryLimit))
         let selected = candidates.filter { frame in
             if let final { return frame.observation.final == final }
-            guard now - frame.time <= 3, let live = frame.observation.live, live.turn == acceptedProgress.turn else { return false }
+            guard now - frame.time <= TurnDetector.confirmationWindow, let live = frame.observation.live, live.turn == acceptedProgress.turn else { return false }
             return (live.left != nil && live.left == acceptedProgress.left) ||
                 (live.right != nil && live.right == acceptedProgress.right)
         }

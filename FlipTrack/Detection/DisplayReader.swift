@@ -8,10 +8,12 @@ struct DisplayObservation: Sendable {
     var jpeg: Data?
     var processingMS: Double?
     var text: [DisplayText]
+    var visibleBall: Int?
     var live: LiveScoreboard?
     var final: DisplayResult?
     init(_ text: [DisplayText], activeSlot: Int? = nil) {
         self.text = text
+        self.visibleBall = LiveGameLayout.visibleBall(in: text)
         self.live = LiveGameLayout.result(in: text, activeSlot: activeSlot)
         self.final = live == nil && activeSlot == nil ? EndGameLayout.result(in: text) : nil
     }
@@ -111,7 +113,7 @@ enum DisplayReader {
         let origin = CGPoint(x:bl.x-u.x*0.48-v.x*0.04,y:bl.y-u.y*0.48-v.y*0.04)
         func corner(_ x: CGFloat, _ y: CGFloat) -> CIVector { CIVector(x:origin.x+u.x*x+v.x*y,y:origin.y+u.y*x+v.y*y) }
         let region = image.applyingFilter("CIPerspectiveCorrection", parameters: [
-            "inputTopLeft":corner(-0.10,1.3),"inputTopRight":corner(1.10,1.3),"inputBottomLeft":corner(-0.10,-0.03),"inputBottomRight":corner(1.10,-0.03)])
+            "inputTopLeft":corner(-0.16,1.3),"inputTopRight":corner(1.10,1.3),"inputBottomLeft":corner(-0.16,-0.03),"inputBottomRight":corner(1.10,-0.03)])
         guard region.extent.width > 0, region.extent.height > 0 else { return nil }
         let resized = region.transformed(by: CGAffineTransform(scaleX: 1400/region.extent.width, y: 440/region.extent.height))
         var words = try recognize(resized).map { item in
@@ -219,8 +221,16 @@ enum DisplayReader {
             return heights[(heights.count - 1) / 2]
         }
         let left = height(65..<350), right = height(380..<580)
-        let footerHeight = text.filter { $0.text.uppercased().contains("FREE") }.map { Double($0.bounds.height)*160 }.min() ?? 14
-        guard Double(max(left,right)) >= max(18,footerHeight*1.7) else { return nil }
+        let footer = text.filter { $0.text.uppercased().contains("FREE") }.min { $0.bounds.height < $1.bounds.height }
+        let footerHeight = footer.map { Double($0.bounds.height)*160 } ?? 14
+        let scoreCount = text.filter {
+            EndGameLayout.score(from: $0.text) != nil && $0.bounds.midY > (footer?.bounds.maxY ?? 0.3)
+        }.count
+        // Two readable score fields support relative size evidence. With only
+        // one field, require more absolute height so an inactive score cannot
+        // become active just because its blinking neighbor has disappeared.
+        let minimumRatio = scoreCount == 2 ? 1.7 : 1.8
+        guard Double(max(left,right)) >= max(18,footerHeight*minimumRatio) else { return nil }
         let slot: Int
         if Double(left) > Double(right)*1.15 { slot = 1 }
         else if Double(right) > Double(left)*1.15 { slot = 2 }
@@ -228,7 +238,7 @@ enum DisplayReader {
         let activeHeight = slot == 1 ? left : right
         let large = glyphs.filter {
             Double($0.height) >= Double(activeHeight) * 0.8 &&
-            (slot == 1 ? (65..<400).contains($0.x) : (310..<580).contains($0.x))
+            (slot == 1 ? (65..<460).contains($0.x) : (250..<580).contains($0.x))
         }
         var split: CGFloat = slot == 1 ? 0.60 : 0.45
         if slot == 1, let edge = large.map(\.maxX).max(),

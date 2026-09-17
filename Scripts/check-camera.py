@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--device', default='AP11')
 parser.add_argument('--reuse-benchmark', action='store_true',
                     help='Temporarily use the camera-authorized benchmark identity, then restore its app.')
-parser.add_argument('--scenario', choices=['turn', 'finalPixels', 'recorded', 'corrections', 'continuation', 'liveCamera'])
+parser.add_argument('--scenario', choices=['turn', 'finalPixels', 'recorded', 'corrections', 'continuation', 'liveCamera', 'liveSession'])
 parser.add_argument('--slot', type=int, choices=[1, 2], default=2,
                     help='Expected active slot for liveCamera (ordinary turn confirmation).')
 parser.add_argument('--ball', type=int, choices=[1, 2, 3], default=1,
@@ -66,7 +66,7 @@ with log_path.open('w') as log:
     try:
         if args.reuse_benchmark and not restore.is_dir():
             raise RuntimeError(f'Missing benchmark app to restore: {restore}')
-        if scenarios == ['liveCamera']:
+        if scenarios in (['liveCamera'], ['liveSession']):
             (root / '.build/live-fixtures').mkdir(parents=True, exist_ok=True)
         else:
             run('python3', 'Scripts/prepare-live-fixtures.py')
@@ -98,16 +98,19 @@ with log_path.open('w') as log:
             run('xcrun', 'devicectl', '--timeout', '30', 'device', 'process', 'launch', '--device', args.device,
                 '--environment-variables', env, bundle)
             report_path = output / f'autocheck-{scenario}.json'
-            deadline = time.monotonic()+90
+            source_name = "live-session.json" if scenario == "liveSession" else report_path.name
+            deadline = time.monotonic() + (1830 if scenario == "liveSession" else 90)
             while True:
-                if receive(report_path.name, report_path):
+                if receive(source_name, report_path):
                     report = json.loads(report_path.read_text())
-                    if report.get('runID') == run_id:
+                    if report.get('runID') == run_id and (scenario != 'liveSession' or report.get('state') == 'complete'):
                         telemetry_dir = report.get('telemetryDirectory')
                         if not telemetry_dir or not receive(f'Telemetry/{telemetry_dir}', output / f'telemetry-{scenario}'):
                             raise RuntimeError('Missing telemetry or evidence images')
                         if scenario == 'liveCamera' and not receive('live-camera', output / 'live-camera'):
                             raise RuntimeError('Missing real camera inputs')
+                        if scenario == 'liveSession' and report.get('cameraDirectory') and not receive(report['cameraDirectory'], output / 'live-session'):
+                            raise RuntimeError('Missing six-ball camera inputs')
                         if not report.get('passed'):
                             raise RuntimeError(report.get('error', 'Device assertion failed'))
                         break

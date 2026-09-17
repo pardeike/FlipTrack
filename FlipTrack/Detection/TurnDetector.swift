@@ -15,29 +15,33 @@ struct GameProgress: Codable, Equatable, Sendable {
         nextGameTurn == nil && (recovering || turn == nil || turn?.isLast == true)
     }
 
-    mutating func accept(_ reading: LiveScoreboard) {
+    mutating func accept(_ reading: LiveScoreboard, allowDecrease: Bool = false) {
         turn = reading.turn
-        if let value = reading.left { left = value }
-        if let value = reading.right { right = value }
+        // Pinball totals accumulate. Reject a clipped/OCR-decreased live value;
+        // deliberate recovery and final capture retain correction authority.
+        if let value = reading.left, allowDecrease || (left.map { value >= $0 } ?? true) { left = value }
+        if let value = reading.right, allowDecrease || (right.map { value >= $0 } ?? true) { right = value }
         observedStart = true
         needsResync = false
     }
 }
 
 /// Temporal confirmation shared by ordinary tracking and explicit recovery.
-/// A missing/ambiguous frame is evidence against confirmation, not another vote.
+/// Unclassified frames count against confirmation. Located blink-off frames
+/// on the same ball are neutral; only actual active digits cast a vote.
 struct TurnDetector {
-    private var readings: [(TimeInterval, LiveScoreboard?)] = []
+    static let confirmationWindow: TimeInterval = 4
+    private var readings: [(TimeInterval, LiveScoreboard?, Int?)] = []
     private var lastTime: TimeInterval?
 
     mutating func reset() { readings = []; lastTime = nil }
 
     mutating func observe(_ reading: LiveScoreboard?, at time: TimeInterval,
-                          requireScoreForSlot: Int? = nil) -> LiveScoreboard? {
+                          requireScoreForSlot: Int? = nil, visibleBall: Int? = nil) -> LiveScoreboard? {
         if let lastTime, time <= lastTime || time - lastTime > 2 { readings = [] }
         lastTime = time
-        readings.append((time, reading))
-        readings.removeAll { time - $0.0 > 3 }
+        readings.append((time, reading, visibleBall))
+        readings.removeAll { time - $0.0 > Self.confirmationWindow }
         guard let reading else { return nil }
         let matching = readings.filter { sample in
             guard sample.1?.turn == reading.turn else { return false }
@@ -47,7 +51,8 @@ struct TurnDetector {
             }
             return true
         }
-        guard matching.count >= 3, Double(matching.count) / Double(readings.count) >= 0.6,
+        let voting = readings.filter { $0.1 != nil || $0.2 != reading.turn.ball }
+        guard matching.count >= 3, Double(matching.count) / Double(voting.count) >= 0.6,
               let first = matching.first, time-first.0 >= 1 else { return nil }
         // Only persist a number after it agrees on at least three observations.
         func confirmed(_ value: Int?, slot: Int) -> Int? {
@@ -77,10 +82,10 @@ struct GameTracker {
         recovering = false; acceptAfter = time; detector.reset()
     }
 
-    mutating func observe(_ reading: LiveScoreboard?, at time: TimeInterval) -> GameProgress? {
+    mutating func observe(_ reading: LiveScoreboard?, at time: TimeInterval, visibleBall: Int? = nil) -> GameProgress? {
         guard time > acceptAfter else { return nil }
         let outgoing = recovering ? (progress.turn?.slot ?? reading.map { 3-$0.turn.slot }) : nil
-        guard let confirmed = detector.observe(reading, at: time, requireScoreForSlot: outgoing) else { return nil }
+        guard let confirmed = detector.observe(reading, at: time, requireScoreForSlot: outgoing, visibleBall: visibleBall) else { return nil }
         let before = progress
         if let previous = progress.turn, previous.isLast, confirmed.turn == MachineTurn(slot: 1, ball: 1) {
             // The old game's final pair is still needed. Remember actual next-game
@@ -94,7 +99,7 @@ struct GameTracker {
         } else if progress.nextGameTurn != nil {
             // Keep the old game selected until its finals are recorded/reviewed.
         } else if recovering {
-            progress.accept(confirmed)
+            progress.accept(confirmed, allowDecrease: true)
             recovering = false; detector.reset()
         } else if !progress.needsResync {
             if progress.turn == nil || progress.turn == confirmed.turn || progress.turn?.next == confirmed.turn {
