@@ -628,10 +628,15 @@ build 19 distinct from the older web build 18.
   sessions and all 15 games (excluding Core Data's update counter).
   Evidence: `.build/production-before-build20/`,
   `.build/production-after-build20/` and `.build/ap11-after-build20-apps.json`.
-- Web publication initially stops because the saved Cloudflare OAuth login
-  cannot refresh. The deployment remains pending authentication; AP11's
-  installation succeeded independently. Full release log:
-  `.build/logs/release-ios.log`.
+- Web publication initially stopped because the saved Cloudflare OAuth login
+  could not refresh. On September 18 local time, a dedicated Keychain-backed
+  API token restored publication. Published the exact exported IPA already
+  installed on AP11; hosted IPA, manifest and catalog read-back all pass.
+  Build 20 SHA-256:
+  `52dca8e07c6963814cb6287178adab8dc98da7b73ec88ec79d21a42ca109c3be`.
+  Glasswing build 50 and Threadmark build 21 retain their complete catalog
+  entries and verified hosted IPA checksums. Logs:
+  `.build/logs/release-ios.log` and `.build/logs/web-build20.log`.
 - This release carries collection and measured local performance improvements.
   It does not establish additional physical-camera recognition, throughput,
   battery/thermal or live-game acceptance beyond the earlier recorded checks.
