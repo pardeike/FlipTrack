@@ -608,3 +608,30 @@ deployment, capture-rate changes or UX changes are authorized for this pass.
   profiles, `Research/collection-performance-20260917.json` and
   `docs/COLLECTION_PERFORMANCE.md`. Source changes remain separate from released
   AP11 build 19 and collection source `4ab1175`.
+
+
+### 2026-09-17: build 20 production delivery
+
+Andreas authorized web publication and, after play ended, updating AP11 too.
+Collection `4ab1175` and performance `0c382ab` are pushed to `origin/main`.
+Build metadata `183e98e` assigns version 1.0 build 20, keeping the prior AP11
+build 19 distinct from the older web build 18.
+
+- Restored the shared `ios-release` command from the website repository. Its
+  six publishing tests pass. Reconciled the stale local app catalog with live
+  entries before publication and checksum-verified all existing IPA assets.
+- `Scripts/release-ios.sh 00008030-000A64D41104802E` passes normal Swift tests
+  and creates the signed build-20 archive. Export signature/provisioning
+  checks pass; the shared tool installs and launches production on AP11.
+- CoreDevice installed-app read-back confirms version 1.0 build 20. Library
+  backups before/after installation preserve all original fields in both
+  sessions and all 15 games (excluding Core Data's update counter).
+  Evidence: `.build/production-before-build20/`,
+  `.build/production-after-build20/` and `.build/ap11-after-build20-apps.json`.
+- Web publication initially stops because the saved Cloudflare OAuth login
+  cannot refresh. The deployment remains pending authentication; AP11's
+  installation succeeded independently. Full release log:
+  `.build/logs/release-ios.log`.
+- This release carries collection and measured local performance improvements.
+  It does not establish additional physical-camera recognition, throughput,
+  battery/thermal or live-game acceptance beyond the earlier recorded checks.
