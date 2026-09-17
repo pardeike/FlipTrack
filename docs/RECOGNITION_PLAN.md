@@ -376,3 +376,61 @@ copies of session state.
   hosted build numbers agree. The existing session and five games retain all
   pre-existing values apart from Core Data's update counter. Delivery evidence:
   `research/active-game-view-20260916.json`.
+
+### 2026-09-17: player-switch investigation in progress
+
+- New user recording: `IMG_0008.MOV`, 105.125 s, 165,886,977 bytes; private
+  source remains in Downloads. Baseline 2 Hz replay and live AP11 captures are
+  retained under `.build/switch-investigation/`. Do not substitute this clip
+  for the recovered original recording or its baseline metrics.
+- Reproduced BALL 2/Z OCR confusion and incorrect opposite-player votes during
+  active-score blink-off/partial display refresh. Live AP11 shows P2/ball 1,
+  outgoing 361,330 and active 00. Keep ball numbers limited to 1–3, require
+  repeated visual evidence, and preserve final-score/ownership safeguards.
+- Separate test host now has a real-camera diagnostic path (no replay input),
+  with an in-memory session and separate bundle ID. Its first launch waited for
+  camera permission, so that timed-out assertion is not recognition evidence.
+- This checkout lacks `Research/Local` and the original private pixel fixtures.
+  Preserve the existing regression definitions; report unavailable original
+  recording checks separately unless those inputs can be recovered.
+
+### 2026-09-17: player-switch repair verified
+
+- Changed active-digit geometry to include green parts of the color gradient,
+  use the median component height rather than a glare-extended maximum, and
+  require active-size evidence even if the other score has blinked off. The
+  centered large initial 00 is included. Blink-off frames stay unknown; temporal
+  confirmation, turn continuity and recovery rules are unchanged.
+- Correct BALL Z only on a located scoreboard, and accept only complete ball
+  labels 1–3. OCR size evidence now also needs an active-size absolute height.
+- Split touching scores using their glyph-size boundary. When Vision supplies
+  duplicate whole-line bounds, re-read separate pixel fields with dark padding
+  and constrain their boxes to those fields. Space repair is confined to these
+  isolated numeric crops. Proper thousands grouping still rejects malformed
+  scores; semicolon/comma confusion can repair `13,097;110`.
+- New 210-frame / 2 Hz movie regression confirms P2/ball 2 at 2.0 s,
+  P1/ball 3 at 32.5 s, P2/ball 3 at 62.5 s, and next-game P1/ball 1 at 99.0 s.
+  It confirms exactly one final pair, 13,097,110 / 457,000, and has no wrong-turn
+  readings. Baseline had 23 wrong-player observations and never confirmed the
+  P2 turns. GAME OVER itself remains insufficient; the actual final pair is
+  required. The movie also briefly shows finals at 82 s before GAME OVER.
+- Captured real-camera JPEG regressions (32 frames each) confirm P2/ball 1,
+  361,330 / 00 in 2.0 s and P1/ball 2, 361,330 / 4,298,550 in 1.5 s at 2 Hz.
+  These replay timings are not device timing. The earlier physical P2 case
+  passed; the final physical P1 check passed with camera input throughout,
+  correct persisted scores, zero false player/ball readings, and no saved game.
+  AP11 screenshot verifies the white frame around the left score and ball 2.
+- Final P1 physical check: 32 observations, 15 recognized turns, 3.57 s from
+  first camera capture to persisted switch. Reader median/p95/max 371/498/523 ms.
+  Initial thermal state nominal; phone was on battery. This is short stationary
+  live-machine acceptance, not sustained on-power or cabinet-nudge acceptance.
+- `Scripts/check.sh` with both new movie/camera manifests passed: 53 executed
+  tests, 10 older private-input tests skipped, signed iOS build successful.
+  `Scripts/test-recognition.sh` passed 13 recovered-engine tests with Thread
+  Sanitizer. Original recording/reference/store inputs remain unavailable here;
+  their skipped regressions are not claimed as passing.
+- Full routine logs and private inputs remain ignored. Reproducible extraction
+  and real-camera commands are in `TELEMETRY.md`; compact evidence and input
+  fingerprint: `research/player-switching-20260917.json`. Production build 18
+  and its sessions are unchanged; AP11 currently shows the isolated check host.
+  Production deployment is pending the existing explicit deploy boundary.

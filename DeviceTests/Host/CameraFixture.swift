@@ -5,6 +5,22 @@ import Foundation
 /// drive controlled observations, or recorded pixels through DisplayReader.
 final class CameraFixture {
     private let scenario = ProcessInfo.processInfo.environment["FLIPTRACK_TEST_SCENARIO"] ?? "turn"
+    var usesLiveCamera: Bool { scenario == "liveCamera" }
+    private var liveReadings: [FrameReading] = []
+
+    func recordLive(_ observation: DisplayObservation, image: CIImage, at time: TimeInterval) throws {
+        guard liveReadings.count < 32 else { return }
+        let folder = URL.documentsDirectory.appendingPathComponent("live-camera")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let data = imageContext.jpegRepresentation(of: image, colorSpace: CGColorSpaceCreateDeviceRGB())
+        try data?.write(to: folder.appendingPathComponent("frame-\(liveReadings.count).jpg"))
+        liveReadings.append(FrameReading(observation, at: time))
+        try JSONEncoder().encode(liveReadings).write(to: folder.appendingPathComponent("readings.json"), options: .atomic)
+        if liveReadings.count == 32 {
+            try Data("complete".utf8).write(to: folder.appendingPathComponent("complete"))
+        }
+    }
+
     var recoveryStarted: TimeInterval?
     var cameraFrames = 0
     private let imageContext = CIContext()

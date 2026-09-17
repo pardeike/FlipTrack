@@ -139,20 +139,35 @@ enum DisplayReader {
               text.contains(where: { word in
                   word.bounds.minY > bottom && word.text.filter(\.isNumber).count >= 12
               }) else { return text }
-        let slot = try activeScoreSlot(image, text: text)
-        let split: CGFloat = slot == 1 ? 0.60 : slot == 2 ? 0.45 : 0.5
+        let geometry = try activeScoreGeometry(image, text: text)
+        let split: CGFloat = geometry?.split ?? 0.5
         var recovered: [DisplayText] = []
         for side in 0..<2 {
             let r = CGRect(x: side == 0 ? 0 : split, y: bottom, width: side == 0 ? split : 1-split, height: 1-bottom)
             guard r.height > 0 else { return text }
             let crop = CGRect(x: image.extent.minX+r.minX*image.extent.width, y: image.extent.minY+r.minY*image.extent.height,
                               width: r.width*image.extent.width, height: r.height*image.extent.height)
-            let words = try recognize(image.cropped(to: crop))
-            let valid = words.filter { EndGameLayout.score(from: $0.text) != nil && $0.bounds.minX > 0.015 && $0.bounds.maxX < 0.985 && $0.bounds.height*r.height > footer.bounds.height*0.65 }
-                guard valid.count == 1 else { continue }
-            let word = valid[0], b = word.bounds
-            recovered.append(DisplayText(text: word.text, confidence: word.confidence,
-                bounds: CGRect(x:r.minX+b.minX*r.width,y:r.minY+b.minY*r.height,width:b.width*r.width,height:b.height*r.height), isInsideDisplay:true))
+            // Give OCR a dark margin without importing digits from the other
+            // field. The pixel-derived split can sit very close to both scores.
+            let paddedBounds = crop.insetBy(dx: -image.extent.width * 0.025, dy: -image.extent.height * 0.025)
+            let padded = image.cropped(to: crop).composited(over: CIImage(color: .black).cropped(to: paddedBounds))
+            let words = try recognize(padded)
+            let valid = words.compactMap { word -> DisplayText? in
+                // Vision can insert a space within one digit group. Only remove
+                // it inside an isolated score field with explicit separators.
+                let value = word.text.contains(",") || word.text.contains(".")
+                    ? word.text.replacingOccurrences(of: " ", with: "") : word.text
+                let b = word.bounds
+                guard EndGameLayout.score(from: value) != nil, b.minX > 0.015, b.maxX < 0.985,
+                      b.height * paddedBounds.height / image.extent.height > footer.bounds.height * 0.65 else { return nil }
+                return DisplayText(text: value, confidence: word.confidence,
+                    bounds: CGRect(x: (paddedBounds.minX + b.minX * paddedBounds.width - image.extent.minX) / image.extent.width,
+                                   y: (paddedBounds.minY + b.minY * paddedBounds.height - image.extent.minY) / image.extent.height,
+                                   width: b.width * paddedBounds.width / image.extent.width,
+                                   height: b.height * paddedBounds.height / image.extent.height).intersection(r), isInsideDisplay: true)
+            }
+            guard valid.count == 1 else { continue }
+            recovered.append(valid[0])
         }
         guard !recovered.isEmpty else { return text }
         return text.filter { $0.bounds.midY < bottom } + recovered
@@ -163,6 +178,10 @@ enum DisplayReader {
     /// Ported from the research activeSlot geometry, on a newly located display.
     /// Color ratios reject cabinet art; OCR size evidence supplies a neutral-color fallback.
     private static func activeScoreSlot(_ input: CIImage, text: [DisplayText]) throws -> Int? {
+        try activeScoreGeometry(input, text: text)?.slot
+    }
+
+    private static func activeScoreGeometry(_ input: CIImage, text: [DisplayText]) throws -> (slot: Int, split: CGFloat)? {
         let normalized = input.transformed(by: CGAffineTransform(translationX: -input.extent.minX, y: -input.extent.minY))
         let image = normalized.transformed(by: CGAffineTransform(scaleX: 640 / normalized.extent.width, y: 160 / normalized.extent.height))
         let w = 640, h = 160
@@ -174,9 +193,9 @@ enum DisplayReader {
         for y in 5..<125 { for x in 0..<w {
             let i = y*stride+x*4
             let r = Double(pixels[i])/255, g = Double(pixels[i+1])/255, b = Double(pixels[i+2])/255
-            mask[y*w+x] = max(r,g) > 0.16 && r > b*1.08 && g > b*1.04
+            mask[y*w+x] = max(r,g) > 0.16 && g > b*1.25 && (r > b*1.08 || g > r*1.3)
         } }
-        var glyphs: [(x: Int, height: Int)] = []
+        var glyphs: [(x: Int, height: Int, minX: Int, maxX: Int)] = []
         for start in mask.indices where mask[start] {
             mask[start] = false
             var queue = [start], index = 0, minX = start%w, maxX = start%w, minY = start/w, maxY = start/w
@@ -190,15 +209,36 @@ enum DisplayReader {
                 }
             }
             let height = maxY-minY+1, width = maxX-minX+1
-            if height > 16 && height < 90 && queue.count > 45 && width > 4 && width < 125 { glyphs.append(((minX+maxX)/2, height)) }
+            if height > 16 && height < 90 && queue.count > 45 && width > 4 && width < 125 { glyphs.append(((minX+maxX)/2, height, minX, maxX)) }
         }
-        let left = glyphs.filter { $0.x > 65 && $0.x < 310 }.map(\.height).max() ?? 0
-        let right = glyphs.filter { $0.x > 380 && $0.x < 580 }.map(\.height).max() ?? 0
+        // Glare can extend one component. Use the typical digit height, not
+        // the tallest fragment. Adjacent zeros may form one connected component.
+        func height(_ range: Range<Int>) -> Int {
+            let heights = glyphs.filter { range.contains($0.x) }.map(\.height).sorted()
+            guard !heights.isEmpty else { return 0 }
+            return heights[(heights.count - 1) / 2]
+        }
+        let left = height(65..<350), right = height(380..<580)
         let footerHeight = text.filter { $0.text.uppercased().contains("FREE") }.map { Double($0.bounds.height)*160 }.min() ?? 14
-        guard Double(max(left,right)) >= max(18,footerHeight*1.55) else { return nil }
-        if Double(left) > Double(right)*1.15 { return 1 }
-        if Double(right) > Double(left)*1.15 { return 2 }
-        return nil
+        guard Double(max(left,right)) >= max(18,footerHeight*1.7) else { return nil }
+        let slot: Int
+        if Double(left) > Double(right)*1.15 { slot = 1 }
+        else if Double(right) > Double(left)*1.15 { slot = 2 }
+        else { return nil }
+        let activeHeight = slot == 1 ? left : right
+        let large = glyphs.filter {
+            Double($0.height) >= Double(activeHeight) * 0.8 &&
+            (slot == 1 ? (65..<400).contains($0.x) : (310..<580).contains($0.x))
+        }
+        var split: CGFloat = slot == 1 ? 0.60 : 0.45
+        if slot == 1, let edge = large.map(\.maxX).max(),
+           let next = glyphs.filter({ $0.minX > edge && $0.x < 580 }).map(\.minX).min() {
+            split = CGFloat(edge + next) / CGFloat(w * 2)
+        } else if slot == 2, let edge = large.map(\.minX).min(),
+                  let previous = glyphs.filter({ $0.maxX < edge && $0.x > 65 }).map(\.maxX).max() {
+            split = CGFloat(edge + previous) / CGFloat(w * 2)
+        }
+        return (slot, split)
     }
 
     private static func correctedDisplay(_ image: CIImage, rectangle: VNRectangleObservation) -> CIImage? {
@@ -239,11 +279,15 @@ enum DisplayReader {
             }
             // Some Vision versions join both score fields into one OCR line.
             // Split only a complete pair with valid thousands grouping.
-            let pattern = #"^([0-9]{1,3}(?:[,\.][0-9]{3}){2,})\s*([0-9]{1,3}(?:[,\.][0-9]{3}){2,})$"#
+            let pattern = #"^([0-9]{1,3}(?:[,\.][0-9]{3}){1,})\s*([0-9]{1,3}(?:[,\.][0-9]{3}){1,})$"#
             if let expression = try? NSRegularExpression(pattern: pattern),
                let match = expression.firstMatch(in: text.string, range: NSRange(text.string.startIndex..., in: text.string)),
                let left = Range(match.range(at: 1), in: text.string), let right = Range(match.range(at: 2), in: text.string) {
-                return [item(left), item(right)]
+                let l = item(left), r = item(right)
+                // Some Vision versions return the whole line for both ranges.
+                // Keep that line intact so separate pixel crops can establish
+                // real field bounds; duplicated bounds must never assign scores.
+                if l.bounds.maxX < r.bounds.minX { return [l, r] }
             }
             return [item(text.string.startIndex..<text.string.endIndex)]
         }

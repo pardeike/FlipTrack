@@ -99,3 +99,35 @@ JSON/JPEG evidence. It restores the separate benchmark app afterward.
 Telemetry and accepted evidence add storage and JPEG work. Short camera-loaded
 checks measure this version, but sustained real-machine play is still the
 acceptance boundary for an evening's operation.
+
+## Real-camera player-switch check
+
+The isolated host can read the actual mounted camera instead of injecting
+fixture observations. Leave the machine waiting on the specified turn, then run:
+
+```sh
+python3 Scripts/check-camera.py --device AP11 --scenario liveCamera \
+  --slot 1 --ball 2 --left 361330 --right 4298550
+```
+
+This seeds the preceding turn in an in-memory session, observes 32 real camera
+inputs, and requires ordinary confirmation of the expected turn and supplied
+scores, no false player/ball observations, and no completed-game insertion.
+`--left` and `--right` are optional assertions, never recognition inputs.
+The expected slot/ball only initialize and check the test session; they are
+never passed into the reader. The report, actual camera JPEGs, telemetry and
+screenshot are retrieved under `.build/camera-checks/`. The first installation
+may require allowing camera access to **FlipTrack Checks** on the phone.
+The production app, its data and the separate benchmark identity are untouched.
+
+For the September 17 movie regression, prepare the fingerprint-checked private
+frames and pass their manifest to the normal gate:
+
+```sh
+python3 Scripts/prepare-switch-fixtures.py /path/to/IMG_0008.MOV
+FLIPTRACK_SWITCH_FIXTURES="$PWD/.build/switch-fixtures/manifest.json" Scripts/check.sh
+```
+
+This is a 2 Hz replay of the new 105-second recording, including turn changes,
+GAME OVER, the actual final score pair, and the following new game. It does not
+replace `Scripts/check.sh --recording` or the original research recording.

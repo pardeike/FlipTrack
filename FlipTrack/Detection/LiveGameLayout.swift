@@ -25,7 +25,16 @@ enum LiveGameLayout {
         if GameDisplayLayout.isNewGame(in: observations) {
             return LiveScoreboard(turn: MachineTurn(slot: 1, ball: 1), left: 0, right: 0)
         }
-        var text = observations.filter { $0.confidence >= 0.5 }
+        var text = observations.filter { $0.confidence >= 0.5 }.map { word in
+            // The dot-matrix 2 resembles Z. Correct only the complete ball label
+            // inside a located display; the footer and score layout must still agree.
+            if word.isInsideDisplay && word.text.uppercased() == "BALL Z" {
+                return DisplayText(text: "BALL 2", confidence: word.confidence, bounds: word.bounds,
+                                   rotation: word.rotation, isInsideDisplay: true,
+                                   characterHeight: word.characterHeight, corners: word.corners)
+            }
+            return word
+        }
         for word in text where word.text.uppercased().range(of: #"^BALL\s*[123]\s+FREE\s*PLAY\.?$"#, options: .regularExpression) != nil {
             let digit = word.text.first(where: \.isNumber)!
             let r = word.bounds
@@ -52,7 +61,7 @@ enum LiveGameLayout {
         }
         guard !GameDisplayLayout.isBonusScreen(in: text) else { return nil }
         let balls = text.compactMap { observation -> (Int, CGRect)? in
-            guard let range = observation.text.uppercased().range(of: #"^BALL\s*([123])(?:\D|$)"#, options: .regularExpression),
+            guard let range = observation.text.uppercased().range(of: #"^BALL\s*([123])\s*[._-]?$"#, options: .regularExpression),
                   let digit = observation.text[range].first(where: { $0.isNumber }), let ball = Int(String(digit)) else { return nil }
             return (ball, observation.bounds)
         }
@@ -71,10 +80,10 @@ enum LiveGameLayout {
         var left: Int?, right: Int?, sizedSlot: Int?
         if scores.count == 2 {
             let l = scores[0], r = scores[1]
-            guard l.1.maxX < r.1.minX, abs(l.1.maxY-r.1.maxY) < max(l.1.height,r.1.height) else { return nil }
+            guard l.1.maxX <= r.1.minX, abs(l.1.maxY-r.1.maxY) < max(l.1.height,r.1.height) else { return nil }
             left = l.0; right = r.0
-            if l.2 > r.2 * 1.15 && l.2 > a.height*1.2 { sizedSlot = 1 }
-            if r.2 > l.2 * 1.15 && r.2 > a.height*1.2 { sizedSlot = 2 }
+            if l.2 > r.2 * 1.15 && l.2 > a.height*1.9 { sizedSlot = 1 }
+            if r.2 > l.2 * 1.15 && r.2 > a.height*1.9 { sizedSlot = 2 }
         } else if scores.count == 1, let activeSlot {
             // A single OCR number does not establish its side on a full frame.
             // Rectified display coordinates can still supply a partial score.

@@ -13,7 +13,13 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--device', default='AP11')
 parser.add_argument('--reuse-benchmark', action='store_true',
                     help='Temporarily use the camera-authorized benchmark identity, then restore its app.')
-parser.add_argument('--scenario', choices=['turn', 'finalPixels', 'recorded', 'corrections', 'continuation'])
+parser.add_argument('--scenario', choices=['turn', 'finalPixels', 'recorded', 'corrections', 'continuation', 'liveCamera'])
+parser.add_argument('--slot', type=int, choices=[1, 2], default=2,
+                    help='Expected active slot for liveCamera (ordinary turn confirmation).')
+parser.add_argument('--ball', type=int, choices=[1, 2, 3], default=1,
+                    help='Expected ball for liveCamera.')
+parser.add_argument('--left', type=int, help='Expected confirmed left score for liveCamera.')
+parser.add_argument('--right', type=int, help='Expected confirmed right score for liveCamera.')
 args = parser.parse_args()
 scenarios = [args.scenario] if args.scenario else ['turn', 'finalPixels', 'recorded', 'corrections', 'continuation']
 run_id = str(uuid.uuid4())
@@ -60,11 +66,19 @@ with log_path.open('w') as log:
     try:
         if args.reuse_benchmark and not restore.is_dir():
             raise RuntimeError(f'Missing benchmark app to restore: {restore}')
-        run('python3', 'Scripts/prepare-live-fixtures.py')
+        if scenarios == ['liveCamera']:
+            (root / '.build/live-fixtures').mkdir(parents=True, exist_ok=True)
+        else:
+            run('python3', 'Scripts/prepare-live-fixtures.py')
+        device_info = output / 'device.json'
+        run('xcrun', 'devicectl', 'device', 'info', 'details', '--device', args.device,
+            '--json-output', str(device_info))
+        udid = json.loads(device_info.read_text())['result']['hardwareProperties']['udid']
         run('xcodegen', 'generate', '--spec', 'DeviceTests/project.yml', '--project', '.build')
         step = 'build signed camera check host'
-        run('xcodebuild', '-project', '.build/FlipTrackDeviceTests.xcodeproj', '-target', 'FlipTrackDeviceHost',
-            '-configuration', 'Release', '-sdk', 'iphoneos', '-allowProvisioningUpdates',
+        run('xcodebuild', '-project', '.build/FlipTrackDeviceTests.xcodeproj', '-scheme', 'FlipTrackDeviceHost',
+            '-configuration', 'Release', '-destination', f'id={udid}', '-allowProvisioningUpdates',
+            '-allowProvisioningDeviceRegistration',
             f'PRODUCT_BUNDLE_IDENTIFIER={bundle}', f'SYMROOT={root}/.build/device-autocheck', 'build')
         step = 'install camera check host'
         run('xcrun', 'devicectl', 'device', 'install', 'app', '--device', args.device,
@@ -72,8 +86,14 @@ with log_path.open('w') as log:
         installed = True
         for scenario in scenarios:
             step = f'physical camera check: {scenario}'
-            env = json.dumps({'FLIPTRACK_AUTOCHECK': '1', 'FLIPTRACK_TEST_SCENARIO': scenario,
-                              'FLIPTRACK_CHECK_ID': run_id})
+            environment = {'FLIPTRACK_AUTOCHECK': '1', 'FLIPTRACK_TEST_SCENARIO': scenario,
+                              'FLIPTRACK_CHECK_ID': run_id, 'FLIPTRACK_EXPECT_SLOT': str(args.slot),
+                              'FLIPTRACK_EXPECT_BALL': str(args.ball)}
+            if args.left is not None:
+                environment['FLIPTRACK_EXPECT_LEFT'] = str(args.left)
+            if args.right is not None:
+                environment['FLIPTRACK_EXPECT_RIGHT'] = str(args.right)
+            env = json.dumps(environment)
             stop_host()
             run('xcrun', 'devicectl', '--timeout', '30', 'device', 'process', 'launch', '--device', args.device,
                 '--environment-variables', env, bundle)
@@ -86,6 +106,8 @@ with log_path.open('w') as log:
                         telemetry_dir = report.get('telemetryDirectory')
                         if not telemetry_dir or not receive(f'Telemetry/{telemetry_dir}', output / f'telemetry-{scenario}'):
                             raise RuntimeError('Missing telemetry or evidence images')
+                        if scenario == 'liveCamera' and not receive('live-camera', output / 'live-camera'):
+                            raise RuntimeError('Missing real camera inputs')
                         if not report.get('passed'):
                             raise RuntimeError(report.get('error', 'Device assertion failed'))
                         break

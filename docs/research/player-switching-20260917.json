@@ -1,0 +1,90 @@
+{
+  "sourceMovie": {
+    "name": "IMG_0008.MOV",
+    "sha256": "6863670c1c5174eb59f228f43b91422362eb29dc59a4305387b561942b0a154f",
+    "bytes": 165886977,
+    "durationSeconds": 105.125
+  },
+  "movieReplay": {
+    "samples": 210,
+    "samplingHz": 2,
+    "baselineWrongPlayerObservations": 23,
+    "baselineFinalObservations": 1,
+    "confirmedTurnTimes": [
+      2,
+      32.5,
+      62.5,
+      99
+    ],
+    "confirmedTurns": [
+      "P2 ball 2",
+      "P1 ball 3",
+      "P2 ball 3",
+      "P1 ball 1"
+    ],
+    "confirmedFinals": [
+      [
+        13097110,
+        457000
+      ]
+    ],
+    "wrongPlayerObservations": 0
+  },
+  "cameraReplay": {
+    "samplesPerCase": 32,
+    "cases": [
+      {
+        "turn": "P2 ball 1",
+        "scores": [
+          361330,
+          0
+        ],
+        "confirmationSeconds": 2
+      },
+      {
+        "turn": "P1 ball 2",
+        "scores": [
+          361330,
+          4298550
+        ],
+        "confirmationSeconds": 1.5
+      }
+    ]
+  },
+  "physicalP1": {
+    "report": {
+      "cameraRunning": true,
+      "gameCount": 2,
+      "left": 361330,
+      "maxMS": 522.9463333380409,
+      "p50MS": 371.1788750078995,
+      "p95MS": 498.1204583309591,
+      "passed": true,
+      "recognizedTurns": 15,
+      "right": 4298550,
+      "runID": "f4869401-1b8e-4b88-a513-38ae90ef7e6e",
+      "samples": 32,
+      "scenario": "liveCamera",
+      "scoreImages": 4,
+      "telemetryDirectory": "2026-09-17T16-04-36Z-CE4FA3FB-BD74-4273-9112-9EA2F0131F4A",
+      "telemetryEvents": 51,
+      "turnBall": 2,
+      "turnSlot": 1
+    },
+    "confirmationFromFirstCaptureSeconds": 3.57065908331424,
+    "screenshotSHA256": "aaa587fc158ea9063810c70c6fd26048ce9248767f55f1b8084ea2fd988a5485",
+    "batteryState": "unplugged",
+    "thermalAtStart": "nominal"
+  },
+  "verification": {
+    "corePassed": 53,
+    "privateInputTestsSkipped": 10,
+    "recoveredEnginePassed": 13,
+    "signedIOSBuild": true,
+    "productionDeployed": false
+  },
+  "localArtifacts": {
+    "investigation": ".build/switch-investigation",
+    "physical": ".build/camera-checks/f4869401-1b8e-4b88-a513-38ae90ef7e6e"
+  }
+}

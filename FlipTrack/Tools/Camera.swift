@@ -141,10 +141,12 @@ final class Camera: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unc
         guard now - lastFrame >= 0.5, let buffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
         lastFrame = now
         #if FLIPTRACK_DEVICE_TESTING
-        do { emit(.frame(try fixture.observation(at:now),now)) }
-        catch { fail("Test fixture: \(error.localizedDescription)") }
-        return
-        #else
+        if !fixture.usesLiveCamera {
+            do { emit(.frame(try fixture.observation(at:now),now)) }
+            catch { fail("Test fixture: \(error.localizedDescription)") }
+            return
+        }
+        #endif
         autoreleasepool {
             let frame = CIImage(cvPixelBuffer: buffer)
             let raw = configuration.useCenteredScanArea
@@ -158,12 +160,14 @@ final class Camera: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, @unc
                     observation.jpeg = imageContext.jpegRepresentation(of: image, colorSpace: CGColorSpaceCreateDeviceRGB())
                 }
                 observation.processingMS = (ProcessInfo.processInfo.systemUptime - now) * 1000
+                #if FLIPTRACK_DEVICE_TESTING
+                try fixture.recordLive(observation, image: image, at: now)
+                #endif
                 emit(.frame(observation, now))
             } catch {
                 fail("The display could not be read: \(error.localizedDescription)")
             }
         }
-        #endif
     }
 
     private func emit(_ event: Event) {

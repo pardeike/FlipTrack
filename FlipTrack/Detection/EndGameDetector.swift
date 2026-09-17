@@ -25,7 +25,8 @@ enum EndGameLayout {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
         // Correct isolated letter/digit confusion, but never parse a numeric prefix
         // of a label, bonus message, decimal, or malformed thousands grouping.
-        let normalized = text.replacingOccurrences(of: "O", with: "0")
+        let normalized = text.replacingOccurrences(of: ";", with: ",")
+            .replacingOccurrences(of: "O", with: "0")
             .replacingOccurrences(of: "I", with: "1")
             .replacingOccurrences(of: "L", with: "1")
             .replacingOccurrences(of: "S", with: "5")

@@ -14,6 +14,11 @@ enum DeviceCheck {
             try await Task.sleep(for:.milliseconds(100))
         }
     }
+    static var expectedLiveTurn: MachineTurn {
+        let environment = ProcessInfo.processInfo.environment
+        return MachineTurn(slot: Int(environment["FLIPTRACK_EXPECT_SLOT"] ?? "2") ?? 2,
+                           ball: Int(environment["FLIPTRACK_EXPECT_BALL"] ?? "1") ?? 1)
+    }
     static func run(scanner:Scanner, session:Session, context:ModelContext, start:() -> Void) async {
         guard ProcessInfo.processInfo.environment["FLIPTRACK_AUTOCHECK"] == "1" else { return }
         let scenario = ProcessInfo.processInfo.environment["FLIPTRACK_TEST_SCENARIO"] ?? "turn"
@@ -21,12 +26,42 @@ enum DeviceCheck {
         try? FileManager.default.removeItem(at:output)
         var report:[String:Any] = ["scenario":scenario,"passed":false,"runID":ProcessInfo.processInfo.environment["FLIPTRACK_CHECK_ID"] ?? "manual"]
         do {
+            if scenario == "liveCamera" {
+                let folder = URL.documentsDirectory.appendingPathComponent("live-camera")
+                if FileManager.default.fileExists(atPath: folder.path) { try FileManager.default.removeItem(at: folder) }
+            }
             start()
             try await wait { scanner.camera.session.isRunning || scanner.error != nil }
             try require(scanner.error == nil, scanner.error ?? "Camera failed")
             try require(scanner.camera.session.isRunning,"Camera must be running")
             let initial = session.progress
-            if scenario == "turn" {
+            if scenario == "liveCamera" {
+                try await wait({ FileManager.default.fileExists(atPath: URL.documentsDirectory.appendingPathComponent("live-camera/complete").path) }, timeout: 60)
+                try require(session.progress.turn == expectedLiveTurn, "Expected live turn was not confirmed")
+                try require(!session.progress.needsResync, "Live turn became uncertain")
+                let data = try Data(contentsOf: URL.documentsDirectory.appendingPathComponent("live-camera/readings.json"))
+                let samples = try JSONSerialization.jsonObject(with: data) as! [[String: Any]]
+                let turns = samples.compactMap { $0["live"] as? [String: Any] }.compactMap { $0["turn"] as? [String: Int] }
+                try require(samples.count == 32 && turns.count >= 3, "Missing live camera evidence")
+                try require(turns.allSatisfy { $0["slot"] == expectedLiveTurn.slot && $0["ball"] == expectedLiveTurn.ball }, "False player/ball reading on the stationary live scoreboard")
+                try require(samples.allSatisfy { $0["final"] == nil }, "Live scoreboard was read as final")
+                let durations = samples.compactMap { $0["processingMS"] as? Double }.sorted()
+                report["samples"] = samples.count
+                report["recognizedTurns"] = turns.count
+                report["p50MS"] = durations[durations.count / 2]
+                report["p95MS"] = durations[Int(Double(durations.count - 1) * 0.95)]
+                report["maxMS"] = durations.last
+                report["left"] = session.progress.left
+                report["right"] = session.progress.right
+                let environment = ProcessInfo.processInfo.environment
+                if let value = environment["FLIPTRACK_EXPECT_LEFT"].flatMap(Int.init) {
+                    try require(session.progress.left == value, "Wrong confirmed left score")
+                }
+                if let value = environment["FLIPTRACK_EXPECT_RIGHT"].flatMap(Int.init) {
+                    try require(session.progress.right == value, "Wrong confirmed right score")
+                }
+                try require(session.games?.count == 2, "Live camera saved a completed game")
+            } else if scenario == "turn" {
                 scanner.resync()
                 try require(scanner.isResyncing,"Recovery must start")
                 try await Task.sleep(for:.seconds(1))
