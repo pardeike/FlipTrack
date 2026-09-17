@@ -133,5 +133,27 @@
     "pixelRegressionPassed": true,
     "guardedAgainstScoreDecreases": true,
     "scope": "Same collected camera pixels replayed on Mac, not a new physical game."
+  },
+  "delivery": {
+    "version": "1.0",
+    "build": "19",
+    "sourceCommit": "f43e4f4",
+    "installedAndLaunchedOn": "AP11",
+    "installedVersionReadBack": true,
+    "productionDataPreserved": true,
+    "sessionsPreserved": 2,
+    "gamesPreserved": 5,
+    "webPublished": false,
+    "webBlocker": "ios-release helper not installed on this Mac",
+    "websiteBuildLastChecked": "18",
+    "releaseLog": ".build/logs/release-ios.log",
+    "screenshotSHA256": "3dbe9056707d128c28a64f547cd244e95318930f14445dd19d5e481bbc0bdd41"
+  },
+  "validation": {
+    "distinctTestsExecutedSuccessfully": 56,
+    "olderPrivateInputTestsUnavailable": 10,
+    "signedIOSBuild": true,
+    "signedReleaseArchive": true,
+    "newMovieInitialConfirmationSeconds": 4.5
   }
 }

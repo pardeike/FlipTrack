@@ -500,3 +500,19 @@ copies of session state.
   56 distinct tests executed successfully; 10 older private-input tests remain
   unavailable. Full-game source-time confirmation is 2.1–3.2 s from first
   readable turn evidence. Final gate: `.build/six-ball-results/final-gate.log`.
+
+### 2026-09-17: build 19 installed on AP11
+
+- Source repair `f43e4f4` committed/pushed. `Scripts/release-ios.sh AP11` passed
+  core tests and signed archiving, then stopped at the missing `ios-release`
+  executable (`.build/logs/release-ios.log`). No web publication is claimed;
+  the website remains at the last checked build 18.
+- Installed the canonical **1.0 (19)** archived production app directly using
+  CoreDevice, then launched it. Installed-app read-back confirms bundle
+  `net.pardeike.FlipTrack`, version 1.0, build 19. Embedded profile includes AP11.
+- Production screenshot shows the regular session list. Before/after store
+  comparison preserves every value in both sessions and all five games, except
+  the deliberately excluded Core Data update counter. No test results were
+  imported. Evidence and limitations: `research/six-ball-20260917.json`.
+- The final binary is available for play now. Fresh live-game acceptance and
+  sustained nudging/lighting checks remain distinct from the repaired replay.
