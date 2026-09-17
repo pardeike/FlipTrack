@@ -26,6 +26,8 @@ public final class Session: Identifiable, Hashable {
     /// Additive, optional storage for observed features. Independent of wins,
     /// score editing and the currently selected/undone game.
     public var collectedFeatureData: Data?
+    /// Decoded view of the exact persisted bytes; never part of the store schema.
+    @Transient var featureCollectionCache: FeatureCollectionCache?
     @Relationship(deleteRule: .cascade, inverse: \Game.session)
     public var games: [Game]?
 

@@ -576,3 +576,35 @@ controlled, tested or deployed to during this work. Use local pixels and builds.
   remain separate from the passing normal gate. AP11 was not accessed, installed
   to or tested. No web publication or UX changes. Details:
   `docs/FEATURE_COLLECTION.md`.
+
+### 2026-09-17: local collection performance pass
+
+Andreas requested performance work. AP11 remains in use: no device access,
+deployment, capture-rate changes or UX changes are authorized for this pass.
+
+- Established warmed, release-build baselines using 836 recorded OCR frames,
+  93 fixed pixel samples and a separate 1,000-record in-memory persistence
+  stress case. Inputs, raw timings and profiler samples remain ignored under
+  `.build/performance/`; reproducible preparation and opt-in tests are checked in.
+- Replace repeated per-candidate normalization of every mode alias with one
+  immutable normalized lookup. Feature classification costs roughly 1/14 as
+  much on this Mac, with identical output for all 836 text inputs.
+- Cache a session's decoded collection against the exact persisted bytes.
+  Corrections/replacements, rollback, clearing and corrupt data invalidate the
+  cached view. The cache is transient; every accepted revision still encodes and
+  saves immediately. The 1,000-record save benchmark falls from about 22 ms to
+  11 ms. Smaller sessions benefit less; decoding is traded for retained memory.
+- Vision OCR dominates the image pipeline. Reusing Vision request objects was
+  measured and removed because it provided no meaningful gain. No broad OCR or
+  physical-device speedup is claimed, and no thresholds/resolutions were relaxed.
+- The normal gate passes **62 executed tests**, with 12 opt-in/private tests
+  skipped, plus a signed generic iOS build. All 767 six-ball observations have
+  identical live/final/ball/feature semantics to the pre-optimization replay.
+  Other recorded gates (210 movie, 64 stationary, 69 feature frames) also pass.
+  Five focused feature/storage tests pass under Thread Sanitizer, including
+  replacement and rollback cache invalidation. Existing legacy movie failures
+  remain as previously documented, not reclassified as passes.
+- Evidence: `.build/performance/check.log`, `tsan.log`, baseline/optimized JSON
+  profiles, `Research/collection-performance-20260917.json` and
+  `docs/COLLECTION_PERFORMANCE.md`. Source changes remain separate from released
+  AP11 build 19 and collection source `4ab1175`.

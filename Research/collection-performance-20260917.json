@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-09-17",
+  "baselineCommit": "4ab1175",
+  "host": "Mac14,2",
+  "compiler": "Apple Swift 6.4 (swiftlang-6.4.0.20.104)",
+  "configuration": "release",
+  "text": {
+    "frames": 836,
+    "warmPasses": 5,
+    "inputSHA256": "b9cb82d97c4f3e591602601f453600f9c2f23a3ef50ede85df60f788279b84c2",
+    "baseline": {
+      "medianMS": 570.9652916993946,
+      "meanMS": 571.7403916758485,
+      "minMS": 568.277541664429,
+      "maxMS": 575.4478333401494
+    },
+    "optimized": {
+      "medianMS": 41.16241668816656,
+      "meanMS": 41.131616674829274,
+      "minMS": 41.00470832781866,
+      "maxMS": 41.22225003084168
+    },
+    "identicalFeatures": true
+  },
+  "pixels": {
+    "frames": 93,
+    "warmPasses": 2,
+    "baselinePassTotalMS": [
+      16535.73699964909,
+      16633.789000101388
+    ],
+    "optimizedPassTotalMS": [
+      16339.71649990417,
+      16510.08612505393
+    ],
+    "identicalSemantics": true,
+    "conclusion": "No meaningful end-to-end OCR speedup; Vision dominates.",
+    "preliminaryOptimizedPassTotalMS": [
+      16518.629041558597,
+      16919.60845841095
+    ]
+  },
+  "persistence": {
+    "records": 1000,
+    "baselineBytes": 659564,
+    "optimizedBytes": 659562,
+    "measuredUpdates": 20,
+    "store": "SwiftData in-memory, one warm-up update excluded",
+    "baseline": {
+      "medianMS": 21.84995834250003,
+      "meanMS": 21.899285420658998,
+      "minMS": 21.6332083218731,
+      "maxMS": 22.440000029746443
+    },
+    "optimized": {
+      "medianMS": 11.052062502130866,
+      "meanMS": 11.044202078483067,
+      "minMS": 10.713208350352943,
+      "maxMS": 11.278999969363213
+    }
+  },
+  "limits": [
+    "No AP11 access or deployment",
+    "No physical-camera, thermal, battery, CloudKit or disk I/O throughput claim",
+    "Pixel corpus is targeted; not a full-movie accuracy measurement",
+    "Existing three legacy original-recording score tests remain unresolved"
+  ],
+  "sixBallSemanticComparison": {
+    "frames": 767,
+    "differences": 0
+  }
+}

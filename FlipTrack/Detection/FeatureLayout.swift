@@ -59,6 +59,15 @@ enum FeatureLayout {
             .trimmingCharacters(in: .punctuationCharacters)
     }
     private static func compact(_ value: String) -> String { normalized(value).filter { $0.isLetter || $0.isNumber } }
+    // Normalize the fixed catalogue once, rather than every alias for every
+    // possible title on every OCR pass. Keep collisions explicitly ambiguous.
+    private static let modesByTitle: [String: Set<PinballMode>] = {
+        var result: [String: Set<PinballMode>] = [:]
+        for mode in PinballMode.allCases {
+            for alias in mode.aliases { result[compact(alias), default: []].insert(mode) }
+        }
+        return result
+    }()
     private static func matches(_ value: String, _ pattern: String) -> Bool {
         value.range(of: pattern, options: .regularExpression) != nil
     }
@@ -112,10 +121,8 @@ enum FeatureLayout {
             for length in 1...min(3, ordered.count-index) {
                 let titleWords = Array(ordered[index..<(index+length)])
                 let title = titleWords.map(\.text).joined(separator: " ")
-                let candidates = PinballMode.allCases.filter { mode in
-                    mode.aliases.contains { compact(title) == compact($0) }
-                }
-                guard candidates.count == 1, let mode = candidates.first else { continue }
+                guard let candidates = modesByTitle[compact(title)], candidates.count == 1,
+                      let mode = candidates.first else { continue }
                 let bounds = titleWords.dropFirst().reduce(titleWords[0].bounds) { $0.union($1.bounds) }
                 guard bounds.height <= titleWords[0].bounds.height*4,
                       titleWords.allSatisfy({ abs($0.bounds.midX-bounds.midX) <= bounds.width*0.55 }) else { continue }

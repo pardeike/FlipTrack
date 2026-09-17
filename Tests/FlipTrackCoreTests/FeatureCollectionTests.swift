@@ -190,6 +190,16 @@ private func board() -> DisplayObservation {
     let reloaded = try ModelContainer(for: Session.self, Game.self, configurations: configuration)
     let restored = try #require(reloaded.mainContext.fetch(FetchDescriptor<Session>()).first)
     #expect(try restored.collectedFeatures() == [event])
+    // Same ID/revision/count can arrive with corrected bytes. Cache identity
+    // must follow the persisted value, including after a rollback or clearing.
+    var replacement = event
+    replacement.reading.text = ["corrected source text"]
+    restored.collectedFeatureData = try JSONEncoder().encode([replacement])
+    #expect(try restored.collectedFeatures() == [replacement])
+    reloaded.mainContext.rollback()
+    #expect(try restored.collectedFeatures() == [event])
+    restored.collectedFeatureData = nil
+    #expect(try restored.collectedFeatures().isEmpty)
     restored.collectedFeatureData = Data("broken".utf8)
     #expect(throws: (any Error).self) { try restored.collectedFeatures() }
 }
